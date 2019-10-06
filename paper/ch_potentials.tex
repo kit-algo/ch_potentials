@@ -8,6 +8,7 @@
 %for enabling cleveref support, use "cleveref"
 %for enabling cleveref support, use "autoref"
 
+\usepackage[algo2e,vlined]{algorithm2e}
 
 %\graphicspath{{./graphics/}}%helpful if your graphic files are in another directory
 
@@ -69,6 +70,106 @@
 \begin{abstract}
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent convallis orci arcu, eu mollis dolor. Aliquam eleifend suscipit lacinia. Maecenas quam mi, porta ut lacinia sed, convallis ac dui. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.
 \end{abstract}
+
+Fast routing in huge street networks has seen a lot of research \cite{Survey}.
+For static, time- and user-invariant networks a lot of techniques exist. 
+One of the most successful ones are Contraction Hierarchies~\cite{CH}.
+These work in two phases.
+The first phase is called preprocessing phase and is a slow index-construction.
+In this phase the road graph and the edge weights are known.
+In the second phase, called query phase, minimum weight paths are computed.
+The query phase has access to the precomputed index and is very fast.
+Queries can be answered on the order of only a millisecond by CH.
+
+These techniques are used in online navigation services. 
+In these services, there is a single index.
+With this index a large number of user requests are answered.
+The preprocessing phases is rerun on a regular interval to incorporate map updates.
+
+While highly scalable, this setup has the disadvantage, that every user must have use the same weights.
+In this paper, we explore an novel algorithm, called CH-Potentials, that uses the two phase setup, however, allows the weights to be modified on a per query basis.
+Applications for this algorithm are personalized user settings such as for example:
+Avoiding highways, capping the maximum speed, or avoid user-configurable areas.
+
+\paragraph{Related Work}
+
+We are not the first to investigate this problem setting. 
+Two approaches exist in the litrature.
+
+The three phase approach splits the preprocessing phase into two.
+Techniques that use this setup are MLD/CRP \cite{?} and CCH \cite{?}.
+The first phase is a weight-independent preprocessing phase that analsyse the graph topology.
+The second phase is called customization phase and introduces the weights into the index.
+The third phase is the query phase that computes paths.
+The preprocessing phase is very slow.
+The customization phase runs on the order of seconds.
+The query phase runs within milliseconds.
+
+The three phase approach is ideal to incorporate weight changes that apply to all users.
+Live traffic information is a prime example.
+It has been sugested to use the three phase approach to handle user-specific requirements by storing a copy of the index per user.
+The problem with this approach is that it binds a lot of server-side resources per user.
+Further, if the user often changes his weights, the customization needs to run often.
+Every customization requires seconds of running time.
+Just applying Dijkstra's algorithm to the input graph results in similar running times.
+
+The second approach is Sabine's VLDB personalized routing.
+Also TopoCore~\cite{?}.
+
+A paragraph about A*~\cite{?}.
+
+A paragraph about PHAST~\cite{?}.
+
+\paragraph{CH-Potential Overview}
+
+Our novel algroithm CH-Potentials is at its core a combination of A* and PHAST.
+For an additional performance, we further combine it with TopoCore.
+
+The input of the preprocessing phase is a graph and lower-bound weights $w_{\ell}$.
+Denote by $d_{\ell}(x,y)$ the minimum weight $xy$-path distance with respect to $w_{\ell}$.
+The preprocessing phase consists of computing a CH.
+
+The input to the query phase is a source $s$ and a target $t$ node and user-specific weights $w_u$.
+These weights $w_u$ must not be smaller than the lower-bound weights $w_{\ell}$, i.e., $w_{\ell}(e) < w_u(e)$ for all edges $e$.
+Analogous to $d_{\ell}(x,y)$, $d_u(x,y)$ is the minimum-weight phase according to $w_u$.
+The core of the query phase is an A* search with respect to $d_u$ from $s$ to $t$.
+The distance $d_{\ell}(x,t)$ from a node $x$ to $t$ is used as potential.
+
+\begin{algorithm2e}
+\KwData{$B[x]$ distance from $s$ to $x$ compute in backward search, or $+\infty$ if unreachable}
+\KwData{$P[x]$ memoized potential for $x$, or $\bot$ if not yet computed. Equal to $d_{\ell}(x,t)$}
+\SetKwFunction{Pot}{Potential}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\Pot{$x$}}{
+  \If{$P[x] = \bot$}{
+    $P[x]\leftarrow B[x]$\;
+    \For{$(x,y)$ is upward CH edge with weight $w_{xy}$}{
+      $P[x]\leftarrow \min\{P[x],w_{xy}+\Pot(y)\}$\;
+    }
+  }
+  \Return{$P[x]$}\;
+}
+
+\caption{Algorithm to compute Potentials.}
+\label{algo:pot}
+
+\end{algorithm2e}
+
+
+The core contribution of our algorithm consist in the way $d_{\ell}(x,t)$ is efficiently computed.
+For this, we use a PHAST variant.
+In the first step, we explore all nodes backward-reachable from $t$ in the CH.
+We store the computed distances in the array $B$.
+We then execute the A* search.
+Potentials are computed recursively, on-the-fly, with memoization as depicted in Algorithm \ref{algo:pot}.
+If a potential is unknown, it is computed by recursively computing the potentials of all higher nodes in the CH backward search graph.
+These potentials are then increased by the distance in the CH backwards search graph.
+The potential of a node $x$ is the minimum over all these values and the distance found in the CH forward search.
+
+Our algorithm can be applied as described to the input graph.
+However, depending on the weights, the A* search can get stuck often in deadends.
+We therefore first coarsen the input graph using TopoCore and apply the above described algorithm to the core.
+In this setup, TopoCore handles all deadends. 
 
 \section{Introduction}
 \label{sec:intro}
