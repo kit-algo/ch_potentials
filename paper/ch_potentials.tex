@@ -71,14 +71,14 @@ A* is an extension to Dijkstra's algorithm.
 It uses a potential function to estimate the distance of each node to the target.
 By adding these estimates to the queue keys, the search is directed towards the target.
 The quality of this potential determines the performance of A*.
-We introduce a novel potential function which utilizes Contraction Hierarchies to efficiently calculate perfect potentials on road networks.
+We introduce a novel potential function which utilizes Contraction Hierarchies to efficiently calculate perfect potentials on road networks. % TODO not the function is novel
 Perfect potentials can be used to speed up shortest path queries for extended problem settings like for example frequently changing or time-dependent edge weights.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-Fast routing in huge street networks has seen a lot of research \cite{Survey}.
+Fast routing in huge street networks has seen a lot of research \cite{bdgmpsww-rptn-16}.
 For static, time- and user-invariant networks a lot of techniques exist.
 They work in two phases.
 The first phase is called preprocessing phase and is a slow index-construction.
@@ -86,12 +86,12 @@ In this phase the road graph and the edge weights are known.
 In the second phase, called query phase, minimum weight paths are computed.
 The query phase has access to the precomputed index and is very fast.
 
-One of the most successful ones are Contraction Hierarchies~(CH)~\cite{CH}.
+One of the most successful ones are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
 Contraction Hierarchies exploit inherent hierarchies in the shortest-path structure of road networks.
 Using CHs, Queries can be answered on the order of only a millisecond.
 However, CHs can not always be easily extended to more complicated problem settings.
 % TODO what problem settings
-While such extensions exist~\cite{CCH,KaTCH}, they often require substantial engineering effort.
+While such extensions exist~\cite{dsw-cch-15,bgsv-mtdtt-13}, they often require substantial engineering effort.
 
 On the other hand, goal directed speed-up techniques based on A* are usually slower but more flexible.
 The performance of these approaches depends on the quality of the potential functions used for the A* search.
@@ -132,25 +132,25 @@ This allows us to retain the flexibility of A* based approaches but use much mor
 % The second approach is Sabine's VLDB personalized routing.
 % Also TopoCore~\cite{?}.
 
-A plethora of of research exists in the area of efficient routing in road networks \cite{Survey}.
-Here, we are going to focus on the algorithms relevant to this work.
+A plethora of of research exists in the area of efficient routing in road networks \cite{bdgmpsww-rptn-16}.
+Here, we focus on the algorithms directly relevant to this work.
 
-At the core is the algorithm of Dijkstra~\cite{Dijkstra}.
+At the core is the algorithm of Dijkstra~\cite{d-ntpcg-59}.
 This algorithm explores the graph starting at a source node $s$ and visiting nodes ordered by increasing distance from $s$.
 For each node $v$, a tentative distance $d_s(v)$ is maintained, which is initially set to $\infty$.
 In each iteration the node $u$ with the smallest remaining distance $d_s(u)$ is extracted from a priority queue and settled.
 Each outgoing edge $(u,v)$ of $u$ is relaxed, that is to check if $d_s(u) + w(u,v) < d_s(v)$ and if so update the distance and the queue position of $v$ or insert $v$ into the queue.
 Once the target node $t$ is settled, the shortest path and distance between $s$ and $t$ is known.
 
-A*~\cite{?} extends Dijkstra's algorithm by changing the order in which nodes are visited such that nodes in the direction of $t$ are visited earlier.
+A*~\cite{hnr-afbhd-68} extends Dijkstra's algorithm by changing the order in which nodes are visited such that nodes in the direction of $t$ are visited earlier.
 This is achieved through a potential function $p$ which estimates for each node the distance to $t$.
 The priority queue is then ordered by $d_s(u) + p(u)$.
 
-ALT~\cite{ALT} is an A* based technique which precomputes shortest distances between a small set of landmark nodes and all other nodes during preprocessing.
+ALT~\cite{gh-cspas-05} is an A* based technique which precomputes shortest distances between a small set of landmark nodes and all other nodes during preprocessing.
 For the query, potentials are calculated using the triangle inequality for shortest distances and the precomputed distances.
 This achieves decent speed-ups and can be used in other problem settings but is not competitive to hierarchical approaches
 
-Contraction Hierarchies~\cite{CH} are a popular hierarchical speed-up technique.
+Contraction Hierarchies~\cite{gssv-erlrn-12} are a popular hierarchical speed-up technique.
 During preprocessing, all nodes are ranked by some measure of importance.
 Nodes which lie on many shortest paths (for example highway nodes) are important.
 Then, nodes are contracted iteratively by increasing rank.
@@ -158,7 +158,7 @@ To contract a node $v$ means removing it form the graph, but preserving all shor
 This is achieved by inserting shortcut edges between the neighbors of $v$ which have the length of the path over $v$, if necessary.
 The query is a bidirectional Dijkstra starting from $s$ and $t$ where only edges to nodes with higher rank are relaxed.
 
-PHAST~\cite{?} is an algorithm for one-to-many queries based on Contraction Hierarchies.
+PHAST~\cite{dgnw-phast-13} is an algorithm for one-to-many queries based on Contraction Hierarchies.
 The preprocessing phase remains the same.
 For the query, the forward search $s$ also remains the same.
 Instead of running a backward upward search from all nodes, PHAST now relaxes all edges $(u,v)$ in the backward graph where $rank(u) > rank(v)$ ordered descending by $rank(v)$.
