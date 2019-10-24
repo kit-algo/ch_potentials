@@ -29,7 +29,7 @@
 \ccsdesc[500]{Theory of computation~Shortest paths}
 % \ccsdesc[500]{General and reference}%TODO mandatory: Please choose ACM 2012 classifications from https://dl.acm.org/ccs/ccs_flat.cfm
 
-\keywords{Dummy keyword}%TODO mandatory; please add comma-separated list of keywords
+\keywords{Route planning, Contraction Hierarchies, A*}%TODO mandatory; please add comma-separated list of keywords
 
 % \category{}%optional, e.g. invited paper
 
@@ -67,12 +67,15 @@
 \maketitle
 
 \begin{abstract}
+Quickly determining shortest paths in networks is an important ingredient for many routing applications.
+While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical problems.
 A* is an extension to Dijkstra's algorithm.
 It uses a potential function to estimate the distance of each node to the target.
 By adding these estimates to the queue keys, the search is directed towards the target.
 The quality of this potential determines the performance of A*.
-We introduce a novel potential function which utilizes Contraction Hierarchies to efficiently calculate perfect potentials on road networks. % TODO not the function is novel
-Perfect potentials can be used to speed up shortest path queries for extended problem settings like for example frequently changing or time-dependent edge weights.
+We introduce a novel way to efficiently calculate potentials through Contraction Hierarchies.
+These potentials are perfect with respect to a lower bound graph.
+They can be used to speed up shortest path queries for extended problem settings like frequently changing or time-dependent edge weights.
 \end{abstract}
 
 \section{Introduction}
@@ -136,33 +139,40 @@ A plethora of of research exists in the area of efficient routing in road networ
 Here, we focus on the algorithms directly relevant to this work.
 
 At the core is the algorithm of Dijkstra~\cite{d-ntpcg-59}.
-This algorithm explores the graph starting at a source node $s$ and visiting nodes ordered by increasing distance from $s$.
+This algorithm explores the graph visiting nodes ordered by increasing distance from a source node $s$.
 For each node $v$, a tentative distance $d_s(v)$ is maintained, which is initially set to $\infty$.
 In each iteration the node $u$ with the smallest remaining distance $d_s(u)$ is extracted from a priority queue and settled.
-Each outgoing edge $(u,v)$ of $u$ is relaxed, that is to check if $d_s(u) + w(u,v) < d_s(v)$ and if so update the distance and the queue position of $v$ or insert $v$ into the queue.
+For outgoing edge $(u,v)$ of $u$ the algorithms checks if $d_s(u) + w(u,v) < d_s(v)$.
+If so, the distance and the queue position of $v$ is updated.
+This process is denoted as edge relaxation.
 Once the target node $t$ is settled, the shortest path and distance between $s$ and $t$ is known.
 
-A*~\cite{hnr-afbhd-68} extends Dijkstra's algorithm by changing the order in which nodes are visited such that nodes in the direction of $t$ are visited earlier.
-This is achieved through a potential function $p$ which estimates for each node the distance to $t$.
-The priority queue is then ordered by $d_s(u) + p(u)$.
+A*~\cite{hnr-afbhd-68} extends Dijkstra's algorithm by changing the order in which nodes are visited.
+Nodes in the direction of $t$ should be visited earlier.
+This is achieved through a potential function $p$ estimating the distance to $t$.
+The priority queue is ordered by $d_s(u) + p(u)$.
 
 ALT~\cite{gh-cspas-05} is an A* based technique which precomputes shortest distances between a small set of landmark nodes and all other nodes during preprocessing.
 For the query, potentials are calculated using the triangle inequality for shortest distances and the precomputed distances.
-This achieves decent speed-ups and can be used in other problem settings but is not competitive to hierarchical approaches
+This achieves decent speed-ups and can be used in other problem settings.
+However, the performance is not competitive to hierarchical approaches.
 
 Contraction Hierarchies~\cite{gssv-erlrn-12} are a popular hierarchical speed-up technique.
 During preprocessing, all nodes are ranked by some measure of importance.
-Nodes which lie on many shortest paths (for example highway nodes) are important.
+Nodes which lie on many shortest paths are important.
 Then, nodes are contracted iteratively by increasing rank.
-To contract a node $v$ means removing it form the graph, but preserving all shortest distances among all other nodes.
-This is achieved by inserting shortcut edges between the neighbors of $v$ which have the length of the path over $v$, if necessary.
-The query is a bidirectional Dijkstra starting from $s$ and $t$ where only edges to nodes with higher rank are relaxed.
+To contract a node $v$ means removing it form the graph, but preserving shortest distances among all other nodes.
+This is achieved by inserting shortcut edges between the neighbors of $v$ which have the length of the path over $v$.
+The query is a bidirectional Dijkstra starting from $s$ and $t$ where only edges to higher ranked nodes are relaxed.
 
 PHAST~\cite{dgnw-phast-13} is an algorithm for one-to-many queries based on Contraction Hierarchies.
 The preprocessing phase remains the same.
-For the query, the forward search $s$ also remains the same.
-Instead of running a backward upward search from all nodes, PHAST now relaxes all edges $(u,v)$ in the backward graph where $rank(u) > rank(v)$ ordered descending by $rank(v)$.
-To achieve good running times, it is important that nodes and edges are ordered such that relaxing the downward edges is just a linear sweep over the edge array.
+The query begins with a forward upward search from $s$.
+The backward search now needs to determine distances to \emph{all} nodes.
+To achieve this, PHAST relaxes all edges $(u,v)$ in the backward graph where $rank(u) > rank(v)$ ordered descending by $rank(v)$.
+Having processed all edges, distances to all nodes are known.
+PHAST achieves good running times by heavily exploiting memory locality:
+Nodes and edges are reordered such that relaxing all downward edges is just a linear sweep over the edge array.
 
 % \section{Preliminaries}
 % \label{sec:prelim}
@@ -171,10 +181,17 @@ To achieve good running times, it is important that nodes and edges are ordered 
 \label{sec:algo}
 
 Our new algorithm is at its core a combination of A* and PHAST.
+We take the preprocessing from CHs and PHAST and apply it to a lower bound graph.
+The query is an A* variant.
+It uses exact distances on the lower bound graph as potentials and obtains these through a lazy PHAST-like approach.
 % For an additional performance, we further combine it with TopoCore.
+
 
 The input of the preprocessing phase is a graph and lower-bound weights $w_{\ell}$.
 Denote by $d_{\ell}(x,y)$ the minimum weight $xy$-path distance with respect to $w_{\ell}$.
+How exactly this lower bound graph is obtained depends on the problem setting.
+In the case of routing with life traffic it may be the free flow travel time.
+In the case of time-dependent routing it may be the lower bound of each travel time function.
 The preprocessing phase consists of computing a CH of the graph with lower-bound weights.
 
 The input to the query phase is a source $s$ and a target $t$ node and weights $w_u$.
@@ -204,9 +221,9 @@ The distance $d_{\ell}(x,t)$ from a node $x$ to $t$ is used as potential.
 
 \end{algorithm2e}
 
-The core contribution of our algorithm consist in the way $d_{\ell}(x,t)$ is efficiently computed.
+Our core contribution consist in the way $d_{\ell}(x,t)$ is efficiently computed.
 For this, we use a PHAST variant.
-In the first step, we explore all nodes backward-reachable from $t$ in the CH.
+Before starting the A* search, we explore all nodes backward-reachable from $t$ in the CH.
 We store the computed distances in the array $B$.
 We then execute the A* search.
 Potentials are computed recursively, on-the-fly, with memoization as depicted in Algorithm \ref{algo:pot}.
@@ -231,7 +248,7 @@ The potential of a node $x$ is the minimum over all these values and the distanc
 \section{Conclusion}
 \label{sec:conclusion}
 
-We introduce a novel way to compute potentials for the A* algorithm.
+We introduce a novel way to compute potentials for A*.
 The potentials are calculated utilizing a CH on a lower bound graph and perfect with regards to that lower bound graph.
 With these potentials we can speed up A* search for extended route planning problems like route planning with live traffic, time-dependent travel time predictions or user preferences.
 
