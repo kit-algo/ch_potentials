@@ -68,12 +68,12 @@
 \maketitle
 
 \begin{abstract}
-Efficiently computing flexible and optimal routes in continental-sized road networks is a thought challenge.
+Efficiently computing flexible and optimal routes in continental-sized road networks is a tough challenge.
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical applications.
 A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, or Artificial Intelligence.
 However, A*'s performance depends on the availability of a good potential, also called heuristic, function.
 Computing a good potential is a challenge of its own.
-In the past decade, many hierachical speedup techniques have therefore been developped.
+To avoid the need for a potential, many hierachical speedup techniques have been developped.
 They achieve speed and optimality but sacrifize flexibility.
 In this paper, we use hierarchical techniques to compute potential functions.
 With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining optimality.
@@ -126,11 +126,10 @@ Live-traffic and historic traffic patterns are examples of how the travel time c
 Another example are road blockages.
 These are usually modelled by setting travel times to infinity.
 Some blockage types, such as accidents, are similar to live traffic.
-Other blockages such as reversible one-ways or time-dependent turn-restrictions or seasonal closures are more similar to historic traffic patterns.
+Other blockages such as reversible one-ways, time-dependent turn-restrictions, or seasonal closures are more similar to historic traffic patterns.
 
 Flexibility is also necessary to account for driver preferences.
-Some drivers want to avoid highways whereas other drivers want to avoid city centers.
-Even other drivers are willing to make a detour to avoid certain high crime areas.
+For example, common options in navigation devices include avoiding highways or tunnels.
 These requirements are usally modelled by modifying the edge weights and are highly depend on the driver.
 Sometimes they even depend on his current mood and might change while driving.
 
@@ -139,47 +138,37 @@ For example, trucks are not allowed in some areas depending on the time of the d
 Some truck carry hazardous materials and are therefore not allowed in some areas because of environmental protection laws.
 Once the truck has delivered his goods, he may again pass the area.
 
-The reasons why flexibility is a necessary property of a routing engine are sheer endless.
-However, we need to make some assumptions to be able to design algorithms.
-We describe these in the next section.
+\section{Problem Setting}
 
-\section{Formalization}
+As detailed in the previous section, the reasons why flexibility is a necessary property of a routing engine are sheer endless.
+However, a formal problem specification that encompasses all these options is complex and well beyond the scope of this paper.
+For an example of such a formulation, we refer to \cite{sea2020paper} which covers a truck-specific application.
+The algorithm presented in \cite{sea2020paper} uses a preliminary version of CH-Potentials. 
+For simplicity, we limit our exposition to the classical shortest path formulation.
+To support algorithm extensions, we avoid two operations that are adverse to generalization.
+These are: 
+(1) traversing an input edge in backward direction, and
+(2) combining input weights.
+Backward traversal is problematic as a weight can depend on the moment that an edge is entered, which is unknown in a backward search.
+Combining input weights can be difficult, if the input weights are more complex objects than scalar values.
+For example, when considering historic traffic patterns, the input weights are usually functions \cite{citation needed}.
+
+Our algorithm has one major restriction, it requires the presence of an inflexible scalar weight lower bound for every input edge.
+The performance of our algorithm depends on this lower bound being close to the actual weight.
+Using the trivial lower bound of zero everywhere, CH-potentials degenerate to an engineered variant of Dijkstra's algorithm.
 
 Throughout this paper, we assume that we are given a directed graph $G$ with nodes $V$ and edges $E$.
-Edge weights are given by a function $w_q:\mathbb{R}^+ \times E\rightarrow \mathbb{R}^+$.
-The first parameter to $w_q$ are the costs of the path when an edge is reached.
-This is necessary to support time-dependent effects such as historic traffic patterns or time-dependent restriction.
-We refer to the weights as \emph{query edge weights}.
-Troughout this paper, we assume that the weights fulfill the FIFO property.
-This is necessary to prevent the problem setting from becoming NP-hard \cite{Veit}.
-It states that $w_q(\tau,e)+h\le w_q(\tau+h,e)$ for all $\tau$, $h\in \mathbb{R}^+$, and $e\in E$.
-Informally, it states that waiting at a node is never beneficial.
-We further assume that \emph{lower bound edge weights} $w_\ell : E\rightarrow \mathbb{R}^+$ are available such that $w_\ell(e)\le w_q(\tau,e)$ for all $e$ and $\tau$.
+Every edge has a lower bound weight $w_\ell:E\rightarrow \mathbb{R}^+$ and a query weight $w_q:E\rightarrow \mathbb{R}^+$.
+It must hold that $0\le w_\ell(e)\le w_q(e)$.
+We are further given a source node $s$ and a target node $t$.
 
-A path is sequence of connected edges from a \emph{source node} $s$ to a \emph{target node} $t$.
-Paths have cost that depends on the source costs $c\in \mathbb{R}^+$.
-We define the costs $C(P)$ of a path $e_1,e_2\ldots$ recursively as $C(e_1)=w_q(c,e_1)$ and $C(e_1\ldots c_k)=C(e_1\ldots c_{k-1})+w_q(C(e_1\ldots c_{k-1}),e_k)$.
-If the weights of an edge are independent of the other weights along the path and the source costs are zero, then the path costs boil down to the classical $C(P) = w_q(e_1)+w_q(e_2)+\ldots$ expression.
 
-Route planning algorithms usually operate in two or more phases.
-The exact details vary among papers as different problem formulations are considered.
-In this section, we describe the setup used in our work.
-
-We consider two phases: a \emph{preprocessing} and a \emph{query} phase.
-In a slow, offline preprocessing phase, $G$ and $w_\ell$ are given.
-$s$, $t$, $c$, and $w_q$ are unknown.
-In this phase, auxilary data is computed which is used in a second, fast query phase.
-
-The input to the \emph{query phase} is a $s$, $t$, $c$, and $w_q$.
-Further, the input to the preprocessing phase and the computed auxilary data is also available to the query phase.
-The output of the query phase is a minimum cost path.
-
-The idea is that the preprocessing phase is performed once per map release.
-The computed auxilariy data is shared among many drivers and vehicles.
-
-The query phase is executed each time a driver requests a route.
-It accounts for the current road situation and the current driver preferences.
-In theory, it is possible that a driver changes his perferences for every query.
+Our algorithm uses two phases.
+The first is a slow \emph{preprocessing phase}, where only $G$ and $w_\ell$ are known.
+It computes auxilary data.
+The second phase is the \emph{query phase}.
+It is given the auxilary data and $G$, $w_\ell$, $w_q$, $s$, and $t$.
+The output of the query phase, is a path $e_1,e_2\ldots e_k$ such that $\sum w_q(e_i)$ is minimized.
 
 \section{Related Work}
 
@@ -210,7 +199,7 @@ However, the performance is not competitive to hierarchical approaches.
 A* star is a well-known extension to Dijkstra's algorithm.
 It uses a potential function $\pi:V\rightarrow \mathbb{R}^+$.
 The potential is often called heuristic.
-A* is optimal, if the potential $\pi(v)$ is consistent \cite{Pearl, Judea (1984). Heuristics: Intelligent Search Strategies for Computer Problem Solving. Addison-Wesley. ISBN 0-201-05594-5.}, which essentially mean that $\pi(v)$ is a lower bound of the distance from $v$ to $t$.
+A* is optimal, if the potential $\pi(v)$ is consistent \cite{Pearl, Judea (1984). Heuristics: Intelligent Search Strategies for Computer Problem Solving. Addison-Wesley. ISBN 0-201-05594-5.}, which essentially means that $\pi(v)$ is a lower bound of the distance from $v$ to $t$.
 
 The best possible potential that can be derived from the auxilary data is the minimum path distance with respect to $w_\ell$.
 Every better, consistent potential requires knowledge of the query weights $w_q$, which is unavailable during preprocessing.
@@ -258,13 +247,13 @@ Similarily, the first node is the mid node of a \emph{down path}.
 Every up and down path is an up-down path.
 
 In the preprocessing phase, a CH adds \emph{shortcut} edges to the input graph $G$ to obtain $G^+$.
-The trick is that in $G^+$ for pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path.
-We may therefore restrict our search to up-down paths.
+The trick is that in $G^+$ for pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path with the same length as a shortest path in $G$.
+We may therefore restrict our search to up-down paths in $G^+$.
 This search is performed using a bidirectional search.
 The forward search starts from $s$ and only follows up-edges.
 Similarily, the backward search starts at $t$ and only follows down-edges in reversed direction.
 The two searches meet in the mid node.
-Pseudo-code for the backward search is presented in Listing~\ref{algo:ch-backward}.
+Pseudo-code for the backward search is presented in Algorithm~\ref{algo:ch-backward}.
 The forward search works analogously.
 
 A CH query is fast, if the number of nodes reachable via only up- or down-nodes is small.
@@ -299,15 +288,15 @@ First the preprocessing phase is executed analogously to the original CH.
 The query phase is divided into two steps.
 The first step is analogously to the CH query:
 From the target node $t$, all reachable nodes via reversed down-edges are explored.
-Listing~\ref{algo:ch-backward} shows this first step.
+Algorithm~\ref{algo:ch-backward} shows this first step.
 The second step iterates over all CH level from top to bottom.
 In each iteration, all up-edges starting within the current level are followed in reverse.
 After all level are processed, the distances from all nodes towards $t$ is computed.
-Phast is slightly faster than Dijkstra's algorithm on road graphs because it is a better fit for modern processor architecutres.
-Phast's main advantage is that is can be more easily parallelized than Dijkstra's algorithm.
+Phast is slightly faster than Dijkstra's algorithm on road graphs because it is a better fit for modern processor architectures.
+Phast's main advantage is that is easily be parallelized.
 However, we will not consider parallelization in this paper.
 We refer to \cite{Phast} for an in-depth experimental performance analysis.
-Pseudo-code is provided in Listing~\ref{algo:phast}.
+Pseudo-code is provided in Algorithm~\ref{algo:phast}.
 
 Using Phast, we can compute optimal A* potentials in another way.
 In the query phase, we first use Phast to compute the distances from every node to $t$ with respect to the query edge weights $w_\ell$ and store the result in an array $H$.
@@ -315,7 +304,7 @@ In the next step, we run $A^*$ and implement the potential function as lookup in
 
 This setup also works.
 The potential evaluation and by extension the $A^*$ search is indeed fast.
-However, Phast step before the search is comparatively expensive.
+However, the Phast step before the search is comparatively expensive.
 The reason for this is that the distance from all nodes towards $t$ are computed.
 Ideally, we only want to compute the distances from the nodes explored in the $A^*$ search towards $t$.
 
@@ -341,11 +330,11 @@ Ideally, we only want to compute the distances from the nodes explored in the $A
 \label{algo:pot}
 \end{algorithm2e}
 
-Fortunately, the Phast computation can be done lazily using memoization as depicted in Listing~\ref{algo:pot}.
+Fortunately, the Phast computation can be done lazily using memoization as depicted in Algorithm~\ref{algo:pot}.
 
 In a first step, we run the backward CH search from $t$ to obtain an array $B$.
 $B[v]$ is the minimum down $vt$-path distance or $+\infty$, if there is no such path.
-$B$ is computed as shown in Listing~\ref{algo:ch-backward}.
+$B$ is computed as shown in Algorithm~\ref{algo:ch-backward}.
 
 Suppose, we need to compute the potential $\pi(v)$ of a node $v$.
 We do this by first recursively computing the potentials $\pi(u)$ of all nodes for which an up-edge $(v,u)$ exists.
@@ -359,10 +348,38 @@ However, we can still improve the performance.
 A quick investigation reveals, that most of the running time is spent in the potential evaluation.
 We therefore investigate methods to evaluate fewer potentials.
 
+\section{Avoid Placing Nodes in The Queue}
+
+We observe, that a potential evaluation is only necessary for nodes that are placed into the queue.
+We therefore avoid placing nodes into the queue.
+
+In this section, we slightly modify how A* works internally.
+Our modified version maintains the following entities:
+(1) a tentative distance $D$ for every node,
+(2) a queue of nodes $Q$ weighted by $D[v]+\pi(v)$.
+
+Initially, $Q$ only contains $s$.
+$D$ is $+\infty$ everywhere except for $D[s]=0$.
+
+Similarily to the basic A* algorithm, our algorithm continously removes nodes from the queue $Q$.
+Denote by $x$ such a node.
+Contrary to A*, our algorithm does not only consider the immediate outgoing edges of $x$.
+Instead, a queue-less backtracking search at $x$ is started.
+For every node $y$ visited in the backtracking search, the following steps are performed:
+
+If $D[y]$ is less than the distance along the path of the backtracking search, the search is pruned.
+Otherwise, $D[y]$ is reduced.
+
+If $y$ is already in $Q$, then the backtracking search is pruned and the key of $y$ is decreased, if appropriate.
+Otherwise, we do some magic and sometimes continue the search and sometimes prune. 
+
+TODO: description incomplete
+
+
 \section{Largest Biconnected Component}
 
 A lot of nodes in road networks lead to dead-ends.
-Unless the source or target is is in a dead-end, it is uncessary to explore these nodes.
+Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
 We employ an idea from \cite{TOPOCORE} to avoid these nodes entirely.
 This reduces the number of explored nodes and thus fewer potentials are evaluated.
 
@@ -370,16 +387,19 @@ In the preprocessing phase, before the CH is created, we compute the subgraph $G
 We do this using Tarjan's algorithm \cite{Tarjan's algorithm}.
 For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
 For nodes in the core, $a_v=v$.
+We exploit that all attachment nodes are single node separators and the problem can be decomposed along them.
+The basic CH-potential preprocessing step is only executed for $G_C$.
 
-The query phase is divided into three steps.
-In the first step, we search a path from $s$ to $a_s$ using Dijkstra's algorithm restricted to $s$'s biconnected component.
-The second step, consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
+The query phase is divided into four steps.
+In the first step, we use Dijkstra's algorithm to explore the component that contains $s$ until $a_s$ is reached.
+If this search finds $t$, then $s$ and $t$ are part of the same component.
+An optimal path was found and therefore the algorithm stops early.
+Otherwise, in the second step starts.
+It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
 
-The resulting algorithm is an improved CH-potential variant that visits fewer nodes and thus evaluates fewer potentials.
-An added advantage is that the A* search no longer explores unnecessary dead-ends.
-The resulting algorithm is fast, but can still be improved.
+TODO: Everything below is old.
 
 \section{Skipping Degree Two Chains}
 
