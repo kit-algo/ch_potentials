@@ -194,7 +194,7 @@ For the query, potentials are calculated using the triangle inequality for short
 This achieves decent speed-ups and can be used in other problem settings.
 However, the performance is not competitive to hierarchical approaches.
 
-\section{A*}
+\section{Goal-Directed Search using A*}
 
 A* star is a well-known extension to Dijkstra's algorithm.
 It uses a potential function $\pi:V\rightarrow \mathbb{R}^+$.
@@ -206,7 +206,7 @@ Every better, consistent potential requires knowledge of the query weights $w_q$
 Our technique allows to compute these best possible potentials.
 Within this regard, CH-potentials are \emph{optimal A* potentials}.
 
-\section{CH}
+\section{Contraction Hierarchy (CH)}
 
 \begin{algorithm2e}
 \KwData{$B[x]$ tentative distance from $x$ to $t$, initially $+\infty$}
@@ -267,7 +267,7 @@ This works, however, while one CH query is fast, answering one for every node in
 Fortunatly, we can do better.
 However, for this we need another component called Phast \cite{Phast}.
 
-\section{Phast}
+\section{Potentials using PHAST}
 
 \begin{algorithm2e}
 \KwData{$P[x]$ tentative distance from $x$ to $t$}
@@ -398,52 +398,6 @@ Otherwise, in the second step starts.
 It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
-
-TODO: Everything below is old.
-
-\section{Skipping Degree Two Chains}
-
-\begin{algorithm2e}
-\KwData{$D[x]$ tentative distance from $s$ to $x$, initially $+\infty$}
-\KwData{$Q$ minimum priority queue of nodes}
-$D[a_s]\leftarrow 0$\;
-Add $a_s$ to $Q$ with weight $\pi(a_s)$\;
-\While{not $Q$ empty}{
-  $x\leftarrow$ pop node from $Q$\;
-  \If{$x = a_t$}{finished\;}
-  \For{all edges $(x,y)$ in the core graph $G_C$}{
-    $\alpha\leftarrow x$;
-    $\beta\leftarrow y$;
-    $w\leftarrow w_q(\alpha,\beta)$\;
-    \While{undirected degree of $\beta$ is 2 and $z\neq a_t$}{
-      $\gamma\leftarrow$ neighbor of $\beta$ in $G_C$ different from $\alpha$\;
-      $w\leftarrow w+w_q(\beta,\gamma)$;
-      $\alpha\leftarrow \beta$;
-      $\beta\leftarrow \gamma$\;
-    }
-    \If{$D[x]+w < D[\beta]$}{
-        $D[\beta]\leftarrow D[x]+w$\;
-    	Add $\beta$ to Q with weight $D[\beta]+\pi(\beta)$\;
-    }
-  }
-}
-\caption{A* star search in the core skipping degree two nodes}
-\label{algo:skip-a-star}
-\end{algorithm2e}
-
-The core graph $G_C$ contains a lot of degree two nodes \cite{TOPOCORE}.
-At such nodes no directional decision is made.
-It is therefore unecessary to evaluate the potentials at these nodes.
-
-We exploit this intuition by modifying the A* search.
-When exploring the neighbors $y$ of node $x$, we follow chains of degree two nodes until a node $\beta$ with degree at least three is found.
-Instead of $y$, we add $\beta$ to the queue.
-No queue operations nor potential evaluations are required for the intermediate degree two nodes.
-
-\section{Skipping Trees}
-
-TODO @ Tim, bringt das wirklich was?
-
 
 \section{Conclusion}
 \label{sec:conclusion}
