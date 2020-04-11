@@ -360,7 +360,7 @@ However, we can still improve the performance.
 A quick investigation reveals, that most of the running time is spent in the potential evaluation.
 We therefore investigate methods to evaluate fewer potentials.
 
-\section{Avoiding Potential Evaluations}
+\section{Avoiding Potential Function Evaluations}
 
 We observe, that a potential evaluation is always paired with a queue push operation.
 By avoiding push operations we can therefore also avoid potential evaluations.
@@ -390,7 +390,7 @@ This implies a potential evaluation.
 If the node is already in the queue, a decrease key operation is executed.
 One can view this modifed A* algorithm as a lazy version of \cite{topocore} where the set of virtually contracted nodes is computed at query time.
 
-\subsection{Largest Biconnected Component}
+\subsection{Avoid Dead-Ends using Largest Biconnected Component}
 
 A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
@@ -416,14 +416,14 @@ The final path is the concatenation of all three path parts.
 \section{Experiments}
 
 \begin{itemize}
-\item Avoid nothing running times, i.e., what is if $w_q = q_\ell$?
-\item Multiply all weights by $\alpha$ for $\alpha$ in 1.1, 1.5, 2, 3
+\item Avoid nothing running times, i.e., what is if $w_q = w_\ell$?
+\item Multiply all weights by $\alpha$, i.e., $w_q = \alpha w_\ell$ for $\alpha$ in 1.1, 1.5, 2, 3
 \item Avoid highway
 \item Avoid tunnel
 \item Avoid highway + tunnel
 \item MapBox Live Traffic
 \item Ptv-TD traffic? Achtung: Das Fass würde ich nicht aufmachen. Am Ende will ein Reviewer, dass wir avoid highway mit TD kombinieren... das ist NP-schwer
-\item Running times if OSM degree 2 nodes are not extracted!
+\item Running times if OSM degree 2 nodes are not extracted! Das einzige Argument pro Erhalten von Deg 2 das ich bisher kenne ist MapBox Live Traffic matchen.
 \end{itemize}
 
 
