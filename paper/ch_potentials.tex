@@ -84,18 +84,30 @@ With this approach, we combine some of the hierarchical speed with the flexibili
 Route planning in street networks of continental scale is a well-researched topic with many applications~\cite{bdgmpsww-rptn-16}.
 It is usually formalized as a variant of the classical shortest path problem in weighted graphs.
 Efficiently computing flexible and optimal routes is a thought challenge.
-Optimal means that the computed path always has minimum cost.
-Being able to change the edge weights is flexibility.
+Optimal means that the computed path always has minimum weight.
 Efficiently means that the path computation is fast.
+Being able to change the edge weights between path computations is flexibility.
 
 Dijkstra's algorithm \cite{?} achieves flexiblity and optimality but unfortunately rrequires several seconds to compute paths across continental road networks, which is too slow for many applications.
 A classic speedup approach is the well-known A* algorithm \cite{hnr-afbhd-68}.
 While flexible, A*'s performance crucially depends on the quality of the potential, also called heuristic, function.
-Finding such a function is difficult.
+Finding such a function that can be computed efficiently is difficult.
 A lot of research of the last decade has therefore focused on mostly hierarchical approaches \cite{CH,CCH,CRP,HIGHWAYHIERACHIES,MLD} which do not require such a function.
-A popular hierachical algorithm is Contraction Hierarchy (CH) \cite{?} and its Live-Traffic capable Customizable CH (CCH) \cite{?} extension.
-While undoubtedly fast, hierarchical approaches sacrifice flexibility to obtain speed.
+A popular hierachical algorithm is Contraction Hierarchy (CH) \cite{geisberger}.
+There is a lot of work that extends CH to handle more complex settings.
+For example, in \cite{sabine, kobitzsch} multi-criteria optimization is studied.
+In \cite{CCH}, CH is modified to support Live-Traffic.
+Historic traffic patterns are combined with CH in \cite{TD-CCH-preprint, TDCH, TDCRP}.
+Specialized variants for electric vehicle routing are developped in \cite{moritz baum, charge}.
+While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
+Further, in every setting the flexibility available at query time is fairly limited and usually encompasses only one very specific setting.
+
+While undoubtedly fast, hierarchical approaches tend to sacrifice flexibility to obtain speed.
 In this paper, we explore CH-Potentials, a novel combination of A* and the hierachical techniques CH and CCH.
+We are not the first to combine hierarchical approaches and A* \cite{core-alt, real, charge, bdsssw-chgds-08}.
+However, past work mostly uses A* to accelerate hierarchical approaches and sacrifzies A*'s felxibility in the process.
+Our primary algorithm design objective is to retain A*'s flexibility.
+
 Our algorithm is built upon ideas from Phast \cite{?}, a CH-extension.
 The novel idea is to compute optimal A* potentials lazily.
 The hierarchical approach is applied to the lower bound graph with respect to the edge costs.
@@ -143,10 +155,10 @@ Once the truck has delivered his goods, he may again pass the area.
 As detailed in the previous section, the reasons why flexibility is a necessary property of a routing engine are sheer endless.
 However, a formal problem specification that encompasses all these options is complex and well beyond the scope of this paper.
 For an example of such a formulation, we refer to \cite{sea2020paper} which covers a truck-specific application.
-The algorithm presented in \cite{sea2020paper} uses a preliminary version of CH-Potentials. 
+The algorithm presented in \cite{sea2020paper} uses a preliminary version of CH-Potentials.
 For simplicity, we limit our exposition to the classical shortest path formulation.
 To support algorithm extensions, we avoid two operations that are adverse to generalization.
-These are: 
+These are:
 (1) traversing an input edge in backward direction, and
 (2) combining input weights.
 Backward traversal is problematic as a weight can depend on the moment that an edge is entered, which is unknown in a backward search.
@@ -350,8 +362,8 @@ We therefore investigate methods to evaluate fewer potentials.
 
 \section{Avoid Placing Nodes in The Queue}
 
-We observe, that a potential evaluation is only necessary for nodes that are placed into the queue.
-We therefore avoid placing nodes into the queue.
+We observe, that a potential evaluation is always paired with a queue push operation.
+By avoiding push operations we can therefore also avoid potential evaluations.
 
 In this section, we slightly modify how A* works internally.
 Our modified version maintains the following entities:
@@ -362,21 +374,23 @@ Initially, $Q$ only contains $s$.
 $D$ is $+\infty$ everywhere except for $D[s]=0$.
 
 Similarily to the basic A* algorithm, our algorithm continously removes nodes from the queue $Q$.
-Denote by $x$ such a node.
+Denote by $x$ a node removed with the queue.
 Contrary to A*, our algorithm does not only consider the immediate outgoing edges of $x$.
-Instead, a queue-less backtracking search at $x$ is started.
-For every node $y$ visited in the backtracking search, the following steps are performed:
+Instead, a limited, queue-less backtracking search at $x$ is started.
+The idea is to process local tree-like areas of the graph without queue interaction.
+We exploit that backtracking is fast on trees.
 
-If $D[y]$ is less than the distance along the path of the backtracking search, the search is pruned.
-Otherwise, $D[y]$ is reduced.
+The backtracking search continues until either the tentative distance at a node is lower than the length of the path found by the search or a stop node is encountered.
+Every node that was already pushed is a stop node.
+Nodes with degree 4 or more is a stop node (TODO: @Tim out-degree ?).
+Every degree 3 node that is reached via another degree 3 node from the backtracking search start is a stop node.
+If the search was stopped because of the tentative distance, then it is aborted.
+If the search was stopped because a stop node was encountered, the stop node is added to the queue.
+This implies a potential evaluation.
+If the node is already in the queue, a decrease key operation is executed.
+One can view this modifed A* algorithm as a lazy version of \cite{topocore} where the set of virtually contracted nodes is computed at query time.
 
-If $y$ is already in $Q$, then the backtracking search is pruned and the key of $y$ is decreased, if appropriate.
-Otherwise, we do some magic and sometimes continue the search and sometimes prune. 
-
-TODO: description incomplete
-
-
-\section{Largest Biconnected Component}
+\subsection{Largest Biconnected Component}
 
 A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
@@ -398,6 +412,20 @@ Otherwise, in the second step starts.
 It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
+
+\section{Experiments}
+
+\begin{itemize}
+\item Avoid nothing running times, i.e., what is if $w_q = q_\ell$?
+\item Multiply all weights by $\alpha$ for $\alpha$ in 1.1, 1.5, 2, 3
+\item Avoid highway
+\item Avoid tunnel
+\item Avoid highway + tunnel
+\item MapBox Live Traffic
+\item Ptv-TD traffic? Achtung: Das Fass würde ich nicht aufmachen. Am Ende will ein Reviewer, dass wir avoid highway mit TD kombinieren... das ist NP-schwer
+\item Running times if OSM degree 2 nodes are not extracted!
+\end{itemize}
+
 
 \section{Conclusion}
 \label{sec:conclusion}
