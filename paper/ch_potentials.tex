@@ -174,7 +174,6 @@ Every edge has a lower bound weight $w_\ell:E\rightarrow \mathbb{R}^+$ and a que
 It must hold that $0\le w_\ell(e)\le w_q(e)$.
 We are further given a source node $s$ and a target node $t$.
 
-
 Our algorithm uses two phases.
 The first is a slow \emph{preprocessing phase}, where only $G$ and $w_\ell$ are known.
 It computes auxilary data.
@@ -360,58 +359,42 @@ However, we can still improve the performance.
 A quick investigation reveals, that most of the running time is spent in the potential evaluation.
 We therefore investigate methods to evaluate fewer potentials.
 
-\section{Avoiding Potential Function Evaluations}
+\section{Avoiding Potential Function Evaluations at Degree Two Nodes}
 
 We observe, that a potential evaluation is always paired with a queue push operation.
-By avoiding push operations we can therefore also avoid potential evaluations.
-
+By avoiding push operations, we can therefore also avoid potential evaluations.
 In this section, we slightly modify how A* works internally.
-Our modified version maintains the following entities:
-(1) a tentative distance $D$ for every node,
-(2) a queue of nodes $Q$ weighted by $D[v]+\pi(v)$.
+Our objective is process chains of low degree nodes sequentially without putting them into the queue.
 
-Initially, $Q$ only contains $s$.
-$D$ is $+\infty$ everywhere except for $D[s]=0$.
+We denote the tentative distance array used in the A* algorithm by $D$.
+When removing a node $v_1$ from the A* queue, we iterate over all outgoing edges $(v_1,v_2)$ of $v_1$ and process the chain started by $(v_1, v_2)$.
+If $D[v_2] < D[v_1]+w_q(v_1,v_2)$, our algorithm stops processing the chain and continues with the next outgoing edge of $v_1$.
+Otherwise, $D[v_2]$ is set to $D[v_1]+w_q(v_1,v_2)$ and processing the chain continues.
+If $v_2$ has only one outgoing edge that leads to a node $v_3$ different from $v_1$, we process $v_3$ analogously.
+This is repeated until a $v_k$ is reached such that either $D[v_{k-1}]+w_q(v_{k-1},v_k)\ge D[v_k]$ or $v_k$ has more than one successor different from $v_{k-1}$.
+Our algorithm continues removing nodes from the queue until a node $x$ is removed for which $D[x]\ge D[t]$.
 
-Similarily to the basic A* algorithm, our algorithm continously removes nodes from the queue $Q$.
-Denote by $x$ a node removed with the queue.
-Contrary to A*, our algorithm does not only consider the immediate outgoing edges of $x$.
-Instead, a limited, queue-less backtracking search at $x$ is started.
-The idea is to process local tree-like areas of the graph without queue interaction.
-We exploit that backtracking is fast on trees.
+Our optimization can be described as node contraction performed lazily at query time.
+If $G$ is undirected, all nodes with a degree two in $G$ except $s$ are lazily contracted.
+As we only employ contraction during the query, we do not loose flexibility.
+This contrasts with most hierarchical approaches, that use contraction in the preprocessing step.
 
-The backtracking search continues until either the tentative distance at a node is lower than the length of the path found by the search or a stop node is encountered.
-Every node that was already pushed is a stop node.
-Nodes with degree 4 or more is a stop node (TODO: @Tim out-degree ?).
-Every degree 3 node that is reached via another degree 3 node from the backtracking search start is a stop node.
-If the search was stopped because of the tentative distance, then it is aborted.
-If the search was stopped because a stop node was encountered, the stop node is added to the queue.
-This implies a potential evaluation.
-If the node is already in the queue, a decrease key operation is executed.
-One can view this modifed A* algorithm as a lazy version of \cite{topocore} where the set of virtually contracted nodes is computed at query time.
+Not pushing degree two nodes into the queue gives a moderate to large speedup depending on how many degree two nodes are part of the graph.
+We can achieve a slightly larger speedup by also not pushing every degree three node into the queue.
 
-\subsection{Avoid Dead-Ends using Largest Biconnected Component}
+\section{Avoiding Potential Function Evaluations at Degree Three Nodes}
 
-A lot of nodes in road networks lead to dead-ends.
-Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
-We employ an idea from \cite{TOPOCORE} to avoid these nodes entirely.
-This reduces the number of explored nodes and thus fewer potentials are evaluated.
+In the previous section, we described how a lazy degree two node contraction can be used to accelerate an A* search.
+Denote by $I$ the set of nodes that can be pushed into the A* queue.
+Using the $I$ from the previous section, $G\setminus I$ is a disjoint set of paths, if $G$ is undirected.
+For performance reasons, it is important that $G\setminus I$ results in a disjoint collection of simple graphs.
+Fortunately, we can allow slightly more complex graphs than just paths.
+In this section, we use stars where the center node has degree three.
+This allows us to further increase the size of $I$, which in turn reduces the number of A* queue operations and potential evaluations.
 
-In the preprocessing phase, before the CH is created, we compute the subgraph $G_C$, called \emph{core}, induced by the largested biconnected component of the undirected graph underlying $G$.
-We do this using Tarjan's algorithm \cite{Tarjan's algorithm}.
-For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
-For nodes in the core, $a_v=v$.
-We exploit that all attachment nodes are single node separators and the problem can be decomposed along them.
-The basic CH-potential preprocessing step is only executed for $G_C$.
-
-The query phase is divided into four steps.
-In the first step, we use Dijkstra's algorithm to explore the component that contains $s$ until $a_s$ is reached.
-If this search finds $t$, then $s$ and $t$ are part of the same component.
-An optimal path was found and therefore the algorithm stops early.
-Otherwise, in the second step starts.
-It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
-Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
-The final path is the concatenation of all three path parts.
+Let $v_k$ be the last node of a chain as in the previous section.
+If $v_k$ has two successor nodes $u$ and $w$ that differ from $v_{k-1}$ and $v_k$ is not part of the queue, then we do not push $v_k$.
+Instead, we follow the chains started by $(v_k, u)$ and $(v_k, w)$ as described in the previous section.
 
 \section{Experiments}
 
