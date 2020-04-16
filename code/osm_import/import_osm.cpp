@@ -7,6 +7,9 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <unordered_set>
+#include <fstream>
+#include <sstream>
 
 using namespace RoutingKit;
 using namespace std;
@@ -30,10 +33,33 @@ bool is_freeway(const TagMap&way_tags){
 }
 
 int main(int argc, char*argv[]){
-	if(argc != 2){
-		cout << argv[0] << " pbf_file\n\nWrites extracted files into current working directory"<<endl;
+	if(argc < 2){
+		cout << argv[0] << " pbf_file [traffic1.csv [traffic2.csv [...]]]\n\nWrites extracted files into current working directory"<<endl;
 		return 2;
 	}
+
+        
+        unordered_set<uint64_t>is_osm_node_traffic_end_point;
+
+        for(int i=2; i<argc; ++i){
+                std::ifstream in(argv[i]);
+                if(!in){
+                        cout << "Cannot open "<< argv[i]<<" skipping" << endl;
+                }else{
+                        string line;
+                        while(getline(in, line)){
+                                istringstream line_in(line);                             
+                                string node_id;
+                                getline(line_in, node_id, ',');
+                                is_osm_node_traffic_end_point.insert(stol(node_id));
+                                getline(line_in, node_id, ',');
+                                is_osm_node_traffic_end_point.insert(stol(node_id));
+                        }
+                }
+        }
+
+        cout << "number of osm nodes that are traffic endpoints : "<< is_osm_node_traffic_end_point.size() << endl;
+
 	string pbf_file = argv[1];
 
 	std::function<void(const std::string&)>log_message = [](const string&msg){
@@ -42,12 +68,13 @@ int main(int argc, char*argv[]){
 
 	auto mapping = load_osm_id_mapping_from_pbf(
 		pbf_file,
-		nullptr,
+		[&](uint64_t osm_node_id, const TagMap&node_tags){
+                        return is_osm_node_traffic_end_point.count(osm_node_id) > 0;
+                },
 		[&](uint64_t osm_way_id, const TagMap&tags){
 			return is_osm_way_used_by_cars(osm_way_id, tags, log_message);
 		},
-		log_message,
-		true // all_modelling_nodes_are_routing_nodes
+		log_message
 	);
 
 	unsigned routing_way_count = mapping.is_routing_way.population_count();
@@ -69,8 +96,7 @@ int main(int argc, char*argv[]){
 			return get_osm_car_direction_category(osm_way_id, way_tags, log_message);
 		},
 		nullptr,
-		log_message,
-		true
+		log_message
 	);
 
 	unsigned arc_count  = routing_graph.arc_count();
