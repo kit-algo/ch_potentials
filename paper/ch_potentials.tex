@@ -409,6 +409,36 @@ Instead, we follow the chains started by $(v_k, u)$ and $(v_k, w)$ as described 
 \item Running times if OSM degree 2 nodes are not extracted! Das einzige Argument pro Erhalten von Deg 2 das ich bisher kenne ist MapBox Live Traffic matchen.
 \end{itemize}
 
+Tims plan:
+
+\begin{itemize}
+\item Effectiveness of A*
+	\begin{itemize}
+  \item Multiplied weights by 1 to 2 in steps of 0.05
+  \item On DIMACs Eur
+  \item Plot x factor, y running time
+  \end{itemize}
+
+\item Algo Building Blocks
+	\begin{itemize}
+  \item DIMACs Eur x1.1
+  \item Table
+  	\begin{itemize}
+    \item columns: running time, potential evals, relaxed arcs
+    \item rows: (Dijkstra, SCC, Deg2, Deg3) x (CH Pot or not)
+    \item or transposed?
+		\end{itemize}
+	\end{itemize}
+
+\item Applications
+	\begin{itemize}
+  \item Table
+  	\begin{itemize}
+    \item columns: running time, potential evals, relaxed arcs, shortest path distance / lower bound, dijkstra running time?
+    \item rows: OSM Ger Mapbox Live, forbidden highways, forbidden tunnels, TD Ger06, TD Eur17, DIMACs Eur 1000 {Random|Fastest} Arcs {x2, x10}
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
 
 \section{Conclusion}
 \label{sec:conclusion}
