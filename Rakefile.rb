@@ -89,7 +89,7 @@ namespace "exp" do
   directory "#{exp_dir}/applications"
 
   task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing"] + graphs.map { |g| g + 'lower_bound' } do
-    graph.each do |graph|
+    graphs.each do |graph|
       5.times do
         filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
         sh "echo '#{graph}' >> #{filename}"
