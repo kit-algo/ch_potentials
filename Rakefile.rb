@@ -81,7 +81,7 @@ end
 
 namespace "exp" do
   desc "Run all experiments"
-  task all: [:preprocessing, :scaled_weights, :building_blocks, :applications, :baselines]
+  task all: [:preprocessing, :scaled_weights, :building_blocks, :applications]
 
   directory "#{exp_dir}/preprocessing"
   directory "#{exp_dir}/scaled_weights"
