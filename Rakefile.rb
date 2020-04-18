@@ -65,7 +65,7 @@ namespace "prep" do
   end
 
   static_graphs.each do |graph|
-    file graph + "lower_bound" do
+    file graph + "lower_bound" => graph do
       sh "ln -s #{graph}/travel_time #{graph}/lower_bound"
     end
   end
