@@ -57,10 +57,10 @@ namespace "prep" do
   graphs.each do |graph|
     directory graph + "lower_bound_ch"
     file graph + "lower_bound_ch" => ["code/compute_ch/build/compute_ch", graph + 'lower_bound'] do
-      sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound "
-          + "#{graph}/lower_bound_ch/order "
-          + "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight "
-          + "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight")
+      sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
+          "#{graph}/lower_bound_ch/order " +
+          "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
+          "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight")
     end
   end
 
@@ -92,11 +92,11 @@ namespace "exp" do
     graphs.each do |graph|
       filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
       sh "echo '#{graph}' >> #{filename}"
-      sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound "
-        + "#{graph}/lower_bound_ch/order "
-        + "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight "
-        + "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight "
-        + ">> #{filename}")
+      sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
+        "#{graph}/lower_bound_ch/order " +
+        "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
+        "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight " +
+        ">> #{filename}")
     end
   end
 
