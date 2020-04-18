@@ -1,5 +1,5 @@
-raise "No or wrong experiments output dir configured - please set CHPOT_EXP_OUTPUT_DIR env var" unless Dir.exists? exp_dir || ""
-exp_dir = exp_dir
+raise "No or wrong experiments output dir configured - please set CHPOT_EXP_OUTPUT_DIR env var" unless Dir.exists? ENV['CHPOT_EXP_OUTPUT_DIR'] || ""
+exp_dir = ENV['CHPOT_EXP_OUTPUT_DIR']
 
 file "paper/ch_potentials.pdf" => [
   "paper/ch_potentials.tex"] do
