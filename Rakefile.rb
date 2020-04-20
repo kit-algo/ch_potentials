@@ -141,7 +141,7 @@ namespace 'build' do
 
   directory "code/osm_import/build"
 
-  file "code/osm_import/build/import_osm" => ["code/osm_import/build", , "code/osm_import/src/bin/import_osm.cpp"] do
+  file "code/osm_import/build/import_osm" => ["code/osm_import/build", "code/osm_import/src/bin/import_osm.cpp"] do
     Dir.chdir "code/osm_import/build/" do
       sh "cmake -DCMAKE_BUILD_TYPE=Release .. && make"
     end
