@@ -211,7 +211,8 @@ However, the performance is not competitive to hierarchical approaches.
 A* star is a well-known extension to Dijkstra's algorithm.
 It uses a potential function $\pi:V\rightarrow \mathbb{R}^+$.
 The potential is often called heuristic.
-A* is optimal, if the potential $\pi(v)$ is consistent \cite{Pearl, Judea (1984). Heuristics: Intelligent Search Strategies for Computer Problem Solving. Addison-Wesley. ISBN 0-201-05594-5.}, which essentially means that $\pi(v)$ is a lower bound of the distance from $v$ to $t$.
+A* is optimal, if the potential $\pi(v)$ is consistent \cite{Pearl, Judea (1984). Heuristics: Intelligent Search Strategies for Computer Problem Solving. Addison-Wesley. ISBN 0-201-05594-5.}.
+In this paper, all considered potentials are derived from exact shortest path distances and are thus consistent.
 
 The best possible potential that can be derived from the auxilary data is the minimum path distance with respect to $w_\ell$.
 Every better, consistent potential requires knowledge of the query weights $w_q$, which is unavailable during preprocessing.
