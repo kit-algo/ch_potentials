@@ -37,9 +37,9 @@ int main(int argc, char*argv[]){
       ch_forward_first_out = argv[5];
       ch_forward_head = argv[6];
       ch_forward_weight = argv[7];
-      ch_backward_first_out = argv[5];
-      ch_backward_head = argv[6];
-      ch_backward_weight = argv[7];
+      ch_backward_first_out = argv[8];
+      ch_backward_head = argv[9];
+      ch_backward_weight = argv[10];
     }
 
 
