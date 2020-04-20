@@ -417,6 +417,28 @@ Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+\pi(b)$.
 If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
 The situation is depicted in Figure~\ref{fig:push-deg3}.
 
+\subsection{Avoid Dead-Ends using Largest Biconnected Component}
+
+A lot of nodes in road networks lead to dead-ends.
+Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
+This reduces the number of explored nodes and thus fewer potentials are evaluated.
+
+In the preprocessing phase, before the CH is created, we compute the subgraph $G_C$, called \emph{core}, induced by the largested biconnected component of the undirected graph underlying $G$.
+We do this using Tarjan's algorithm \cite{Tarjan's algorithm}.
+For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
+For nodes in the core, $a_v=v$.
+We exploit that all attachment nodes are single node separators and the problem can be decomposed along them.
+The basic CH-potential preprocessing step is only executed for $G_C$.
+
+The query phase is divided into four steps.
+In the first step, we use Dijkstra's algorithm to explore the component that contains $s$ until $a_s$ is reached.
+If this search finds $t$, then $s$ and $t$ are part of the same component.
+An optimal path was found and therefore the algorithm stops early.
+Otherwise, in the second step starts.
+It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
+Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
+The final path is the concatenation of all three path parts.
+
 
 \section{Experiments}
 
