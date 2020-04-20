@@ -8,6 +8,7 @@
 %for enabling cleveref support, use "cleveref"
 %for enabling cleveref support, use "autoref"
 
+\usepackage{wrapfig}
 \usepackage[algo2e,vlined]{algorithm2e}
 
 %\graphicspath{{./graphics/}}%helpful if your graphic files are in another directory
@@ -361,40 +362,60 @@ We therefore investigate methods to evaluate fewer potentials.
 
 \section{Avoiding Potential Function Evaluations at Degree Two Nodes}
 
-We observe, that a potential evaluation is always paired with a queue push operation.
-By avoiding push operations, we can therefore also avoid potential evaluations.
-In this section, we slightly modify how A* works internally.
-Our objective is process chains of low degree nodes sequentially without putting them into the queue.
+Potential evaluation is an expensive operation that we want to avoid.
+A potential evaluation is always paired with a queue push operation.
+By avoiding push operations, we can therefore avoid potential evaluations.
+This is the objective of this and the next section.
 
-We denote the tentative distance array used in the A* algorithm by $D$.
-When removing a node $v_1$ from the A* queue, we iterate over all outgoing edges $(v_1,v_2)$ of $v_1$ and process the chain started by $(v_1, v_2)$.
-If $D[v_2] < D[v_1]+w_q(v_1,v_2)$, our algorithm stops processing the chain and continues with the next outgoing edge of $v_1$.
-Otherwise, $D[v_2]$ is set to $D[v_1]+w_q(v_1,v_2)$ and processing the chain continues.
-If $v_2$ has only one outgoing edge that leads to a node $v_3$ different from $v_1$, we process $v_3$ analogously.
-This is repeated until a $v_k$ is reached such that either $D[v_{k-1}]+w_q(v_{k-1},v_k)\ge D[v_k]$ or $v_k$ has more than one successor different from $v_{k-1}$.
-Our algorithm continues removing nodes from the queue until a node $x$ is removed for which $D[x]\ge D[t]$.
+We modify how A* by processing low degree nodes consecutively without pushing them into the queue.
+Our algorithm makes use of the undirected degree $d(x)$ of a node $x$. 
+Formally, $d(x)$ is the number of nodes $y$ such that $(x,y)\in E$ or $(y,x)\in E$.
 
-Our optimization can be described as node contraction performed lazily at query time.
-If $G$ is undirected, all nodes with a degree two in $G$ except $s$ are lazily contracted.
-As we only employ contraction during the query, we do not loose flexibility.
-This contrasts with most hierarchical approaches, that use contraction in the preprocessing step.
+Analogous to A*, our algorithm stores for every node $x$ a tentative distance $D[x]$.
+Additionally, it maintains a minimum priority queue. 
+Diverging from A*, not all nodes can be pushed but every node has a tentative distance.
 
-Not pushing degree two nodes into the queue gives a moderate to large speedup depending on how many degree two nodes are part of the graph.
-We can achieve a slightly larger speedup by also not pushing every degree three node into the queue.
+Our algorithm differs from A* when removing a node $x$ from the queue.
+A* iterates over the outgoing arcs $(x,y)$ of $x$ and tries to reduce $D[y]$ by relaxing $(x,y)$.
+If A* succeeds, $y$'s weight in the queue is set to $D[y]+\pi(y)$.
+Our algorithm, however, behaves differently, if $d(y)\le 2$.
+Our algorithm determines the longest degree two chain of nodes $x,y_1,\ldots, y_k, z$ such that $d(y_i)=2$ and $d(z)\neq z$.
+If our algorithm succeeds in reducing $D[y_1]$, it does not push $y_1$ into the queue.
+Instead, it iteratively tries to reduce all $D[y_i]$.
+If it does not reach $z$, then only $D$ is modified but no queue action is performed.
+If $D[z]$ is modified and $d(z)>2$, $z$'s weight in the queue is set to $D[y]+\pi(y)$.
+
+As the target node $t$ might have degree two, our algorithm cannot rely on stopping, when $t$ is removed from the queue.
+Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight in the queue.
 
 \section{Avoiding Potential Function Evaluations at Degree Three Nodes}
 
-In the previous section, we described how a lazy degree two node contraction can be used to accelerate an A* search.
-Denote by $I$ the set of nodes that can be pushed into the A* queue.
-Using the $I$ from the previous section, $G\setminus I$ is a disjoint set of paths, if $G$ is undirected.
-For performance reasons, it is important that $G\setminus I$ results in a disjoint collection of simple graphs.
-Fortunately, we can allow slightly more complex graphs than just paths.
-In this section, we use stars where the center node has degree three.
-This allows us to further increase the size of $I$, which in turn reduces the number of A* queue operations and potential evaluations.
+\begin{wrapfigure}{r}{3.5cm}
 
-Let $v_k$ be the last node of a chain as in the previous section.
-If $v_k$ has two successor nodes $u$ and $w$ that differ from $v_{k-1}$ and $v_k$ is not part of the queue, then we do not push $v_k$.
-Instead, we follow the chains started by $(v_k, u)$ and $(v_k, w)$ as described in the previous section.
+\begin{center}
+\includegraphics{push-deg3}
+\end{center}
+
+\caption{$x$ is removed from the queue. $y_i$, $z$, $a_i$, and $\alpha_i$ are never part of the queue. $\beta$ and $b$ are pushed into the queue.}
+\label{fig:push-deg3}
+
+\end{wrapfigure}
+
+
+In the previous section, we described an optimized A* variant that does not push degree two nodes.
+In this section, we also avoid degree three nodes.
+
+Denote by $x,y_1,\ldots, y_k, z$ a degree chain as described in the previous section.
+If $z$ is already in the queue, then $z$'s weight in the queue is adjusted as in the previous section.
+
+If $d(z)\neq 3$ or $z$ is in the queue, our algorithm proceeds as in the previous section.
+Otherwise, there exist up to two degree chains $z,a_1,\ldots,a_p,b$ and $z,\alpha_1,\ldots,\alpha_q,\beta$ such that $a_1\neq y_k \neq \alpha_1$.
+Our algorithm iteratively tries to reduce all $D[a_i]$ and $D[\alpha_i]$.
+If it reaches $\beta$, $\beta$'s weight in the queue is set to $D[\beta]+\pi(\beta)$.
+Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+\pi(b)$.
+If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
+The situation is depicted in Figure~\ref{fig:push-deg3}.
+
 
 \section{Experiments}
 
