@@ -102,21 +102,21 @@ namespace "exp" do
 
   task scaled_weights: [dimacs_graph + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
-      sh "cargo run --release --bin chpot_weight_scaling -- #{graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_weight_scaling -- #{dimacs_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
     end
   end
 
   task building_blocks: [dimacs_graph + 'lower_bound_ch'] + ["#{exp_dir}/building_blocks"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
-      sh "cargo run --release --bin dijkstra -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin dijkstra -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
     end
   end
 
