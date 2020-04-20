@@ -141,7 +141,7 @@ namespace 'build' do
 
   directory "code/osm_import/build"
 
-  file "code/osm_import/build/import_osm" => "code/osm_import/build" do
+  file "code/osm_import/build/import_osm" => ["code/osm_import/build", , "code/osm_import/src/bin/import_osm.cpp"] do
     Dir.chdir "code/osm_import/build/" do
       sh "cmake -DCMAKE_BUILD_TYPE=Release .. && make"
     end
@@ -151,7 +151,7 @@ namespace 'build' do
 
   directory "code/compute_ch/build"
 
-  file "code/compute_ch/build/compute_ch" => "code/compute_ch/build" do
+  file "code/compute_ch/build/compute_ch" => ["code/compute_ch/build", "code/compute_ch/src/bin/compute_contraction_hierarchy_and_order.cpp"] do
     Dir.chdir "code/compute_ch/build/" do
       sh "cmake -DCMAKE_BUILD_TYPE=Release .. && make"
     end
