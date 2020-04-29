@@ -1,0 +1,8 @@
+! namespace RoutingKit2
+! include_guard ROUTING_KIT2_GEO_INDEX_SCHEMA_H
+! include "geo_pos.h"
+
+= GeoIndex =
+
+GeoPos @ item_count pos
+uint32_t @ item_count id

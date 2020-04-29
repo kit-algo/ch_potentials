@@ -1,0 +1,65 @@
+! namespace RoutingKit2
+! include_guard ROUTING_KIT2_MAP_SCHEMA_H
+! include "geo_pos.h"
+
+= LinkEnds =
+node_count
+uint32_t @ link_count link_head
+uint32_t @ link_count link_tail
+
+= LinkEndsAdjArray =
+uint32_t @ node_count+1 first_outgoing_dlink_index_of_node
+uint32_t @ 2*link_count outgoing_dlink
+
+= LinkShapes =
+node_count
+
+uint32_t @ link_count link_head
+uint32_t @ link_count link_tail
+
+uint32_t @ link_count link_length_in_cm
+
+LatLon @ node_count node_pos
+uint32_t @ link_count+1 first_shape_pos_of_link
+LatLon @ shape_pos_count shape_pos
+
+= CarRoads =
+node_count
+
+uint32_t @ link_count link_head
+uint32_t @ link_count link_tail
+
+uint32_t @ link_count link_length_in_cm
+
+LatLon @ node_count node_pos
+uint32_t @ link_count+1 first_shape_pos_of_link
+LatLon @ shape_pos_count shape_pos
+
+uint32_t @ 2*link_count dlink_traversal_time_in_ms
+
+uint32_t @ forbidden_maneuver_count+1 first_dlink_of_forbidden_maneuver
+uint32_t @ forbidden_maneuver_dlink_count forbidden_maneuver_dlink
+
+= OSMCarRoads =
+node_count
+
+uint32_t @ link_count link_head
+uint32_t @ link_count link_tail
+
+uint32_t @ link_count link_length_in_cm
+
+LatLon @ node_count node_pos
+uint32_t @ link_count+1 first_shape_pos_of_link
+LatLon @ shape_pos_count shape_pos
+
+uint32_t @ 2*link_count dlink_traversal_time_in_ms
+
+uint32_t @ forbidden_maneuver_count+1 first_dlink_of_forbidden_maneuver
+uint32_t @ forbidden_maneuver_dlink_count forbidden_maneuver_dlink
+
+uint32_t @ way_count+1 first_link_of_way
+
+uint64_t @ node_count node_osm_id
+uint64_t @ way_count way_osm_id
+uint64_t @ forbidden_maneuver_count forbidden_maneuver_osm_id
+
