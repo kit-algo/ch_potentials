@@ -83,6 +83,8 @@ namespace "exp" do
   desc "Run all experiments"
   task all: [:preprocessing, :scaled_weights, :building_blocks, :applications]
 
+  task queries: [:scaled_weights, :building_blocks, :applications]
+
   directory "#{exp_dir}/preprocessing"
   directory "#{exp_dir}/scaled_weights"
   directory "#{exp_dir}/building_blocks"
@@ -114,7 +116,7 @@ namespace "exp" do
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simple_scale -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
     end
