@@ -90,32 +90,32 @@ Optimal means that the computed path always has minimum weight.
 Efficiently means that the path computation is fast.
 Being able to change the edge weights between path computations is flexibility.
 
-Dijkstra's algorithm \cite{?} achieves flexiblity and optimality but unfortunately rrequires several seconds to compute paths across continental road networks, which is too slow for many applications.
+Dijkstra's algorithm \cite{d-ntpcg-59} achieves flexiblity and optimality but unfortunately rrequires several seconds to compute paths across continental road networks, which is too slow for many applications.
 A classic speedup approach is the well-known A* algorithm \cite{hnr-afbhd-68}.
 While flexible, A*'s performance crucially depends on the quality of the potential, also called heuristic, function.
 Finding such a function that can be computed efficiently is difficult.
-A lot of research of the last decade has therefore focused on mostly hierarchical approaches \cite{CH,CCH,CRP,HIGHWAYHIERACHIES,MLD} which do not require such a function.
-A popular hierachical algorithm is Contraction Hierarchy (CH) \cite{geisberger}.
+A lot of research of the last decade has therefore focused on mostly hierarchical approaches \cite{gssv-erlrn-12,dsw-cch-15,dgpw-crprn-13,ss-ehh-12} which do not require such a function.
+A popular hierachical algorithm is Contraction Hierarchy (CH) \cite{gssv-erlrn-12}.
 There is a lot of work that extends CH to handle more complex settings.
-For example, in \cite{sabine, kobitzsch} multi-criteria optimization is studied.
-In \cite{CCH}, CH is modified to support Live-Traffic.
-Historic traffic patterns are combined with CH in \cite{TD-CCH-preprint, TDCH, TDCRP}.
-Specialized variants for electric vehicle routing are developped in \cite{moritz baum, charge}.
+For example, in \cite{fns-opca-14,gks-rpfof-10} multi-criteria optimization is studied.
+In \cite{dsw-cch-15}, CH is modified to support Live-Traffic.
+Historic traffic patterns are combined with CH in \cite{swz-sfert-19,bgsv-mtdtt-13,bdpw-dtdrp-16}.
+Specialized variants for electric vehicle routing are developped in \cite{bdgwz-sfpcs-19}.
 While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
 Further, in every setting the flexibility available at query time is fairly limited and usually encompasses only one very specific setting.
 
 While undoubtedly fast, hierarchical approaches tend to sacrifice flexibility to obtain speed.
 In this paper, we explore CH-Potentials, a novel combination of A* and the hierachical techniques CH and CCH.
-We are not the first to combine hierarchical approaches and A* \cite{core-alt, real, charge, bdsssw-chgds-08}.
+We are not the first to combine hierarchical approaches and A* \cite{bdsssw-chgds-10, gkw-blwr-07, bdgwz-sfpcs-19}.
 However, past work mostly uses A* to accelerate hierarchical approaches and sacrifzies A*'s felxibility in the process.
 Our primary algorithm design objective is to retain A*'s flexibility.
 
-Our algorithm is built upon ideas from Phast \cite{?}, a CH-extension.
+Our algorithm is built upon ideas from Phast \cite{dgnw-phast-13}, a CH-extension.
 The novel idea is to compute optimal A* potentials lazily.
 The hierarchical approach is applied to the lower bound graph with respect to the edge costs.
 As the hierarchical approaches are optimal, the resulting A* potential is the tightest possible.
 With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining optimality.
-Figure~\ref{img:search-space} depicts an example  A* search with CH-Potentials.
+Figure~\ref{img:search-space} depicts an example A* search with CH-Potentials.
 
 \begin{figure}
 TODO
@@ -156,8 +156,8 @@ Once the truck has delivered his goods, he may again pass the area.
 
 As detailed in the previous section, the reasons why flexibility is a necessary property of a routing engine are sheer endless.
 However, a formal problem specification that encompasses all these options is complex and well beyond the scope of this paper.
-For an example of such a formulation, we refer to \cite{sea2020paper} which covers a truck-specific application.
-The algorithm presented in \cite{sea2020paper} uses a preliminary version of CH-Potentials.
+For an example of such a formulation, we refer to \cite{kswz-erptd-20} which covers a truck-specific application.
+The algorithm presented in \cite{kswz-erptd-20} uses a preliminary version of CH-Potentials.
 For simplicity, we limit our exposition to the classical shortest path formulation.
 To support algorithm extensions, we avoid two operations that are adverse to generalization.
 These are:
@@ -185,7 +185,7 @@ The output of the query phase, is a path $e_1,e_2\ldots e_k$ such that $\sum w_q
 
 \section{Related Work}
 
-TODO: Dijkstra's algorithm \cite{Dijkstra's} can be used to solve the stated problem formalization \cite{Veit?}.
+TODO: Dijkstra's algorithm \cite{d-ntpcg-59} can be used to solve the stated problem formalization \cite{Veit?}.
 
 TODO: CRP was motivated by personalization.
 
@@ -194,8 +194,8 @@ A very common assumption is that the query edge weights $w_q$ are known during t
 In this setup, $w_\ell$ does not exist.
 This allows for very fast query running times, however, changing $w$ requires rerunning the slow preprocessing phase.
 This setup is therefore very unflexible.
-Many hierarchical speedup techniques such as the original CH \cite{CH} use this setup.
-Notable exceptions are \cite{MLD,CRP} and \cite{CCH} which use a third phase to change the query edge weights.
+Many hierarchical speedup techniques such as the original CH \cite{gssv-erlrn-12} use this setup.
+Notable exceptions are \cite{dgpw-crprn-13} and \cite{dsw-cch-15} which use a third phase to change the query edge weights.
 
 
 TODO: Cite Sabine VLDB and TopoCore
@@ -212,7 +212,7 @@ However, the performance is not competitive to hierarchical approaches.
 A* star is a well-known extension to Dijkstra's algorithm.
 It uses a potential function $\pi:V\rightarrow \mathbb{R}^+$.
 The potential is often called heuristic.
-A* is optimal, if the potential $\pi(v)$ is consistent \cite{Pearl, Judea (1984). Heuristics: Intelligent Search Strategies for Computer Problem Solving. Addison-Wesley. ISBN 0-201-05594-5.}.
+A* is optimal, if the potential $\pi(v)$ is consistent \cite{p-hissc-84}.
 In this paper, all considered potentials are derived from exact shortest path distances and are thus consistent.
 
 The best possible potential that can be derived from the auxilary data is the minimum path distance with respect to $w_\ell$.
@@ -245,7 +245,7 @@ $B[t] \leftarrow 0$\;
 \end{algorithm2e}
 
 A CH is a two phase technique to efficiently compute optimal, shortest paths.
-For a detailed exposition, we refer the interested reader to \cite{CCH, CH}.
+For a detailed exposition, we refer the interested reader to \cite{dsw-cch-15,gssv-erlrn-12}.
 In this section, we give a high-level overview of the aspects relevant to this paper.
 
 A CH places nodes into levels.
@@ -271,7 +271,7 @@ Pseudo-code for the backward search is presented in Algorithm~\ref{algo:ch-backw
 The forward search works analogously.
 
 A CH query is fast, if the number of nodes reachable via only up- or down-nodes is small.
-On road networks, this is the case as demonstrated in \cite{ch,punch,crp,cch,flowcutter}.
+On road networks, this is the case as demonstrated in \cite{gssv-erlrn-12,dgrw-gpnc-11,dgpw-crprn-13,dsw-cch-15,hs-gbpo-18}.
 
 Using a CH, we can easily compute optimal A* potentials.
 In the preprocessing phase, a CH with respect to $w_\ell$ is computed.
@@ -279,7 +279,7 @@ The query phase consists of an A* search, where the evaluation of the potential 
 
 This works, however, while one CH query is fast, answering one for every node in the $A^*$ search is slow.
 Fortunatly, we can do better.
-However, for this we need another component called Phast \cite{Phast}.
+However, for this we need another component called Phast \cite{dgnw-phast-13}.
 
 \section{Potentials using PHAST}
 
@@ -297,7 +297,7 @@ Execute Algorithm~\ref{algo:ch-backward}\;
 \label{algo:phast}
 \end{algorithm2e}
 
-Phast \cite{Phast} is a CH extension that computes distances from all nodes to one target node.
+Phast \cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node.
 First the preprocessing phase is executed analogously to the original CH.
 The query phase is divided into two steps.
 The first step is analogously to the CH query:
@@ -309,7 +309,7 @@ After all level are processed, the distances from all nodes towards $t$ is compu
 Phast is slightly faster than Dijkstra's algorithm on road graphs because it is a better fit for modern processor architectures.
 Phast's main advantage is that is easily be parallelized.
 However, we will not consider parallelization in this paper.
-We refer to \cite{Phast} for an in-depth experimental performance analysis.
+We refer to \cite{dgnw-phast-13} for an in-depth experimental performance analysis.
 Pseudo-code is provided in Algorithm~\ref{algo:phast}.
 
 Using Phast, we can compute optimal A* potentials in another way.
@@ -425,7 +425,7 @@ Unless the source or target is is in a dead-end, it is unnecessary to explore th
 This reduces the number of explored nodes and thus fewer potentials are evaluated.
 
 In the preprocessing phase, before the CH is created, we compute the subgraph $G_C$, called \emph{core}, induced by the largested biconnected component of the undirected graph underlying $G$.
-We do this using Tarjan's algorithm \cite{Tarjan's algorithm}.
+We do this using Tarjan's algorithm \cite{t-dfslg2-72}.
 For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
 For nodes in the core, $a_v=v$.
 We exploit that all attachment nodes are single node separators and the problem can be decomposed along them.
@@ -445,6 +445,12 @@ The final path is the concatenation of all three path parts.
 
 \label{sec:experiments}
 
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{fig/scaled_weights.pdf}
+\caption{Query running times for queries of DIMACs Europe with scaled edge weights.}\label{fig:scaled_weights}
+\end{figure}
+
 In this section, we present our experimental evaluation.
 Our benchmark machine runs openSUSE Leap 15.1 (kernel 4.12.14), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
 All experiments were performed sequentially.
@@ -462,12 +468,6 @@ For this instance, we have proprietary live traffic snapshot from Friday 2019/08
 The live data comes in the form of 320K OSM node pairs and live speeds for the link between the nodes.
 We also have two graphs with traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
 One is an old instance of Germany from 2006 (4.7M nodes, 10.7M edges) and the other a newer instance of Europe (25.8M nodes, 55.5M edges).
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{fig/scaled_weights.pdf}
-\caption{Query running times for queries of DIMACs Europe with scaled edge weights.}\label{fig:scaled_weights}
-\end{figure}
 
 \begin{table}
 \centering
@@ -489,18 +489,29 @@ No Deg3                           &  410 &  767.5 &  2.4 \\
 \end{tabular}
 \end{table}
 
-Tims plan:
-
-\begin{itemize}
-\item Applications
-	\begin{itemize}
-  \item Table
-  	\begin{itemize}
-    \item columns: preprocessing time, running time, potential evals, relaxed arcs, shortest path distance / lower bound, dijkstra running time?
-    \item rows: OSM Ger Mapbox Live, forbidden highways, forbidden tunnels, TD Ger06, TD Eur17, DIMACs Eur 1000 {Random|Fastest} Arcs {x2, x10}
-		\end{itemize}
-	\end{itemize}
-\end{itemize}
+\begin{table}
+\centering
+% TODO dijkstra baseline, preprocessing
+\caption{Performance for different applications.}\label{tab:applications}
+\begin{tabular}{llrrrrr}
+\toprule
+        &                     &   Running &     Pot. Eval. &             Relaxed & Avg. length & Affected \\
+        &                     & time [ms] & $[\cdot 10^3]$ & arcs $[\cdot 10^3]$ &    increase &     [\%] \\
+\midrule
+OSM Ger & No Tunnels          &      39.4 &         3874.1 &               290.6 &        1.74 &     83.5 \\
+        & No Highways         &     338.5 &        30383.1 &              2555.9 &        6.24 &     95.0 \\
+        & Mapbox Live         &      96.5 &         9310.9 &               733.7 &        1.12 &     95.0 \\
+\addlinespace
+DIMACs  & Fastest $\times 10$ &       1.0 &           69.2 &                 2.7 &        1.00 &     16.5 \\
+Europe  & Fastest $\times 2$  &       1.0 &           68.9 &                 2.7 &        1.00 &     16.5 \\
+        & Random $\times 10$  &       1.1 &           80.9 &                 3.0 &        1.00 &      1.0 \\
+        & Random $\times 2$   &       1.0 &           76.7 &                 2.9 &        1.00 &      1.0 \\
+\addlinespace
+Ger06   & TD                  &       4.8 &          417.2 &                33.1 &        1.03 &     99.5 \\
+Eur17   & TD                  &      98.5 &         5143.8 &               553.3 &        1.04 &     98.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Conclusion}
 \label{sec:conclusion}
