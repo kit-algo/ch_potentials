@@ -457,17 +457,17 @@ All experiments were performed sequentially.
 Our code is written in Rust and compiled with rustc 1.44.0-nightly in the release profile with the target-cpu=native option.
 
 \subparagraph{Inputs and Methodology}
-We perform experiments on several graphs with travel time weights which we modify in different ways.
-Preprocessing running times are averages over 10 runs.
-For the queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 Our main benchmark instance is a graph of the road network of Western Europe made publicly available for the Ninth DIMACS implementation Challenge~\cite{DemetrescuGJ09} with 18M nodes and 42M edges.
+We use this graph with the travel time as the lower bound and perform experiments with modified edge weights (scaling all travel times or reproducing an experiment from~\cite{dw-lbrdg-07} where 1\,000 random edges are perturbed).
 Additionally, we perform experiments on a recent OSM instance of Germany\footnote{\url{https://download.geofabrik.de/europe/germany.html}, obtained on August 2nd, 2019}.
 To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 11M nodes and 26M edges.
 For this instance, we have proprietary live traffic snapshot from Friday 2019/08/02 afternoon provided by Mapbox\footnote{\url{https://www.mapbox.com/}}.
 The live data comes in the form of 320K OSM node pairs and live speeds for the link between the nodes.
 We also have two graphs with traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
-One is an old instance of Germany from 2006 (4.7M nodes, 10.7M edges) and the other a newer instance of Europe (25.8M nodes, 55.5M edges).
+One is an old instance of Germany with traffic predictions from 2006 (4.7M nodes, 10.7M edges) and the other a newer instance of Europe (25.8M nodes, 55.5M edges, from 2017).
+Preprocessing running times are averages over 10 runs.
+For the queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 
 \begin{table}
 \centering
