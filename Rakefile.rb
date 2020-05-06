@@ -131,7 +131,7 @@ namespace "exp" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin dijkstra -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
-      sh "cargo run --release --bin chpot_live -- #{osm_graph} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_live -- #{osm_graph} '#{live_dir}' > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
