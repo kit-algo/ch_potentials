@@ -43,7 +43,7 @@ td_graphs = [
 ]
 graphs = static_graphs + td_graphs
 
-live_dir = '/algoDaten/mapbox/live-speeds/2019-08-02-15:41/*'
+live_dir = '/algoDaten/mapbox/live-speeds/2019-08-02-15:41/'
 
 namespace "prep" do
   directory osm_graph
@@ -131,7 +131,7 @@ namespace "exp" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin dijkstra -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
-      sh "cargo run --release --bin chpot_live -- #{osm_graph} '#{live_dir}' > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_live -- #{osm_graph} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
