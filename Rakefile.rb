@@ -92,44 +92,42 @@ namespace "exp" do
 
   task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing"] + graphs.map { |g| g + 'lower_bound' } do
     graphs.each do |graph|
-      filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
-      sh "echo '#{graph}' >> #{filename}"
-      sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
-        "#{graph}/lower_bound_ch/order " +
-        "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
-        "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight " +
-        ">> #{filename}")
+      5.times do
+        filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
+        sh "echo '#{graph}' >> #{filename}"
+        sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
+          "#{graph}/lower_bound_ch/order " +
+          "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
+          "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight " +
+          ">> #{filename}")
+      end
     end
   end
 
-  task scaled_weights: [dimacs_graph + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
+  task scaled_weights: [dimacs_graph + 'lower_bound_ch', osm_graph + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
       sh "cargo run --release --bin chpot_weight_scaling -- #{dimacs_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_weight_scaling -- #{osm_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
     end
   end
 
   task building_blocks: [dimacs_graph + 'lower_bound_ch'] + ["#{exp_dir}/building_blocks"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
-      sh "cargo run --release --bin dijkstra -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simple_scale -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
     end
   end
 
   task applications: graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/applications"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
       td_graphs.each do |graph|
-        sh "cargo run --release --bin td_dijkstra -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      end
-      static_graphs.each do |graph|
-        sh "cargo run --release --bin dijkstra -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
       sh "cargo run --release --bin chpot_live -- #{osm_graph} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
