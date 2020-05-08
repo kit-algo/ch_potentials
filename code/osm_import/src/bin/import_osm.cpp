@@ -38,7 +38,7 @@ int main(int argc, char*argv[]){
 		return 2;
 	}
 
-        
+
         unordered_set<uint64_t>is_osm_node_traffic_end_point;
 
         for(int i=2; i<argc; ++i){
@@ -48,7 +48,7 @@ int main(int argc, char*argv[]){
                 }else{
                         string line;
                         while(getline(in, line)){
-                                istringstream line_in(line);                             
+                                istringstream line_in(line);
                                 string node_id;
                                 getline(line_in, node_id, ',');
                                 is_osm_node_traffic_end_point.insert(stol(node_id));
@@ -143,5 +143,7 @@ int main(int argc, char*argv[]){
 	save_vector("travel_time", travel_time);
 	save_vector("latitude", routing_graph.latitude);
 	save_vector("longitude", routing_graph.longitude);
+	save_vector("forbidden_turn_from_arc", routing_graph.forbidden_turn_from_arc);
+	save_vector("forbidden_turn_to_arc", routing_graph.forbidden_turn_to_arc);
 	save_vector("osm_node_ids", node_ids);
 }

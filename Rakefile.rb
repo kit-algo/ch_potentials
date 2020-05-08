@@ -130,6 +130,7 @@ namespace "exp" do
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
       sh "cargo run --release --bin chpot_live -- #{osm_graph} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_turns -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
