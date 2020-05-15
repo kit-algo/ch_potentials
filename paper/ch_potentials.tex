@@ -508,45 +508,14 @@ For the queries, we perform 10\,000 point-to-point queries where both source and
 \begin{table*}
 \centering
 \caption{Query performance with the different algorithmic features.}\label{tab:building_blocks}
-\begin{tabular}{lrrr}
-\toprule
-{} & Running Time &     Queue Pops &   Relaxed Arcs \\
-{} &         [ms] & [$\cdot 10^3$] & [$\cdot 10^6$] \\
-\midrule
-No Deg2, No Deg3, No SCC, No Pot. & 1765 & 7087.0 & 19.6 \\
-No Deg2, No Deg3, No Pot.         & 1308 & 6249.8 & 17.3 \\
-No Deg3, No Pot.                  & 1180 & 5233.7 & 16.5 \\
-No Pot.                           &  901 & 3035.5 & 15.1 \\
-No Deg2, No Deg3, No SCC          &  547 & 1006.4 &  2.7 \\
-No Deg2, No Deg3                  &  469 &  905.2 &  2.5 \\
-No Deg3                           &  410 &  767.5 &  2.4 \\
-                                  &  315 &  445.0 &  2.2 \\
-\bottomrule
-\end{tabular}
+\input{table/building_blocks.tex}
 \end{table*}
 
 \begin{table*}
 \centering
 % TODO dijkstra baseline, preprocessing
 \caption{Performance for different applications.}\label{tab:applications}
-\begin{tabular}{llrrrrr}
-\toprule
-        &                     &   Running &     Pot. Eval. &             Relaxed & Avg. length & Affected \\
-        &                     & time [ms] & $[\cdot 10^3]$ & arcs $[\cdot 10^3]$ &    increase &     [\%] \\
-\midrule
-OSM Ger & No Tunnels          &      39.4 &         3874.1 &               290.6 &        1.74 &     83.5 \\
-        & No Highways         &     338.5 &        30383.1 &              2555.9 &        6.24 &     95.0 \\
-        & Mapbox Live         &      96.5 &         9310.9 &               733.7 &        1.12 &     95.0 \\
-\addlinespace
-DIMACs  & Fastest $\times 10$ &       1.0 &           69.2 &                 2.7 &        1.00 &     16.5 \\
-Europe  & Fastest $\times 2$  &       1.0 &           68.9 &                 2.7 &        1.00 &     16.5 \\
-        & Random $\times 10$  &       1.1 &           80.9 &                 3.0 &        1.00 &      1.0 \\
-        & Random $\times 2$   &       1.0 &           76.7 &                 2.9 &        1.00 &      1.0 \\
-\addlinespace
-Ger06   & TD                  &       4.8 &          417.2 &                33.1 &        1.03 &     99.5 \\
-Eur17   & TD                  &      98.5 &         5143.8 &               553.3 &        1.04 &     98.5 \\
-\bottomrule
-\end{tabular}
+\input{table/applications.tex}
 \end{table*}
 
 \section{Conclusion}

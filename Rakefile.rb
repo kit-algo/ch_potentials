@@ -12,25 +12,25 @@ end
 task default: "paper/ch_potentials.pdf"
 
 namespace "fig" do
-  # file "paper/fig/ranks.pdf" => FileList["#{exp_dir}/rank_queries_all_graphs/*.json"] + FileList["#{exp_dir}/rank_query_stats_no_astar_all_graphs/*.json"] + ['eval/rank_plot.py'] do
-  #   sh "eval/rank_plot.py"
-  # end
+  file "paper/fig/scaled_weights.pdf" => FileList["#{exp_dir}/scaled_weights/*.json"] + ["eval/scaled_weights.py"] do
+    sh "eval/scaled_weights.py"
+  end
 end
 
 namespace "table" do
-  # file "paper/table/related_work.tex" => FileList[
-  #   "#{exp_dir}/katch/contraction/*.out",
-  #   "#{exp_dir}/katch/uniform_queries/*.out",
-  #   "#{exp_dir}/tds/contraction/*.out",
-  #   "#{exp_dir}/tds/uniform_queries/*.out",
-  #   "#{exp_dir}/queries_all_graphs/*.json",
-  #   "#{exp_dir}/customization_all_graphs/*.json",
-  #   "#{exp_dir}/partition/*.out",
-  #   "#{exp_dir}/contraction/*.json",
-  #   ] + ["eval/related_work_cmp.py"] do
+  directory "paper/table"
 
-  #   sh "eval/related_work_cmp.py"
-  # end
+  file "paper/table/applications.tex" => FileList[
+    "#{exp_dir}/preprocessing/*.out",
+    "#{exp_dir}/applications/*.json",
+    ] + ["eval/applications.py", "paper/table"] do
+
+    sh "eval/applications.py"
+  end
+
+  file "paper/table/building_blocks.tex" => FileList["#{exp_dir}/building_blocks/*.json"] + ["eval/building_blocks.py", "paper/table"] do
+    sh "eval/building_blocks.py"
+  end
 end
 
 osm_graph = "/algoDaten/zeitz/roadgraphs/osm_ger_rel/"
