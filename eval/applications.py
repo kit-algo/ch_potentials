@@ -57,7 +57,7 @@ def parse_contraction_output(path):
 preprocessing = pd.DataFrame.from_records([parse_contraction_output(path) for path in glob.glob(base + "preprocessing/*.out")])
 
 queries['affected'] = queries['lower_bound'] != queries['result']
-queries['increase'] = queries['result'] / queries['lower_bound']
+queries['increase'] = (queries['result'] / queries['lower_bound'] - 1) * 100
 
 table = queries.groupby(['graph', 'exp']).agg(
     running_time_ms=('running_time_ms', 'mean'),
@@ -66,13 +66,54 @@ table = queries.groupby(['graph', 'exp']).agg(
     increase=('increase', 'mean'),
     affected=('affected', 'sum'),
     size=('affected', 'count'))
+
+table = table.reindex(['/algoDaten/zeitz/roadgraphs/europe/',
+    '/algoDaten/zeitz/roadgraphs/osm_ger_rel/',
+    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/',
+    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/'], level=0) \
+    .reindex(['chpot_td',
+    'random_times_2',
+    'random_times_10',
+    'fastest_times_2',
+    'fastest_times_10',
+    'chpot_live',
+    'no_tunnels',
+    'no_highways',
+    'chpot_turns'], level=1)
+
 table['affected'] = table['affected'] * 100 / table['size']
 table = table[table.columns[0:-1]]
 table['num_relaxed_arcs'] = table['num_relaxed_arcs'] / 1000
 table['num_pot_evals'] = table['num_pot_evals'] / 1000
 table = table.join(preprocessing.groupby('graph').mean())
 table = table.join(dijkstra_queries.groupby(['graph', 'exp']).agg(dijkstra_running_time_ms=('running_time_ms', 'mean')))
-#table = table.round(1)
+table = table.round(1)
+
+table = table.rename(index={
+    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/': 'TDGer06',
+    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/': 'TDEur17',
+    '/algoDaten/zeitz/roadgraphs/osm_ger_rel/': 'OSM Germany',
+    '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe',
+    'chpot_td': 'TD',
+    'chpot_live': 'Mapbox Live',
+    'chpot_turns': 'Turns',
+    'no_highways': 'No Highways',
+    'no_tunnels': 'No Tunnels',
+    'fastest_times_10': 'Fastest $\\times 10$',
+    'fastest_times_2': 'Fastest $\\times 2$',
+    'random_times_10': 'Random $\\times 10$',
+    'random_times_2': 'Random $\\times 2$',
+})
+
+lines = table.to_latex(escape=False).split("\n")
+
+lines = lines[:2] + [
+  R" & &   Running &     Pot. Eval. &             Relaxed &        Length & Affected & Preprocessing & Dijkstra \\"
+  R" & & time [ms] & $[\cdot 10^3]$ & arcs $[\cdot 10^3]$ & increase [\%] &     [\%] &           [s] &     [ms] \\"
+] + lines[4:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + lines[13:]
+
+output = "\n".join(lines) + "\n"
+output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
 
 with open("paper/table/applications.tex", 'w') as f:
-  f.write(table.to_latex())
+  f.write(output)

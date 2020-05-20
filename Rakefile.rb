@@ -2,7 +2,10 @@ raise "No or wrong experiments output dir configured - please set CHPOT_EXP_OUTP
 exp_dir = ENV['CHPOT_EXP_OUTPUT_DIR']
 
 file "paper/ch_potentials.pdf" => [
-  "paper/ch_potentials.tex"] do
+  "paper/ch_potentials.tex",
+  "paper/fig/scaled_weights.pdf",
+  "paper/table/applications.tex",
+  "paper/table/building_blocks.tex"] do
 
   Dir.chdir "paper" do
     sh "latexmk -pdf ch_potentials.tex"

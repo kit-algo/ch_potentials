@@ -18,13 +18,14 @@ data = [json.load(open(path)) for path in paths]
 
 queries = pd.DataFrame.from_records([{
     'weight_factor': exp['factor'],
-    'graph': run['args'][1],
+    'graph': { '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe', '/algoDaten/zeitz/roadgraphs/osm_ger_rel/': 'OSM Germany' }[run['args'][1]],
     **algo }
     for run in data for exp in run['experiments'] for algo in exp['algo_runs'] if algo.get('algo') == 'CH Potentials Query'])
 
 plt.figure(figsize=(11,4))
-g = sns.boxplot(data=queries, x='weight_factor', y='running_time_ms', hue='graph', linewidth=0.8)
+g = sns.boxplot(data=queries, x='weight_factor', y='running_time_ms', hue='graph', linewidth=0.8, showmeans=True)
 g.set_ylabel('Running Time [ms]')
 g.set_xlabel('Weight Factor')
+g.legend().set_title('')
 plt.tight_layout()
 g.get_figure().savefig('paper/fig/scaled_weights.pdf')
