@@ -95,7 +95,9 @@ int main(int argc, char*argv[]){
 			}
 			return get_osm_car_direction_category(osm_way_id, way_tags, log_message);
 		},
-		nullptr,
+		[&](uint64_t osm_relation_id, const std::vector<OSMRelationMember>&member_list, const TagMap&tags, std::function<void(OSMTurnRestriction)>on_new_restriction){
+			return decode_osm_car_turn_restrictions(osm_relation_id, member_list, tags, on_new_restriction, log_message);
+		},
 		log_message
 	);
 
