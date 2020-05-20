@@ -3,6 +3,8 @@
 #include <routingkit/osm_decoder.h>
 #include <routingkit/vector_io.h>
 #include <routingkit/id_mapper.h>
+#include <routingkit/strongly_connected_component.h>
+#include <routingkit/filter.h>
 
 #include <functional>
 #include <iostream>
@@ -102,6 +104,7 @@ int main(int argc, char*argv[]){
 	);
 
 	unsigned arc_count  = routing_graph.arc_count();
+	unsigned node_count  = routing_graph.node_count();
 
 	std::vector<uint32_t>travel_time = routing_graph.geo_distance;
 	for(unsigned a=0; a<arc_count; ++a){
@@ -126,6 +129,7 @@ int main(int argc, char*argv[]){
 		}
 	}
 
+	cout << "total node count : " << node_count << endl;
 	cout << "total arc count : " << arc_count << endl;
 	cout << "tunnel arc count : " << tunnel_arc_count << endl;
 	cout << "freeway arc count : " << freeway_arc_count << endl;
@@ -137,15 +141,93 @@ int main(int argc, char*argv[]){
 	}
 
 
-	save_vector("first_out", routing_graph.first_out);
-	save_vector("head", routing_graph.head);
+        std::vector<unsigned>first_out = routing_graph.first_out;
+        std::vector<unsigned>head = routing_graph.head;
+        std::vector<unsigned>geo_distance = routing_graph.geo_distance;
+
+        std::vector<float>latitude = routing_graph.latitude;
+        std::vector<float>longitude = routing_graph.longitude;
+
+        std::vector<bool>vec_node_in_largest_scc = compute_largest_strongly_connected_component(first_out, head);
+        BitVector node_in_largest_scc(node_count);
+        for(unsigned i=0; i<node_count; ++i){
+                node_in_largest_scc.set(i, vec_node_in_largest_scc[i]);
+        }
+
+        BitVector arc_in_largest_scc(arc_count);
+        for(unsigned i=0; i<arc_count; ++i){
+                arc_in_largest_scc.set(i, node_in_largest_scc.is_set(tail[i]) && node_in_largest_scc.is_set(head[i]));
+        }
+
+        std::vector<unsigned>old_to_new_node(node_count);
+        unsigned new_node_count = 0;
+        for(unsigned x=0; x<node_count; ++x){
+                if(node_in_largest_scc.is_set(x)){
+                        old_to_new_node[x] = new_node_count++;
+                }else{
+                        old_to_new_node[x] = invalid_id;
+                }
+        }
+
+        std::vector<unsigned>old_to_new_arc(arc_count);
+        unsigned new_arc_count = 0;
+        for(unsigned x=0; x<arc_count; ++x){
+                if(arc_in_largest_scc.is_set(x)){
+                        old_to_new_arc[x] = new_arc_count++;
+                }else{
+                        old_to_new_arc[x] = invalid_id;
+                }
+        }
+
+	cout << "node count in largest scc: " << new_node_count << endl;
+	cout << "arc count in largest scc: " << new_arc_count << endl;
+
+        // first we get rid of the arcs outside of the lscc
+
+        tail = keep_element_of_vector_if(arc_in_largest_scc, tail);
+        head = keep_element_of_vector_if(arc_in_largest_scc, head);
+        arc_category = keep_element_of_vector_if(arc_in_largest_scc, arc_category);
+        geo_distance = keep_element_of_vector_if(arc_in_largest_scc, geo_distance);
+        travel_time = keep_element_of_vector_if(arc_in_largest_scc, travel_time);
+
+        std::vector<unsigned>forbidden_turn_from_arc, forbidden_turn_to_arc;
+
+        for(unsigned i=0; i<routing_graph.forbidden_turn_from_arc.size(); ++i){
+                unsigned from = old_to_new_arc[routing_graph.forbidden_turn_from_arc[i]];
+                unsigned to = old_to_new_arc[routing_graph.forbidden_turn_to_arc[i]];
+                if(from != invalid_id && to != invalid_id){
+                        forbidden_turn_from_arc.push_back(from);
+                        forbidden_turn_to_arc.push_back(to);
+                }
+        }
+
+        // next we get rid of the nodes outside of the lscc
+
+        for(auto&x:tail){
+                x = old_to_new_node[x];
+                assert(x != invalid_id);
+        }
+
+        for(auto&x:head){
+                x = old_to_new_node[x];
+                assert(x != invalid_id);
+        }
+
+        first_out = invert_vector(tail, new_node_count);
+
+        latitude = keep_element_of_vector_if(node_in_largest_scc, latitude);
+        longitude = keep_element_of_vector_if(node_in_largest_scc, longitude);
+        node_ids = keep_element_of_vector_if(node_in_largest_scc, node_ids);
+
+	save_vector("first_out", first_out);
+	save_vector("head", head);
 	save_vector("tail", tail);
 	save_vector("arc_category", arc_category);
-	save_vector("geo_distance", routing_graph.geo_distance);
+	save_vector("geo_distance", geo_distance);
 	save_vector("travel_time", travel_time);
-	save_vector("latitude", routing_graph.latitude);
-	save_vector("longitude", routing_graph.longitude);
-	save_vector("forbidden_turn_from_arc", routing_graph.forbidden_turn_from_arc);
-	save_vector("forbidden_turn_to_arc", routing_graph.forbidden_turn_to_arc);
+	save_vector("latitude", latitude);
+	save_vector("longitude", longitude);
+	save_vector("forbidden_turn_from_arc", forbidden_turn_from_arc);
+	save_vector("forbidden_turn_to_arc", forbidden_turn_to_arc);
 	save_vector("osm_node_ids", node_ids);
 }
