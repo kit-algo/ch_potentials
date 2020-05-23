@@ -70,7 +70,7 @@ int main(int argc, char*argv[]){
 
 	auto mapping = load_osm_id_mapping_from_pbf(
 		pbf_file,
-		[&](uint64_t osm_node_id, const TagMap&node_tags){
+		[&](uint64_t osm_node_id, const TagMap&){
                         return is_osm_node_traffic_end_point.count(osm_node_id) > 0;
                 },
 		[&](uint64_t osm_way_id, const TagMap&tags){
@@ -100,7 +100,9 @@ int main(int argc, char*argv[]){
 		[&](uint64_t osm_relation_id, const std::vector<OSMRelationMember>&member_list, const TagMap&tags, std::function<void(OSMTurnRestriction)>on_new_restriction){
 			return decode_osm_car_turn_restrictions(osm_relation_id, member_list, tags, on_new_restriction, log_message);
 		},
-		log_message
+		log_message,
+                false,
+                OSMRoadGeometry::uncompressed
 	);
 
 	unsigned arc_count  = routing_graph.arc_count();
@@ -219,6 +221,34 @@ int main(int argc, char*argv[]){
         longitude = keep_element_of_vector_if(node_in_largest_scc, longitude);
         node_ids = keep_element_of_vector_if(node_in_largest_scc, node_ids);
 
+        // now take care of the modelling nodes
+
+        std::vector<unsigned>first_modelling_node;
+        std::vector<float>modelling_node_latitude;
+        std::vector<float>modelling_node_longitude;
+
+        {
+                for(unsigned a=0; a<arc_count; ++a){
+                        unsigned n = old_to_new_arc[a];
+                        if(n != invalid_id){
+                                first_modelling_node.push_back(modelling_node_latitude.size());
+                                modelling_node_latitude.insert(
+                                        modelling_node_latitude.end(),
+                                        routing_graph.modelling_node_latitude.begin() + routing_graph.first_modelling_node[a],
+                                        routing_graph.modelling_node_latitude.begin() + routing_graph.first_modelling_node[a+1]
+                                );
+                                modelling_node_longitude.insert(
+                                        modelling_node_longitude.end(),
+                                        routing_graph.modelling_node_longitude.begin() + routing_graph.first_modelling_node[a],
+                                        routing_graph.modelling_node_longitude.begin() + routing_graph.first_modelling_node[a+1]
+                                );
+                        }
+                }
+
+                first_modelling_node.push_back(modelling_node_latitude.size());
+                assert(first_modelling_node.size() == new_arc_count+1);
+        }
+
 	save_vector("first_out", first_out);
 	save_vector("head", head);
 	save_vector("tail", tail);
@@ -230,4 +260,7 @@ int main(int argc, char*argv[]){
 	save_vector("forbidden_turn_from_arc", forbidden_turn_from_arc);
 	save_vector("forbidden_turn_to_arc", forbidden_turn_to_arc);
 	save_vector("osm_node_ids", node_ids);
+	save_vector("first_modelling_node", first_modelling_node);
+	save_vector("modelling_node_latitude", modelling_node_latitude);
+	save_vector("modelling_node_longitude", modelling_node_longitude);
 }
