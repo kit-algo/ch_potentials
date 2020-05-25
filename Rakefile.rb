@@ -69,7 +69,7 @@ namespace "prep" do
 
   static_graphs.each do |graph|
     file graph + "lower_bound" => graph do
-      sh "ln -s #{graph}/travel_time #{graph}/lower_bound" unless File.exist? "#{graph}/travel_time"
+      sh "ln -s #{graph}/travel_time #{graph}/lower_bound" unless File.exist? "#{graph}/lower_bound"
     end
   end
 
