@@ -165,7 +165,7 @@ We describe our work mostly in CH terms.
 Fortunately, all results are also directly applicable to CCH.
 We describe the trade-off between the two variants in Section \ref{TODO}.
 
-\section{Applications - Or why do we care about Flexibility?}
+\subsection{Applications need Flexibility}
 
 Modelling navigation as shortest path problem in graphs with scalar weights is a good but not perfect formalization.
 Several important effects are ignored.
@@ -188,7 +188,7 @@ For example, trucks are not allowed in some areas depending on the time of the d
 Some truck carry hazardous materials and are therefore not allowed in some areas because of environmental protection laws.
 Once the truck has delivered his goods, he may again pass the area.
 
-\section{Problem Setting}
+\subsection{Problem Setting}
 
 As detailed in the previous section, the reasons why flexibility is a necessary property of a routing engine are sheer endless.
 However, a formal problem specification that encompasses all these options is complex and well beyond the scope of this paper.
@@ -208,7 +208,8 @@ The performance of our algorithm depends on this lower bound being close to the 
 Using the trivial lower bound of zero everywhere, CH-potentials degenerate to an engineered variant of Dijkstra's algorithm.
 
 Throughout this paper, we assume that we are given a directed graph $G$ with nodes $V$ and edges $E$.
-Every edge has a lower bound weight $w_\ell:E\rightarrow \mathbb{R}^+$ and a query weight $w_q:E\rightarrow \mathbb{R}^+$.
+Every edge $(x,y)\in E$ has a \emph{tail} node $x$ and a \emph{head} node $y$.
+Further, every edge has a lower bound weight $w_\ell:E\rightarrow \mathbb{R}^+$ and a query weight $w_q:E\rightarrow \mathbb{R}^+ \cup \{+\infty\}$.
 It must hold that $0\le w_\ell(e)\le w_q(e)$.
 We are further given a source node $s$ and a target node $t$.
 
@@ -219,7 +220,7 @@ The second phase is the \emph{query phase}.
 It is given the auxilary data and $G$, $w_\ell$, $w_q$, $s$, and $t$.
 The output of the query phase, is a path $e_1,e_2\ldots e_k$ such that $\sum w_q(e_i)$ is minimized.
 
-\section{Related Work}
+\subsection{Related Work}
 
 TODO: Dijkstra's algorithm \cite{d-ntpcg-59} can be used to solve the stated problem formalization \cite{Veit?}.
 
@@ -243,7 +244,7 @@ For the query, potentials are calculated using the triangle inequality for short
 This achieves decent speed-ups and can be used in other problem settings.
 However, the performance is not competitive to hierarchical approaches.
 
-\section{Goal-Directed Search using A*}
+\section{Algorithm Description}
 
 A* star is a well-known extension to Dijkstra's algorithm.
 It uses a potential function $\pi:V\rightarrow \mathbb{R}^+$.
@@ -251,18 +252,20 @@ The potential is often called heuristic.
 A* is optimal, if the potential $\pi(v)$ is consistent \cite{p-hissc-84}.
 In this paper, all considered potentials are derived from exact shortest path distances and are thus consistent.
 
+
 The best possible potential that can be derived from the auxilary data is the minimum path distance with respect to $w_\ell$.
 Every better, consistent potential requires knowledge of the query weights $w_q$, which is unavailable during preprocessing.
 Our technique allows to compute these best possible potentials.
 Within this regard, CH-potentials are \emph{optimal A* potentials}.
 
-\section{Contraction Hierarchy (CH)}
+\subsection{Contraction Hierarchy (CH)}
 
 \begin{algorithm2e}
-\KwData{$B[x]$ tentative distance from $x$ to $t$, initially $+\infty$}
-\KwData{Mininum priority queue $Q$, also called open list, initially empty}
-Add $t$ to $Q$ with weight 0\;
+\KwData{$B[x]$ tentative distance from $x$ to $t$}
+\KwData{Min. priority queue $Q$, also called open list}
+$B[x] \leftarrow +\infty$ for all $x\neq t$\;
 $B[t] \leftarrow 0$\;
+Make $Q$ only contain $t$ with weight $0$\;
 \While{not $Q$ empty}{
 	$y\leftarrow$ pop minimum element from $Q$\;
 	\For{$xy$ is down-edge in $G^+$}{
@@ -287,9 +290,9 @@ In this section, we give a high-level overview of the aspects relevant to this p
 A CH places nodes into levels.
 No edge must connect two nodes within one level.
 Levels are ordered by ``importance''.
-The intuition is that dead-ends are unimportant while highway bridges are very important.
-An edge goes up when it goes from a node in a lower level to higher level.
-Down edges are defined analogously.
+The intuition is that dead-ends are unimportant and low while highway bridges are very important and high.
+An edge goes \emph{up} when it goes from a node in a lower level to higher level.
+\emph{Down} edges are defined analogously.
 An \emph{up-down path} is a path where only one node $v$ is more important than its neighbors.
 $v$ is called the \emph{mid} node.
 An \emph{up path} is a path where the last node is the mid node.
@@ -299,7 +302,7 @@ Every up and down path is an up-down path.
 In the preprocessing phase, a CH adds \emph{shortcut} edges to the input graph $G$ to obtain $G^+$.
 The trick is that in $G^+$ for pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path with the same length as a shortest path in $G$.
 We may therefore restrict our search to up-down paths in $G^+$.
-This search is performed using a bidirectional search.
+This search is bidirectional.
 The forward search starts from $s$ and only follows up-edges.
 Similarily, the backward search starts at $t$ and only follows down-edges in reversed direction.
 The two searches meet in the mid node.
@@ -317,7 +320,7 @@ This works, however, while one CH query is fast, answering one for every node in
 Fortunatly, we can do better.
 However, for this we need another component called Phast \cite{dgnw-phast-13}.
 
-\section{Potentials using PHAST}
+\subsection{Potentials using PHAST}
 
 \begin{algorithm2e}
 \KwData{$P[x]$ tentative distance from $x$ to $t$}
@@ -358,7 +361,7 @@ However, the Phast step before the search is comparatively expensive.
 The reason for this is that the distance from all nodes towards $t$ are computed.
 Ideally, we only want to compute the distances from the nodes explored in the $A^*$ search towards $t$.
 
-\section{CH-Potentials}
+\subsection{CH-Potentials}
 
 \begin{algorithm2e}
 \KwData{$B[x]$ tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
@@ -398,7 +401,7 @@ However, we can still improve the performance.
 A quick investigation reveals, that most of the running time is spent in the potential evaluation.
 We therefore investigate methods to evaluate fewer potentials.
 
-\section{Avoiding Potential Function Evaluations at Degree Two Nodes}
+\subsection{Skip Degree Two Nodes}
 
 Potential evaluation is an expensive operation that we want to avoid.
 A potential evaluation is always paired with a queue push operation.
@@ -426,7 +429,7 @@ If $D[z]$ is modified and $d(z)>2$, $z$'s weight in the queue is set to $D[y]+\p
 As the target node $t$ might have degree two, our algorithm cannot rely on stopping, when $t$ is removed from the queue.
 Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight in the queue.
 
-\section{Avoiding Potential Function Evaluations at Degree Three Nodes}
+\subsection{Skip Degree Three Nodes}
 
 \begin{figure}
 
@@ -454,7 +457,9 @@ Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+\pi(b)$.
 If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
 The situation is depicted in Figure~\ref{fig:push-deg3}.
 
-\section{Avoid Dead-Ends using Largest Biconnected Component}
+\subsection{Skip Nodes Outside of Largest Biconnected Component}
+
+\label{sec:largested-biconnected-component}
 
 A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
@@ -475,6 +480,73 @@ Otherwise, in the second step starts.
 It consits of applying the basic CH-potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
+
+
+\section{Extensions}
+
+A* is a very flexible algorithm. 
+As such there exist many extensions of CH-Potentials to solve extended problem settings.
+While extending with CH-Potentials is comparatively easy, this is usually not the case with competitor algorithms.
+
+\subsection{Forbidden Turns}
+
+The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
+However in the real world, turn restrictions, such as a forbidden left or right turn, exist.
+Handling turn restrictions correctly is crucial for many applications.
+Such restrictions are usually modelled using turn weights.
+We extend CH-potentials by using zero as lower bound for every turn weight in the potential.
+
+In the extended problem, a \emph{turn weight} $w_t$ is introduced~\cite{related-turn-litrature,see-geisberger-turn-table-paper}.
+$w_t$ maps a pair of incident edges onto the time required to perform the turn.
+Formally, $w_t$ is a function from $V^3$ to $\mathbb{R}^+ \cup\{+\infty\}$.
+A forbidden turn is modelled by setting the corresponding $w_t$ to $+\infty$.
+
+A path with nodes $v_1, v_2,\ldots v_k$ has the following \emph{turn-aware path weight}:\[
+w_q(v_1, v_2) + \sum_{i=2}^{k-1}  w_t(v_{i-1},v_i,v_{i+1})  + w_q(v_i,v_{i+1}) 
+\] The input to the extended problem consists of a source edge and a target edge.
+The objective is to find a path connecting these edges such that the turn-aware path weight is minimized.
+The first term $w_q(v_1, v_2)$ only depends on the source edge.
+As all considered paths share the same source edge, the term is the same for all paths.
+We can therefore ignore it during the optimization.
+
+To account for turns, many algorithms construct a \emph{turn-expanded} graph $G'$.
+Edges in the input graph $G$ correspond to \emph{expanded nodes} in $G'$. 
+For every pair of successive edges $(x,y)$ and $(y,z)$ in $G$, there is an \emph{expanded edge} in $G'$ with expanded weight $w_t(x,y,z) + w_q(y,z)$.
+Notice how an expanded edge weight looks similar to a term of the turn-aware path weight.
+
+A sequence of expanded nodes in the expanded graph $G'$ corresponds to a sequence of edges in the input graph $G$.
+The weight of a path in $G'$ is equal to the turn-aware weight of the corresponding path in $G$ minus the irrelevant $w_q(v_1,v_2)$ term.
+Turn-aware shortest paths can thus be computed by searching for shortest paths in the expanded graph.
+
+The most straight-forward combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
+However, this implies computing a CH on the expanded graph.
+This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{geisberger-turn-table-paper} which we want to avoid.
+
+We therefore only apply the A* search to the expanded graph $G'$. 
+The potentials are computed with respect to the input graph $G$.
+
+Let $(p,q)$ be the target edge and $(x,y)$ the edge for which the A* search wants to compute a potential.
+We construct non-turn-aware CH-Potentials towards $q$.
+The potential for the edge $(x,y)$ is equal to the potential of $y$.
+
+To prove correctness, consider the turn-aware path weight of an optimal path $v_1,v_2\ldots v_k$ with $v_1=x$, $v_2=y$, $v_{k-1}=p$, and $v_k=q$.
+We can lower bound the expression as follows:
+\[
+\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1}) \le \sum_{i=2}^{k-1} \underbrace{w_t(v_{i-1},v_i,v_{i+1})}_{0\le} + \sum_{i=2}^{k-1} \underbrace{w_q(v_i,v_{i+1})}_{w_\ell(v_i,v_{i+1})\le}
+\]
+The $\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1})$ expression is the length of some, not necessarly shortest, $yq$-path in $G$ with $w_\ell$.
+It is by definition not smaller than the shortest $yq$-path length in $G$ with $w_\ell$.
+The shortest $yq$-path length is exactly what CH-Potentials compute.
+The potential is therefore a lower bound.
+It is consistent because it is derived from exact shortest path in $G$ with $w_\ell$.
+
+Unfortunately, the undirected graph underlying the expanded graph is always biconnected.
+The optimization described in \ref{sec:largested-biconnected-component} is therefore ineffective in this setting.
+
+With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH and the preprocessing.
+This allows for a comparatively easy setup and turn-aware routing can be activate or deactivate for every query individually.
+
+\subsection{Time-Dependent Routing}
 
 
 \section{Experiments}
