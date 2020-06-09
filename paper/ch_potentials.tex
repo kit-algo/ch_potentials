@@ -481,7 +481,6 @@ It consits of applying the basic CH-potential algorithm restricted to $G_C$ from
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
 
-
 \section{Extensions}
 
 A* is a very flexible algorithm. 
@@ -538,15 +537,60 @@ The $\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1})$ expression is the length of some, not
 It is by definition not smaller than the shortest $yq$-path length in $G$ with $w_\ell$.
 The shortest $yq$-path length is exactly what CH-Potentials compute.
 The potential is therefore a lower bound.
-It is consistent because it is derived from exact shortest path in $G$ with $w_\ell$.
+It is consistent because it is derived from exact shortest paths in $G$ with $w_\ell$.
 
 Unfortunately, the undirected graph underlying the expanded graph is always biconnected.
 The optimization described in \ref{sec:largested-biconnected-component} is therefore ineffective in this setting.
 
-With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH and the preprocessing.
+With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH and its preprocessing.
 This allows for a comparatively easy setup and turn-aware routing can be activate or deactivate for every query individually.
 
-\subsection{Time-Dependent Routing}
+\subsection{Historic Traffic Patterns}
+
+The classical shortest path problem assumes that edge weights are scalars. 
+However in practice, travel times vary along an edge.
+One source of variance are recurring congestion patterns.
+
+These are modelled using functions as edge weights~\cite{lots-of-td-papers}.
+They map the time of entry into an edge onto the travel time through it.
+Formally, $w_q$ is now a \emph{travel time function} from $E\times \mathbb{R}$ to $\mathbb{R}^+$. 
+$w_q(e, \tau)$ is the travel time through edge $e$ when entering it at $\tau$.
+
+The input to the problem consists of a source node $s$ and a target node $t$ as in the classical problem formulation.
+Additionally, the input contains a source time $\tau_s$.
+A path with edges $e_1,e_2\ldots e_k$ is weighted using $\alpha_k$, which is defined recursively as follows:\[
+\begin{split}
+\alpha_{1} & = w_q(e_1, \tau_s) \\
+\alpha_{k} & = \alpha_{k-1} + w_q(e_1, \alpha_{k-1})
+\end{split}
+\]
+The objective is to find a path that minimizes $\alpha_k$.
+
+If all travel time functions fulfill the \emph{no-waiting property}, this problem can be solved using a straight forward extension of Dijkstra's algorithm \cite{td-alt?}.
+The necessary modification to A* is analogous.
+Without the no-waiting property the problem is in general NP-hard \cite{veit}.
+The no-waiting property states that it is never benficial to wait at a node before entering an edge.
+Formally stated, the following must hold:\[
+\forall e\in E,\tau\in \mathbb{R},\delta\in \mathbb{R}^+: w_q(e, \tau) \le w_q(e, \tau+\delta) + \delta
+\]
+
+Usually, travel time functions are stored as piece-wise linear functions.
+Our implementation follows this setup.
+However in priciple, our algorithm works with any representation that enables an efficient function evaluation.
+
+Following \cite{td-alt}, we set $w_\ell(e)$ to the minimum travel time for every edge, i.e., $w_\ell(e) = \min_\tau w_q(e,\tau)$.
+This setup gives us a lower bound weight that is independent of the edge entry time. 
+Howeve, for every entry time, $w_\ell(e)$ is a valid lower bound.
+
+The modifications to make CH-Potentials work are straight forward.
+We compute the CH with respect to $w_\ell$ which maps edges onto scalars.
+With this CH, we can compute CH-Potentials.
+These are then combined with the travel-time-function-aware A* variant of \cite{td-alt?}. 
+
+With this setup we extended CH-Potentials in a way that keeps all travel-time-function-related information out of the CH and its preprocessing.
+This way, we avoid the main problems of \cite{tdch,catchup}, which propagate the travel time functions into the CH construction.
+
+\subsection{Live Traffic}
 
 
 \section{Experiments}
