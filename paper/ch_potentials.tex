@@ -593,6 +593,28 @@ This way, we avoid the main problems of \cite{tdch,catchup}, which propagate the
 \subsection{Live Traffic}
 
 
+Historic travel time : $w_h(e,\tau)$
+
+Live travel time : $w_c(e)$
+
+Lower bound travel time : $w_\ell(e)$
+
+$\tau_{\mathrm{now}}$ : the current moment in time
+
+$\tau_{\mathrm{soon}}$ : now plus one hour 
+
+A* works on $w_q(e,\tau)$ which is defined as follows:
+
+$w_q(e,\tau) = w_c(e)$ for $\tau \le \tau_{\mathrm{soon}}$
+
+If $w_h(e,\tau_{\mathrm{soon}}) < w_c(e)$, then $w_q(e,\tau) = \max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_h(e,\tau)\}$ for $\tau \ge \tau_{\mathrm{soon}}$.
+
+If $w_h(e,\tau_{\mathrm{soon}}) = w_c(e)$, then $w_q(e,\tau) = w_h(e,\tau)$ for $\tau \ge \tau_{\mathrm{soon}}$.
+
+If $w_h(e,\tau_{\mathrm{soon}}) > w_c(e)$, then $w_q(e,\tau) = \min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_h(e,\tau)\}$ for $\tau \ge \tau_{\mathrm{soon}}$.
+
+
+
 \section{Experiments}
 
 \label{sec:experiments}
