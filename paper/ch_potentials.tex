@@ -55,7 +55,7 @@ While Dijkstra's algorithm can be used to solve these problems, it is too slow f
 A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, or Artificial Intelligence.
 However, A*'s performance depends on the availability of a good potential, also called heuristic, function.
 Computing a good potential is a challenge of its own.
-To avoid the need for a potential, many hierachical speedup techniques have been developped.
+To avoid the need for a potential, many hierarchical speedup techniques have been developped.
 They achieve speed and optimality but sacrifize flexibility.
 In this paper, we use hierarchical techniques to compute potential functions.
 With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining optimality.
@@ -131,7 +131,7 @@ A classic speedup approach is the well-known A* algorithm \cite{hnr-afbhd-68}.
 While flexible, A*'s performance crucially depends on the quality of the potential, also called heuristic, function.
 Finding such a function that can be computed efficiently is difficult.
 A lot of research of the last decade has therefore focused on mostly hierarchical approaches \cite{gssv-erlrn-12,dsw-cch-15,dgpw-crprn-13,ss-ehh-12} which do not require such a function.
-A popular hierachical algorithm is Contraction Hierarchy (CH) \cite{gssv-erlrn-12}.
+A popular hierarchical algorithm is Contraction Hierarchy (CH) \cite{gssv-erlrn-12}.
 There is a lot of work that extends CH to handle more complex settings.
 For example, in \cite{fns-opca-14,gks-rpfof-10} multi-criteria optimization is studied.
 In \cite{dsw-cch-15}, CH is modified to support Live-Traffic.
@@ -141,7 +141,7 @@ While these works show that it is possible to extend hierarchical approaches, th
 Further, in every setting the flexibility available at query time is fairly limited and usually encompasses only one very specific setting.
 
 While undoubtedly fast, hierarchical approaches tend to sacrifice flexibility to obtain speed.
-In this paper, we explore CH-Potentials, a novel combination of A* and the hierachical techniques CH and CCH.
+In this paper, we explore CH-Potentials, a novel combination of A* and the hierarchical techniques CH and CCH.
 We are not the first to combine hierarchical approaches and A* \cite{bdsssw-chgds-10, gkw-blwr-07, bdgwz-sfpcs-19}.
 However, past work mostly uses A* to accelerate hierarchical approaches and sacrifzies A*'s felxibility in the process.
 Our primary algorithm design objective is to retain A*'s flexibility.
@@ -170,23 +170,34 @@ We describe the trade-off between the two variants in Section \ref{TODO}.
 Modelling navigation as shortest path problem in graphs with scalar weights is a good but not perfect formalization.
 Several important effects are ignored.
 In this section, we list a few to motivate why flexibility is important.
+In Section~\ref{sec:extensions}, we describe how to handle some with CH-Potentials in detail.
 
 The travel time across an edge is in general not constant over time.
-Live-traffic and historic traffic patterns are examples of how the travel time can change.
+Live and predicted traffic are examples of how the travel time can change.
 Another example are road blockages.
 These are usually modelled by setting travel times to infinity.
 Some blockage types, such as accidents, are similar to live traffic.
-Other blockages such as reversible one-ways, time-dependent turn-restrictions, or seasonal closures are more similar to historic traffic patterns.
+Other blockages such as reversible one-ways, time-dependent turn-restrictions, or seasonal closures are more similar to predicted traffic.
 
 Flexibility is also necessary to account for driver preferences.
 For example, common options in navigation devices include avoiding highways or tunnels.
+A user preference for simple routes~\cite{https://dl.acm.org/doi/10.1145/2525314.2525362}, i.e., routes with few road changes, may also be considered.  
 These requirements are usally modelled by modifying the edge weights and are highly depend on the driver.
 Sometimes they even depend on his current mood and might change while driving.
+In this paper, we assume that the driver preference is known.
+We refer to \cite{https://dl.acm.org/doi/10.1145/2820783.2820808,https://dl.acm.org/doi/10.1145/2996913.2997004} for approaches to learn these requirements.
 
 Trucks are another class of vehicles with diverse and specific needs.
 For example, trucks are not allowed in some areas depending on the time of the day.
 Some truck carry hazardous materials and are therefore not allowed in some areas because of environmental protection laws.
 Once the truck has delivered his goods, he may again pass the area.
+
+Flexibility can also be used to limit the slope and speed of the roads used during routing.
+This can be useful in the context electric cars to limit energy consumption, increasing the effective range.
+We refer to \cite{https://dl.acm.org/doi/10.1145/2666310.2666382,https://dl.acm.org/doi/10.1145/2820783.2820826} for an introduction to the EV topic.
+
+A necessity for flexibility can also arise as part of a larger optimization.
+For example, \cite{https://dl.acm.org/doi/10.1145/2666310.2666406} adjusts the edge weights to coordinate the routing of large number of vehicle to avoid congestions. 
 
 \subsection{Problem Setting}
 
@@ -234,31 +245,8 @@ This setup is therefore very unflexible.
 Many hierarchical speedup techniques such as the original CH \cite{gssv-erlrn-12} use this setup.
 Notable exceptions are \cite{dgpw-crprn-13} and \cite{dsw-cch-15} which use a third phase to change the query edge weights.
 
-
-
-Simple Routes: https://dl.acm.org/doi/10.1145/2525314.2525362 example of flexibility need
-
-EV: https://dl.acm.org/doi/10.1145/2666310.2666382
-EV: https://dl.acm.org/doi/10.1145/2820783.2820826
-
-Traffic Planning: https://dl.acm.org/doi/10.1145/2666310.2666406 uses an A* search with adjusted costs
-
-Learning Cost functions with CRP: https://dl.acm.org/doi/10.1145/2820783.2820808 strong argument for flexibility. Must Cite.
-Also Learning Cost functions: https://dl.acm.org/doi/10.1145/2996913.2997004 Must Cite.
-
 Personalized Route Planning: https://dl.acm.org/doi/10.1145/2820783.2820830 exact same motivation argument as our paper. Must Cite. 
 TopoCore: https://dl.acm.org/doi/10.1145/2820783.2820856 Must Cite.
-
-Compute Travel Time Probability Per arc: https://dl.acm.org/doi/10.1145/2820783.2820836 Bullshit contentwise. However, could be cited in TD context.
-
-Travel Time Probability with A*: https://dl.acm.org/doi/10.1145/2996913.2996964
-
-Historic Travel Time Function Computation : https://dl.acm.org/doi/10.1145/2996913.2996988 not really relevant but could be cited.
-
-Most preferred path: https://dl.acm.org/doi/10.1145/3139958.3140029
-
-Off-Topic Important for Map-Matching: https://dl.acm.org/doi/10.1145/2525314.2525466
-
 
 
 TODO: Alt
@@ -506,22 +494,35 @@ Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkst
 The final path is the concatenation of all three path parts.
 
 \section{Extensions}
+\label{sec:extensions}
 
 A* is a very flexible algorithm. 
-As such there exist many extensions of CH-Potentials to solve extended problem settings.
-While extending with CH-Potentials is comparatively easy, this is usually not the case with competitor algorithms.
+Many extended problems can therefore be solved using the CH-Potentials algorithm.
+In this section, we describe some extended problems.
+
+\subsection{Avoiding Tunnels and/or Highways}
+\label{sec:no-tunnel-highway}
+
+Avoiding tunnels and/or highways is a common feature of navigation devices.
+Implementing this feature with CH-Potentials is easy.
+We set $w_\ell$ to the freeflow travel time. 
+If an edge is a tunnel and/or a highway, we set $w_q$ to $+\infty$.
+Otherwise, $w_q$ is also to the freeflow travel time.
+This is all that is necessary to make our CH-Potentials algorithm avoid tunnels and/or highways.
 
 \subsection{Forbidden Turns}
+\label{sec:no-turns}
 
 The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
 However in the real world, turn restrictions, such as a forbidden left or right turn, exist.
-Handling turn restrictions correctly is crucial for many applications.
 Such restrictions are usually modelled using turn weights.
 We extend CH-potentials by using zero as lower bound for every turn weight in the potential.
+In this section, we first present the extended problem setting.
+Afterwards, we describe how it can be solved with CH-Potentials.
 
 In the extended problem, a \emph{turn weight} $w_t$ is introduced~\cite{related-turn-litrature,see-geisberger-turn-table-paper}.
 $w_t$ maps a pair of incident edges onto the time required to perform the turn.
-Formally, $w_t$ is a function from $V^3$ to $\mathbb{R}^+ \cup\{+\infty\}$.
+Formally, $w_t$ is a function from $V^3$ to $\mathbb{R}^+ \cup \{+\infty\}$.
 A forbidden turn is modelled by setting the corresponding $w_t$ to $+\infty$.
 
 A path with nodes $v_1, v_2,\ldots v_k$ has the following \emph{turn-aware path weight}:\[
@@ -535,19 +536,17 @@ We can therefore ignore it during the optimization.
 To account for turns, many algorithms construct a \emph{turn-expanded} graph $G'$.
 Edges in the input graph $G$ correspond to \emph{expanded nodes} in $G'$. 
 For every pair of successive edges $(x,y)$ and $(y,z)$ in $G$, there is an \emph{expanded edge} in $G'$ with expanded weight $w_t(x,y,z) + w_q(y,z)$.
-Notice how an expanded edge weight looks similar to a term of the turn-aware path weight.
-
 A sequence of expanded nodes in the expanded graph $G'$ corresponds to a sequence of edges in the input graph $G$.
 The weight of a path in $G'$ is equal to the turn-aware weight of the corresponding path in $G$ minus the irrelevant $w_q(v_1,v_2)$ term.
 Turn-aware shortest paths can thus be computed by searching for shortest paths in the expanded graph.
 
-The most straight-forward combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
+The simplest combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
 However, this implies computing a CH on the expanded graph.
-This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{geisberger-turn-table-paper} which we want to avoid.
+This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{geisberger-turn-table-paper}.
+We want to avoid these complications.
 
 We therefore only apply the A* search to the expanded graph $G'$. 
 The potentials are computed with respect to the input graph $G$.
-
 Let $(p,q)$ be the target edge and $(x,y)$ the edge for which the A* search wants to compute a potential.
 We construct non-turn-aware CH-Potentials towards $q$.
 The potential for the edge $(x,y)$ is equal to the potential of $y$.
@@ -566,21 +565,25 @@ It is consistent because it is derived from exact shortest paths in $G$ with $w_
 Unfortunately, the undirected graph underlying the expanded graph is always biconnected.
 The optimization described in \ref{sec:largested-biconnected-component} is therefore ineffective in this setting.
 
-With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH and its preprocessing.
-This allows for a comparatively easy setup and turn-aware routing can be activate or deactivate for every query individually.
+With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH.
+This allows for a comparatively simple implementation.
 
-\subsection{Historic Traffic Patterns}
+\subsection{Predicted Traffic}
+\label{sec:predicted-traffic}
 
 The classical shortest path problem assumes that edge weights are scalars. 
 However in practice, travel times vary along an edge.
-One source of variance are recurring congestion patterns.
+The primary reason is traffic.
+Recurring traffic can be predicted by observing the traffic in the past.
+It is common \cite{lots-of-td-papers} to represent these predictions as \emph{travel time function}.
+An edge weight is no longer a scalar value but a function that maps the entry time onto the traversal time.
+Performing this prediction is an very interesting research topic~\cite{https://dl.acm.org/doi/10.1145/2820783.2820836,https://dl.acm.org/doi/10.1145/2996913.2996988}, but outside of the scope of this paper.
+It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
+Again, we first formalize the extended problem setting and then describe our solution with CH-Potentials.
 
-These are modelled using functions as edge weights~\cite{lots-of-td-papers}.
-They map the time of entry into an edge onto the travel time through it.
-Formally, $w_q$ is now a \emph{travel time function} from $E\times \mathbb{R}$ to $\mathbb{R}^+$. 
-$w_q(e, \tau)$ is the travel time through edge $e$ when entering it at $\tau$.
-
-The input to the problem consists of a source node $s$ and a target node $t$ as in the classical problem formulation.
+Formally, $w_q$ is a function from $E\times \mathbb{R}$ to $\mathbb{R}^+$. 
+$w_q(e, \tau)$ is the travel time through edge $e$ when entering it at moment $\tau$.
+The input to the extended problem consists of a source node $s$ and a target node $t$, as in the classical problem formulation.
 Additionally, the input contains a source time $\tau_s$.
 A path with edges $e_1,e_2\ldots e_k$ is weighted using $\alpha_k$, which is defined recursively as follows:\[
 \begin{split}
@@ -602,42 +605,58 @@ Usually, travel time functions are stored as piece-wise linear functions.
 Our implementation follows this setup.
 However in priciple, our algorithm works with any representation that enables an efficient function evaluation.
 
-Following \cite{td-alt}, we set $w_\ell(e)$ to the minimum travel time for every edge, i.e., $w_\ell(e) = \min_\tau w_q(e,\tau)$.
-This setup gives us a lower bound weight that is independent of the edge entry time. 
-Howeve, for every entry time, $w_\ell(e)$ is a valid lower bound.
+To solve the time-dependent routing problem, we employ a stratedgy very similar to TD-ALT~\cite{td-alt}.
+The main difference is that we use CH-Potentials instead of landmarks to guide the A* search.
+We set $w_\ell(e)$ to the minimum travel time for every edge, i.e., $w_\ell(e) = \min_\tau w_q(e,\tau)$.
 
-The modifications to make CH-Potentials work are straight forward.
-We compute the CH with respect to $w_\ell$ which maps edges onto scalars.
-With this CH, we can compute CH-Potentials.
-These are then combined with the travel-time-function-aware A* variant of \cite{td-alt?}. 
+We modify the A* search to use the tentative distance at a node $x$ as $\tau$ when evaluating the weight of an outgoing edge $(x,y)$.
+This modification is straight-forward, as our optimizations do not use shortcuts and only travers edges in forward direction.
+For the correctness proof, we refer to~\cite{td-alt?}.
 
-With this setup we extended CH-Potentials in a way that keeps all travel-time-function-related information out of the CH and its preprocessing.
-This way, we avoid the main problems of \cite{tdch,catchup}, which propagate the travel time functions into the CH construction.
+With this setup, we extended CH-Potentials to support time-dependent routing.
+As we were able to keep all travel time functions out of the CH.
+This avoids a lot of algorithmic complications compared to~\cite{TD-CH,CatchUp,TD-CRP}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
 
-\subsection{Live Traffic}
+\subsection{Live and Predicted Traffic}
+\label{sec:live-predicted-traffic}
 
+Beside predicted traffic, we also consider live traffic.
+Live traffic refers to the current traffic situation.
+It is important to distinguish between predicted and live traffic.
+The predicted travel time along an edge was estimated in the past.
+It is possible that it differes from the current travel time significantly, if unexpected events happen.
+An accident is an example of an unexpected event.
+Live traffic data is more accurate for the current moment than predicted data.
+However, just using live traffic data is problematic for long routes as traffic changes while driving.
+At some point, one wants to switch from live traffic back to the predicted traffic.
+In this section, we first describe how to use only live traffic and then describe how to combine it with predicted traffic.
 
-Historic travel time : $w_h(e,\tau)$
+To support live traffic, we set $w_\ell$ to the travel time without any congestions.
+$w_q$ is set to the travel time accounting for the current traffic.
+As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
+With this setup, the CH-Potentials algorithms can make use of live traffic.
 
-Live travel time : $w_c(e)$
+To combine live traffic with predicted traffic, we define a modified travel time function.
+Denote by $w_p(e,\tau)$ the predicted travel time along edge $e$ at moment $\tau$.
+Further, $w_c(e)$ is the travel time according to the live traffic.
+Finally, we denote by $\tau_{\mathrm{soon}}$ the moment up to which we trust the live traffic.
+In our experiments, we set $\tau_{\mathrm{soon}}$ to one hour in the future.
+We need to make sure that the modified travel time function fulfills the no-waiting property.
+For this reason, we cannot make a hard switch at $\tau_{\mathrm{soon}}$.
+Our modified travel time function linearly approaches the predicted travel time with a bounded slope.
 
-Lower bound travel time : $w_\ell(e)$
+Formally, we set $w_q(e,\tau)$ to $w_c(e)$, if $\tau_{\mathrm{soon}}$.
+Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$ is true.
+If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
+Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
+We set $w_\ell$ again to the freeflow travel time.
+Finally, we run the modified time-dependent A* described in the previous section on this modified travel time function. 
+In our implementation, we to not modify the representation of $w_p$.
+Instead, we evaluate the formulas above each time that the modified travel time function is evaluated.
 
-$\tau_{\mathrm{now}}$ : the current moment in time
-
-$\tau_{\mathrm{soon}}$ : now plus one hour 
-
-A* works on $w_q(e,\tau)$ which is defined as follows:
-
-$w_q(e,\tau) = w_c(e)$ for $\tau \le \tau_{\mathrm{soon}}$
-
-If $w_h(e,\tau_{\mathrm{soon}}) < w_c(e)$, then $w_q(e,\tau) = \max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_h(e,\tau)\}$ for $\tau \ge \tau_{\mathrm{soon}}$.
-
-If $w_h(e,\tau_{\mathrm{soon}}) = w_c(e)$, then $w_q(e,\tau) = w_h(e,\tau)$ for $\tau \ge \tau_{\mathrm{soon}}$.
-
-If $w_h(e,\tau_{\mathrm{soon}}) > w_c(e)$, then $w_q(e,\tau) = \min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_h(e,\tau)\}$ for $\tau \ge \tau_{\mathrm{soon}}$.
-
-
+With this setup, we extended CH-Potentials to support a combination of live and predicted traffic.
+We did not make any modification to our algorithm, that would make a combination with tunnel and/or highway avoidance or turn-aware routing difficult.
+This straight-forward integration of complex routing problems is the strengh of the CH-Potential algorithm.
 
 \section{Experiments}
 
