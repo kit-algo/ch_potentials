@@ -206,7 +206,7 @@ However, a formal problem specification that encompasses all these options is co
 For an example of such a formulation, we refer to \cite{kswz-erptd-20} which covers a truck-specific application.
 The algorithm presented in \cite{kswz-erptd-20} uses a preliminary version of CH-Potentials.
 For simplicity, we limit our exposition to the classical shortest path formulation.
-To support algorithm extensions, we avoid two operations that are adverse to generalization.
+To support algorithm extensions, such as time-dependent routing as descibed in Section \ref{sec:predicted-traffic}, we avoid two operations that are adverse to generalization.
 These are:
 (1) traversing an input edge in backward direction, and
 (2) combining input weights.
@@ -216,7 +216,7 @@ For example, when considering historic traffic patterns, the input weights are u
 
 Our algorithm has one major restriction, it requires the presence of an inflexible scalar weight lower bound for every input edge.
 The performance of our algorithm depends on this lower bound being close to the actual weight.
-Using the trivial lower bound of zero everywhere, CH-potentials degenerate to an engineered variant of Dijkstra's algorithm.
+Using the trivial lower bound of zero everywhere, CH-potentials degenerate to a variant of Dijkstra's algorithm.
 
 Throughout this paper, we assume that we are given a directed graph $G$ with nodes $V$ and edges $E$.
 Every edge $(x,y)\in E$ has a \emph{tail} node $x$ and a \emph{head} node $y$.
