@@ -17,7 +17,7 @@
 %
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{A* with Perfect Potentials}
+\title{A* with Perfect Heuristic/Potentials in Road Networks}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -52,12 +52,15 @@
 \begin{abstract}
 Efficiently computing flexible and optimal routes in continental-sized road networks is a tough challenge.
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical applications.
-A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, or Artificial Intelligence.
-However, A*'s performance depends on the availability of a good potential, also called heuristic, function.
-Computing a good potential is a challenge of its own.
-To avoid the need for a potential, many hierarchical speedup techniques have been developped.
-They achieve speed and optimality but sacrifize flexibility.
-In this paper, we use hierarchical techniques to compute potential functions.
+A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
+However, A*'s performance depends on the availability of a good heuristic, also called potential, function.
+Computing a good heuristic/potential is a challenge of its own.
+To avoid the need for a heuristic/potential, many hierarchical speedup techniques, such as Contraction Hierarchies (CH), have been developped.
+These techniques are not based on A* and therefore do not need a heuristic/potential.
+They achieve speed and optimality but sacrifize A*'s flexibility.
+In this paper, we use hierarchical techniques to compute heuristic/potential functions.
+We call our technique CH-Potential.
+Additionally, we describe some A* optimizations to accelerate the processing of low degree nodes, which occur in road networks.
 With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining optimality.
 \end{abstract}
 
@@ -99,7 +102,7 @@ With this approach, we combine some of the hierarchical speed with the flexibili
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{shortest path, road graphs, goal-directed search, contraction hierarchy}
+\keywords{shortest path, road graphs, goal-directed search, contraction hierarchy, heuristic search}
 
 %% A "teaser" image appears between the author and affiliation
 %% information and the body of the document, and typically spans the
@@ -160,17 +163,13 @@ TODO
 \label{img:search-space}
 \end{figure}
 
-Our technique can be applied to a CH and a CCH.
-We describe our work mostly in CH terms.
-Fortunately, all results are also directly applicable to CCH.
-We describe the trade-off between the two variants in Section \ref{TODO}.
-
 \subsection{Applications need Flexibility}
 
 Modelling navigation as shortest path problem in graphs with scalar weights is a good but not perfect formalization.
 Several important effects are ignored.
 In this section, we list a few to motivate why flexibility is important.
 In Section~\ref{sec:extensions}, we describe how to handle some with CH-Potentials in detail.
+Our argument is a variation of the one made by~\cite{CRP,CCH,DBLP:conf/gis/FunkeS15}.
 
 The travel time across an edge is in general not constant over time.
 Live and predicted traffic are examples of how the travel time can change.
@@ -180,24 +179,17 @@ Some blockage types, such as accidents, are similar to live traffic.
 Other blockages such as reversible one-ways, time-dependent turn-restrictions, or seasonal closures are more similar to predicted traffic.
 
 Flexibility is also necessary to account for driver preferences.
-For example, common options in navigation devices include avoiding highways or tunnels.
-A user preference for simple routes~\cite{https://dl.acm.org/doi/10.1145/2525314.2525362}, i.e., routes with few road changes, may also be considered.  
+For example, common options in navigation devices include avoiding highways or tunnels. 
 These requirements are usally modelled by modifying the edge weights and are highly depend on the driver.
 Sometimes they even depend on his current mood and might change while driving.
 In this paper, we assume that the driver preference is known.
-We refer to \cite{https://dl.acm.org/doi/10.1145/2820783.2820808,https://dl.acm.org/doi/10.1145/2996913.2997004} for approaches to learn these requirements.
+We refer to \cite{DBLP:conf/gis/DellingGGKTW15,DBLP:conf/gis/FunkeLS16} for approaches to learn these requirements.
 
 Trucks are another class of vehicles with diverse and specific needs.
 For example, trucks are not allowed in some areas depending on the time of the day.
 Some truck carry hazardous materials and are therefore not allowed in some areas because of environmental protection laws.
 Once the truck has delivered his goods, he may again pass the area.
-
 Flexibility can also be used to limit the slope and speed of the roads used during routing.
-This can be useful in the context electric cars to limit energy consumption, increasing the effective range.
-We refer to \cite{https://dl.acm.org/doi/10.1145/2666310.2666382,https://dl.acm.org/doi/10.1145/2820783.2820826} for an introduction to the EV topic.
-
-A necessity for flexibility can also arise as part of a larger optimization.
-For example, \cite{https://dl.acm.org/doi/10.1145/2666310.2666406} adjusts the edge weights to coordinate the routing of large number of vehicle to avoid congestions. 
 
 \subsection{Problem Setting}
 
@@ -216,7 +208,7 @@ For example, when considering historic traffic patterns, the input weights are u
 
 Our algorithm has one major restriction, it requires the presence of an inflexible scalar weight lower bound for every input edge.
 The performance of our algorithm depends on this lower bound being close to the actual weight.
-Using the trivial lower bound of zero everywhere, CH-potentials degenerate to a variant of Dijkstra's algorithm.
+Using the trivial lower bound of zero everywhere, CH-Potentials degenerate to a variant of Dijkstra's algorithm.
 
 Throughout this paper, we assume that we are given a directed graph $G$ with nodes $V$ and edges $E$.
 Every edge $(x,y)\in E$ has a \emph{tail} node $x$ and a \emph{head} node $y$.
@@ -233,28 +225,34 @@ The output of the query phase, is a path $e_1,e_2\ldots e_k$ such that $\sum w_q
 
 \subsection{Related Work}
 
-TODO: Dijkstra's algorithm \cite{d-ntpcg-59} can be used to solve the stated problem formalization \cite{Veit?}.
+The closest CH-Potential related works are ALT~\cite{gh-cspas-05,DBLP:conf/wea/DellingW07} and CPD-Heursitics~\cite{DBLP:conf/ijcai/BonoGHS19}.
+Just as our approach, ALT is A*-based.
+ALT computes the potential using landmarks.
+The computed potential values are not optimal and thus of lower quality than the optimal ones computed by CH-Potentials.
+ALT is therefore slower.
 
-TODO: CRP was motivated by personalization.
+CPD-Heursitics make use of compressed path databases (CPD). 
+A CPD can quickly compute the first edge of a shortest path between any two nodes.
+In \cite{DBLP:conf/ijcai/BonoGHS19}, a CPD~\cite{DBLP:conf/socs/StrasserHB14} is used to create a potential.
+In every potential evaluation, a path to the target is compute, whose length is used as potential.
+On a conceptual level, this is very similar to CH-Potentials. 
+Fortunately, CH-Potentials do not have to compute a path per evaluation, which makes CH-Potentials faster.
+Further, the CPD used has quadratic preprocessing running times.
+A CH does not.
+This makes CPDs too expensive on large continental road networks.
+The computed potential values are also optimal.
 
-Variations of this setup exist.
-A very common assumption is that the query edge weights $w_q$ are known during the preprocessing phase.
-In this setup, $w_\ell$ does not exist.
-This allows for very fast query running times, however, changing $w$ requires rerunning the slow preprocessing phase.
-This setup is therefore very unflexible.
-Many hierarchical speedup techniques such as the original CH \cite{gssv-erlrn-12} use this setup.
-Notable exceptions are \cite{dgpw-crprn-13} and \cite{dsw-cch-15} which use a third phase to change the query edge weights.
+As ALT and CPD-Heursitics have a similar structure than CH-Potentials, the extensions described in Section~\ref{sec:extensions} can also be applied to them.
+For example, in~\cite{td-alt} it is extended to time-dependent routing.
 
-Personalized Route Planning: https://dl.acm.org/doi/10.1145/2820783.2820830 exact same motivation argument as our paper. Must Cite. 
-TopoCore: https://dl.acm.org/doi/10.1145/2820783.2820856 Must Cite.
+The handling of low degree nodes in our A* search is a variation of the techniques used in TopoCore~\cite{DBLP:conf/gis/DibbeltSW15}, which is inspired by~\cite{DBLP:journals/pvldb/FunkeNS14}.
 
 
-TODO: Alt
+TODO: cite \cite{DBLP:journals/tciaig/BaierBHH15} https://ieeexplore.ieee.org/document/6851877
 
-ALT~\cite{gh-cspas-05} is an A* based technique which precomputes shortest distances between a small set of landmark nodes and all other nodes during preprocessing.
-For the query, potentials are calculated using the triangle inequality for shortest distances and the precomputed distances.
-This achieves decent speed-ups and can be used in other problem settings.
-However, the performance is not competitive to hierarchical approaches.
+TODO: cite \cite{DBLP:journals/ai/SharonSFS15} https://www.aaai.org/ocs/index.php/AAAI/AAAI12/paper/viewFile/5062/5239
+
+TODO: cite \cite{DBLP:conf/ijcai/0002UJAKK18} https://arxiv.org/abs/1706.02792
 
 \section{Algorithm Description}
 
@@ -268,7 +266,7 @@ In this paper, all considered potentials are derived from exact shortest path di
 The best possible potential that can be derived from the auxilary data is the minimum path distance with respect to $w_\ell$.
 Every better, consistent potential requires knowledge of the query weights $w_q$, which is unavailable during preprocessing.
 Our technique allows to compute these best possible potentials.
-Within this regard, CH-potentials are \emph{optimal A* potentials}.
+Within this regard, CH-Potentials are \emph{optimal A* potentials}.
 
 \subsection{Contraction Hierarchy (CH)}
 
@@ -516,7 +514,7 @@ This is all that is necessary to make our CH-Potentials algorithm avoid tunnels 
 The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
 However in the real world, turn restrictions, such as a forbidden left or right turn, exist.
 Such restrictions are usually modelled using turn weights.
-We extend CH-potentials by using zero as lower bound for every turn weight in the potential.
+We extend CH-Potentials by using zero as lower bound for every turn weight in the potential.
 In this section, we first present the extended problem setting.
 Afterwards, we describe how it can be solved with CH-Potentials.
 
@@ -577,7 +575,7 @@ The primary reason is traffic.
 Recurring traffic can be predicted by observing the traffic in the past.
 It is common \cite{lots-of-td-papers} to represent these predictions as \emph{travel time function}.
 An edge weight is no longer a scalar value but a function that maps the entry time onto the traversal time.
-Performing this prediction is an very interesting research topic~\cite{https://dl.acm.org/doi/10.1145/2820783.2820836,https://dl.acm.org/doi/10.1145/2996913.2996988}, but outside of the scope of this paper.
+Performing this prediction is outside of the scope of this paper.
 It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
 Again, we first formalize the extended problem setting and then describe our solution with CH-Potentials.
 
