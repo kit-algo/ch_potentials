@@ -110,7 +110,7 @@ Being able to change the edge weights between path computations is \emph{flexibi
 \includegraphics[width=\columnwidth,height=200px]{fig/searchspace}
 
 
-\caption{Example A* search space with CH-Potentials TODO: what parametrization?}
+\caption{Example A* search space with CH-Potentials}
 \label{img:search-space}
 \end{figure}
 
@@ -218,6 +218,8 @@ By comparing against Oracle-A*, we show that no alternative approach can be sign
 
 \section{Algorithm Description}
 
+In this section, we first describe Contraction Hierarchies, then PHAST, and finally CH-Potentials.
+
 \label{sec:main-algo}
 
 \begin{algorithm2e}
@@ -248,14 +250,17 @@ Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-p
 \label{fig:ch}
 \end{figure}
 
-A Contraction Hierarchy (CH) is a two phase technique to efficiently compute optimal, shortest paths.
-For a detailed exposition, we refer the interested reader to \cite{gssv-erlrn-12,dsw-cch-15}.
-In this section, we give a high-level overview.
+\subsection{Contraction Hierarchy (CH)}
+
+A CH is a two phase technique to efficiently compute optimal, shortest paths.
+It is not flexibile, i.e., $w_q=w_\ell$.
+For a details, we refer the interested reader to \cite{gssv-erlrn-12,dsw-cch-15}.
+In this section, we give an overview.
 
 A CH places nodes into levels.
 No edge must connect two nodes within one level.
 Levels are ordered by ``importance''.
-The intuition is that dead-ends are unimportant and low while highway bridges are very important and high.
+The intuition is that dead-ends are unimportant and at the bottom while highway bridges are very important and at the top.
 An edge goes \emph{up} when it goes from a node in a lower level to higher level.
 \emph{Down} edges are defined analogously.
 An \emph{up-down path} is a path where only one node $v$ is more important than its neighbors.
@@ -265,10 +270,11 @@ Similarily, the first node is the mid node of a \emph{down path}.
 Every up and down path is an up-down path.
 %
 In the preprocessing phase, a CH adds \emph{shortcut} edges to the input graph $G$ to obtain $G^+$.
-This is done by repeatedly contracting unimportant nodes. 
-See \cite{gssv-erlrn-12} for the details.
+This is done by repeatedly contracting unimportant nodes and adding shortcuts between its neighbors.
+See~\cite{gssv-erlrn-12} for the details.
 The trick is that in $G^+$ for pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path with the same length as a shortest path in $G$.
-See Figure~\ref{fig:ch} for an illustration.
+See Figure~\ref{fig:ch} for a proof scetch.
+From every shortest path (red) in $G$, a up-down path of equal length in $G+$ (blue) can be constructed.
 We may therefore restrict our search to up-down paths in $G^+$.
 This search is bidirectional.
 The forward search starts from $s$ and only follows up-edges.
@@ -318,12 +324,11 @@ PHAST's main advantage is that is easily be parallelized.
 However, we will not consider parallelization in this paper.
 We refer to \cite{dgnw-phast-13} for an in-depth experimental performance analysis.
 Pseudo-code is provided in Algorithm~\ref{algo:phast}.
-
 Using PHAST, we can compute optimal A* potentials in another way.
 In the query phase, we first use PHAST to compute the distances from every node to $t$ with respect to the query edge weights $w_\ell$ and store the result in an array $H$.
 In the next step, we run $A^*$ and implement the potential function as lookup in the array $H$.
 
-This setup also works.
+This PHAST-based algorithm works.
 The potential evaluation and by extension the $A^*$ search is indeed fast.
 However, the PHAST step before the search is comparatively expensive.
 The reason for this is that the distance from all nodes towards $t$ are computed.
@@ -350,7 +355,6 @@ Ideally, we only want to compute the distances from the nodes explored in the $A
 \end{algorithm2e}
 
 Fortunately, the PHAST computation can be done lazily using memoization as depicted in Algorithm~\ref{algo:pot}.
-
 In a first step, we run the backward CH search from $t$ to obtain an array $B$.
 $B[v]$ is the minimum down $vt$-path distance or $+\infty$, if there is no such path.
 $B$ is computed as shown in Algorithm~\ref{algo:ch-backward}.
@@ -374,7 +378,9 @@ We therefore investigate methods to evaluate fewer potentials.
 Potential evaluation is an expensive operation that we want to avoid.
 A potential evaluation is always paired with a queue push operation.
 By avoiding push operations, we can therefore avoid potential evaluations.
-This is the objective of this and the next section.
+This is the objective of this section.
+
+\subsection{Skip Degree Two Nodes}
 
 We modify how A* by processing low degree nodes consecutively without pushing them into the queue.
 Our algorithm makes use of the undirected degree $d(x)$ of a node $x$.
@@ -399,18 +405,6 @@ Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight i
 
 \subsection{Skip Degree Three Nodes}
 
-%\begin{figure}
-
-%\begin{center}
-%\includegraphics{push-deg3}
-%\end{center}
-
-%\caption{$x$ is removed from the queue. $y_i$, $z$, $a_i$, and $\alpha_i$ are never part of the queue. $\beta$ and $b$ are pushed into the queue.}
-%\label{fig:push-deg3}
-
-%\end{figure}
-
-
 In the previous section, we described an optimized A* variant that does not push degree two nodes.
 In this section, we also avoid degree three nodes.
 
@@ -423,9 +417,8 @@ Our algorithm iteratively tries to reduce all $D[a_i]$ and $D[\alpha_i]$.
 If it reaches $\beta$, $\beta$'s weight in the queue is set to $D[\beta]+\pi(\beta)$.
 Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+\pi(b)$.
 If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
-%The situation is depicted in Figure~\ref{fig:push-deg3}.
 
-\subsection{Skip Nodes Outside of Largest Biconnected Component}
+\subsection{Stay in Largest Biconnected Component}
 
 \label{sec:largested-biconnected-component}
 
@@ -449,7 +442,7 @@ It consits of applying the basic CH-potential algorithm restricted to $G_C$ from
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
 The final path is the concatenation of all three path parts.
 
-\section{Extensions}
+\section{Algorithm Extensions}
 \label{sec:extensions}
 
 A* is a very flexible algorithm. 
@@ -466,7 +459,7 @@ If an edge is a tunnel and/or a highway, we set $w_q$ to $+\infty$.
 Otherwise, $w_q$ is also to the freeflow travel time.
 This is all that is necessary to make our CH-Potentials algorithm avoid tunnels and/or highways.
 
-\subsection{Forbidden Turns}
+\subsection{Forbidden Turns and Turn Costs}
 \label{sec:no-turns}
 
 The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
@@ -524,7 +517,7 @@ The optimization described in \ref{sec:largested-biconnected-component} is there
 With this setup we extended CH-Potentials in a way that keeps all turn-related information out of the CH.
 This allows for a comparatively simple implementation.
 
-\subsection{Predicted Traffic}
+\subsection{Predicted Traffic or Time-Dependent Routing}
 \label{sec:predicted-traffic}
 
 The classical shortest path problem assumes that edge weights are scalars. 
