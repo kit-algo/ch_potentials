@@ -37,9 +37,10 @@ namespace "table" do
 end
 
 osm_graph = "/algoDaten/zeitz/roadgraphs/osm_ger_rel/"
+osm_europe = "/algoDaten/zeitz/roadgraphs/osm_europe/"
 dimacs_graph = "/algoDaten/zeitz/roadgraphs/europe/"
 
-static_graphs = [osm_graph, dimacs_graph]
+static_graphs = [osm_graph, osm_europe, dimacs_graph]
 td_graphs = [
   "/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/",
   "/algoDaten/graphs/cleaned_td_road_data/de/day/dido/",
@@ -111,19 +112,20 @@ namespace "exp" do
     Dir.chdir "code/bmw_routing_engine/engine" do
       sh "cargo run --release --bin chpot_weight_scaling -- #{dimacs_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_weight_scaling -- #{osm_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_weight_scaling -- #{osm_europe} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
     end
   end
 
-  task building_blocks: [dimacs_graph + 'lower_bound_ch'] + ["#{exp_dir}/building_blocks"] do
+  task building_blocks: [osm_europe + 'lower_bound_ch'] + ["#{exp_dir}/building_blocks"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
-      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-scc chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale -- #{dimacs_graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
     end
   end
 
