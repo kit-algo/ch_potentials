@@ -36,25 +36,65 @@ namespace "table" do
   end
 end
 
-osm_graph = "/algoDaten/zeitz/roadgraphs/osm_ger_rel/"
+osm_ger_src = 'https://download.geofabrik.de/europe/germany-200101.osm.pbf'
+osm_ger_src_file = '/algoDaten/zeitz/roadgraphs/germany-200101.osm.pbf'
+osgm_eur_src = 'https://download.geofabrik.de/europe-200101.osm.pbf'
+osm_eur_src_file = '/algoDaten/zeitz/roadgraphs/europe-200101.osm.pbf'
+
+osm_ger = "/algoDaten/zeitz/roadgraphs/osm_ger/"
+osm_ger_td = "/algoDaten/zeitz/roadgraphs/osm_ger_td/"
 osm_europe = "/algoDaten/zeitz/roadgraphs/osm_europe/"
 dimacs_graph = "/algoDaten/zeitz/roadgraphs/europe/"
 
-static_graphs = [osm_graph, osm_europe, dimacs_graph]
+static_graphs = [osm_ger, osm_europe, dimacs_graph]
 td_graphs = [
   "/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/",
   "/algoDaten/graphs/cleaned_td_road_data/de/day/dido/",
+  osm_ger_td
 ]
 graphs = static_graphs + td_graphs
 
 live_dir = '/algoDaten/mapbox/live-speeds/2019-08-02-15:41/'
+typical_glob = '/algoDaten/mapbox/typical-speeds/**/**/*.csv'
+typical_file = '/algoDaten/mapbox/typical-tuesday-cleaned.csv'
 
 namespace "prep" do
-  directory osm_graph
-  file osm_graph => "code/osm_import/build/import_osm" do
+  file typical_file do
+    Dir.chdir "code/bmw_routing_engine/engine" do
+      sh "cat #{typical_glob} | cargo run --release --bin scrub_td_mapbox -- 576 864 > #{typical_file}"
+    end
+  end
+
+  file osm_ger_src_file do
+    sh "wget -O #{osm_ger_src_file} #{osm_ger_src}"
+  end
+
+  file osm_eur_src_file do
+    sh "wget -O #{osm_eur_src_file} #{osm_eur_src}"
+  end
+
+  directory osm_ger
+  file osm_ger => ["code/osm_import/build/import_osm", osm_ger_src_file] do
     wd = Dir.pwd
-    Dir.chdir osm_graph do
-      sh "#{wd}/code/osm_import/build/import_osm /algoDaten/zeitz/roadgraphs/germany-latest.osm.pbf #{Dir[live_dir + '*'].join(' ')}"
+    Dir.chdir osm_ger do
+      sh "#{wd}/code/osm_import/build/import_osm /algoDaten/zeitz/roadgraphs/germany-latest.osm.pbf #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
+    end
+  end
+
+  directory osm_ger_td
+  file osm_ger_td => [osm_ger, typical_file] do
+    ['first_out', 'head', 'travel_time', 'geo_distance', 'osm_node_ids', 'arc_category', 'forbidden_turn_from_arc', 'forbidden_turn_to_arc', 'latitude', 'longitude', 'tail'].each do |file|
+      sh "ln -s #{osm_ger}/#{file} #{osm_ger_td}/#{file}"
+    end
+    Dir.chdir "code/bmw_routing_engine/engine" do
+      sh "cargo run --release --bin import_td_mapbox -- #{osm_ger_td} #{typical_file}"
+    end
+  end
+
+  file osm_europe => ["code/osm_import/build/import_osm", osm_eur_src_file] do
+    wd = Dir.pwd
+    Dir.chdir osm_europe do
+      sh "#{wd}/code/osm_import/build/import_osm /algoDaten/zeitz/roadgraphs/europe-latest.osm.pbf"
     end
   end
 
@@ -108,10 +148,10 @@ namespace "exp" do
     end
   end
 
-  task scaled_weights: [dimacs_graph + 'lower_bound_ch', osm_graph + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
+  task scaled_weights: [dimacs_graph + 'lower_bound_ch', osm_ger + 'lower_bound_ch', osm_europe + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
     Dir.chdir "code/bmw_routing_engine/engine" do
       sh "cargo run --release --bin chpot_weight_scaling -- #{dimacs_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_weight_scaling -- #{osm_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_weight_scaling -- #{osm_ger} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_weight_scaling -- #{osm_europe} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
     end
   end
@@ -126,6 +166,10 @@ namespace "exp" do
       sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
     end
   end
 
@@ -134,9 +178,11 @@ namespace "exp" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
-      sh "cargo run --release --bin chpot_live -- #{osm_graph} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_turns -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_blocked -- #{osm_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
   end
