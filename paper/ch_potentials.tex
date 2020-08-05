@@ -183,10 +183,11 @@ The handling of low degree nodes in our A* search is a variation of the techniqu
 \subsection{Oracle-A* \& Comparison with Related Work}
 
 To compare against related work, we introduce the concept of Oracle-A*.
-It has access to a perfect shortest distance array as potential.
+It has access to a perfect shortest distance array with respect to $w_\ell$ as potential.
+This is the tightest potential achievable during preprocessing. 
 The array computation time is unaccounted for, i.e., it is magically filled instantly.
 Oracle-A* is not achievable in practice.
-However, is a lower bound for every algorithm following out setup.
+However, is a lower bound for every algorithm following our setup.
 We experimentally show that CH-Potentials are within a factor two of Oracle-A* and thus every related work.
 
 \subsection{Applications need Flexibility}
