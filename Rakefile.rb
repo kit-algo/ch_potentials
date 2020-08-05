@@ -77,7 +77,7 @@ namespace "prep" do
   file osm_ger => ["code/osm_import/build/import_osm", osm_ger_src_file] do
     wd = Dir.pwd
     Dir.chdir osm_ger do
-      sh "#{wd}/code/osm_import/build/import_osm /algoDaten/zeitz/roadgraphs/germany-latest.osm.pbf #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
+      sh "#{wd}/code/osm_import/build/import_osm #{osm_ger_src_file} #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
     end
   end
 
@@ -94,7 +94,7 @@ namespace "prep" do
   file osm_europe => ["code/osm_import/build/import_osm", osm_eur_src_file] do
     wd = Dir.pwd
     Dir.chdir osm_europe do
-      sh "#{wd}/code/osm_import/build/import_osm /algoDaten/zeitz/roadgraphs/europe-latest.osm.pbf"
+      sh "#{wd}/code/osm_import/build/import_osm #{osm_eur_src_file}"
     end
   end
 
