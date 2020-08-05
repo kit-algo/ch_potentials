@@ -22,17 +22,17 @@ table['num_queue_pops'] = table['num_queue_pops'] / 1000
 table = table.round(1)
 
 table = table.rename(index={
-    'CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_NO_SCC, CHPOT_ONLY_TOPO, ': 'No Deg2, No Deg3, No SCC, No Pot.',
+    'CHPOT_NO_BCC, CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ': 'No Deg2, No Deg3, No BCC, No Pot.',
     'CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ':               'No Deg2, No Deg3, No Pot.',
     'CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ':                              'No Deg3, No Pot.',
     'CHPOT_ONLY_TOPO, ':                                             'No Pot.',
-    'CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_NO_SCC, ':                  'No Deg2, No Deg3, No SCC',
+    'CHPOT_NO_BCC, CHPOT_NO_DEG2, CHPOT_NO_DEG3, ':                  'No Deg2, No Deg3, No BCC',
     'CHPOT_NO_DEG2, CHPOT_NO_DEG3, ':                                'No Deg2, No Deg3',
     'CHPOT_NO_DEG3, ':                                               'No Deg3',
 })
 
-table = table.reindex(['No Deg2, No Deg3, No SCC, No Pot.', 'No Deg2, No Deg3, No Pot.', 'No Deg3, No Pot.', 'No Pot.',
-    'No Deg2, No Deg3, No SCC', 'No Deg2, No Deg3', 'No Deg3', ''])
+table = table.reindex(['No Deg2, No Deg3, No BCC, No Pot.', 'No Deg2, No Deg3, No Pot.', 'No Deg3, No Pot.', 'No Pot.',
+    'No Deg2, No Deg3, No BCC', 'No Deg2, No Deg3', 'No Deg3', ''])
 
 lines = table.to_latex(escape=False).split("\n")
 
