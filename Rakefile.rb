@@ -38,7 +38,7 @@ end
 
 osm_ger_src = 'https://download.geofabrik.de/europe/germany-200101.osm.pbf'
 osm_ger_src_file = '/algoDaten/zeitz/roadgraphs/germany-200101.osm.pbf'
-osgm_eur_src = 'https://download.geofabrik.de/europe-200101.osm.pbf'
+osm_eur_src = 'https://download.geofabrik.de/europe-200101.osm.pbf'
 osm_eur_src_file = '/algoDaten/zeitz/roadgraphs/europe-200101.osm.pbf'
 
 osm_ger = "/algoDaten/zeitz/roadgraphs/osm_ger/"
