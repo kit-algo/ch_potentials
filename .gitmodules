@@ -1,3 +1,6 @@
 [submodule "code/RoutingKit"]
 	path = code/RoutingKit
 	url = https://github.com/RoutingKit/RoutingKit.git
+[submodule "code/rust_road_router"]
+	path = code/rust_road_router
+	url = https://github.com/kit-algo/rust_road_router.git

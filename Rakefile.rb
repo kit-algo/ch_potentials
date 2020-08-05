@@ -60,7 +60,7 @@ typical_file = '/algoDaten/mapbox/typical-tuesday-cleaned.csv'
 
 namespace "prep" do
   file typical_file do
-    Dir.chdir "code/bmw_routing_engine/engine" do
+    Dir.chdir "code/rust_road_router/engine" do
       sh "cat #{typical_glob} | cargo run --release --bin scrub_td_mapbox -- 576 864 > #{typical_file}"
     end
   end
@@ -86,7 +86,7 @@ namespace "prep" do
     ['first_out', 'head', 'travel_time', 'geo_distance', 'osm_node_ids', 'arc_category', 'forbidden_turn_from_arc', 'forbidden_turn_to_arc', 'latitude', 'longitude', 'tail'].each do |file|
       sh "ln -s #{osm_ger}/#{file} #{osm_ger_td}/#{file}"
     end
-    Dir.chdir "code/bmw_routing_engine/engine" do
+    Dir.chdir "code/rust_road_router/engine" do
       sh "cargo run --release --bin import_td_mapbox -- #{osm_ger_td} #{typical_file}"
     end
   end
@@ -117,7 +117,7 @@ namespace "prep" do
 
   td_graphs.each do |graph|
     file graph + "lower_bound" => graph do
-      Dir.chdir "code/bmw_routing_engine/engine" do
+      Dir.chdir "code/rust_road_router/engine" do
         sh "cargo run --release --bin td_lower_bound -- #{graph}"
       end
     end
@@ -150,7 +150,7 @@ namespace "exp" do
   end
 
   task scaled_weights: [dimacs_graph + 'lower_bound_ch', osm_ger + 'lower_bound_ch', osm_europe + 'lower_bound_ch'] + ["#{exp_dir}/scaled_weights"] do
-    Dir.chdir "code/bmw_routing_engine/engine" do
+    Dir.chdir "code/rust_road_router/engine" do
       sh "cargo run --release --bin chpot_weight_scaling -- #{dimacs_graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_weight_scaling -- #{osm_ger} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_weight_scaling -- #{osm_europe} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
@@ -158,7 +158,7 @@ namespace "exp" do
   end
 
   task building_blocks: [osm_europe + 'lower_bound_ch'] + ["#{exp_dir}/building_blocks"] do
-    Dir.chdir "code/bmw_routing_engine/engine" do
+    Dir.chdir "code/rust_road_router/engine" do
       sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{osm_europe} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
@@ -175,7 +175,7 @@ namespace "exp" do
   end
 
   task applications: graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/applications"] do
-    Dir.chdir "code/bmw_routing_engine/engine" do
+    Dir.chdir "code/rust_road_router/engine" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
