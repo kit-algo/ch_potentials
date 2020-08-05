@@ -22,7 +22,7 @@ queries = queries.append(pd.DataFrame.from_records([{
     'exp': run['program'],
     'graph': run['args'][1],
     **algo }
-    for run in data for algo in run.get('algo_runs', []) if algo.get('algo') in ['CH Potentials Query', 'CH Potentials TD Query']]))
+    for run in data for algo in run.get('algo_runs', []) if algo.get('algo') == 'CH Potentials Query']))
 
 
 dijkstra_queries = pd.DataFrame.from_records([{
@@ -35,7 +35,7 @@ dijkstra_queries = dijkstra_queries.append(pd.DataFrame.from_records([{
     'exp': run['program'],
     'graph': run['args'][1],
     **algo }
-    for run in data for algo in run.get('algo_runs', []) if algo.get('algo') in ['Dijkstra Query', 'TD Dijkstra Query']]))
+    for run in data for algo in run.get('algo_runs', []) if algo.get('algo') == 'Dijkstra Query']))
 
 
 runtime_pattern = re.compile(".*Needed (\\d+)musec\\..*")
@@ -68,7 +68,9 @@ table = queries.groupby(['graph', 'exp']).agg(
     size=('affected', 'count'))
 
 table = table.reindex(['/algoDaten/zeitz/roadgraphs/europe/',
-    '/algoDaten/zeitz/roadgraphs/osm_ger_rel/',
+    '/algoDaten/zeitz/roadgraphs/osm_eur/',
+    '/algoDaten/zeitz/roadgraphs/osm_ger/',
+    '/algoDaten/zeitz/roadgraphs/osm_ger_td/',
     '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/',
     '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/'], level=0) \
     .reindex(['chpot_td',
@@ -77,6 +79,8 @@ table = table.reindex(['/algoDaten/zeitz/roadgraphs/europe/',
     'fastest_times_2',
     'fastest_times_10',
     'chpot_live',
+    'chpot_td_live',
+    'chpot_turns_td_live',
     'no_tunnels',
     'no_highways',
     'chpot_turns'], level=1)
@@ -92,10 +96,13 @@ table = table.round(1)
 table = table.rename(index={
     '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/': 'TDGer06',
     '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/': 'TDEur17',
-    '/algoDaten/zeitz/roadgraphs/osm_ger_rel/': 'OSM Germany',
+    '/algoDaten/zeitz/roadgraphs/osm_ger/': 'OSM Germany',
+    '/algoDaten/zeitz/roadgraphs/osm_ger_td/': 'OSM Germany',
     '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe',
     'chpot_td': 'TD',
     'chpot_live': 'Mapbox Live',
+    'chpot_td_live': 'Mapbox TD + Live',
+    'chpot_turns_td_live': 'Mapbox TD + Live + Turns',
     'chpot_turns': 'Turns',
     'no_highways': 'No Highways',
     'no_tunnels': 'No Tunnels',
