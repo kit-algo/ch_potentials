@@ -33,11 +33,11 @@
 \usepackage[algo2e,vlined]{algorithm2e}
 
 \pdfinfo{
-/Title (A* with Perfect Heuristic/Potentials in Road Networks)
+/Title (A* with Fast and Tight Heuristic/Potentials in Road Networks)
 /Author (Ben Strasser, Tim Zeitz)
 /Keywords (shortest path, road graphs, goal-directed search, contraction hierarchy, heuristic search)
 }
-\title{A* with Perfect Heuristic/Potentials in Road Networks}
+\title{A* with Fast and Tight Heuristic/Potentials in Road Networks}
 \author{Ben Strasser\\
 academia@ben-strasser.net\\
 \And
@@ -85,13 +85,13 @@ Efficiently computing flexible and optimal routes in continental-sized road netw
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical applications.
 A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
 However, A*'s performance depends on the availability of a good heuristic, also called potential, function.
-Computing a good heuristic/potential is a challenge of its own.
-To avoid the need for a heuristic/potential, many hierarchical speedup techniques, such as Contraction Hierarchies (CH), have been developped.
-These techniques are not based on A* and therefore do not need a heuristic/potential.
+Computing a good heuristic function is a challenge of its own.
+To avoid the need for a heuristic function, many hierarchical speedup techniques, such as Contraction Hierarchies (CH), have been developped.
+These techniques are not based on A* and therefore do not need a heuristic function.
 They achieve speed and optimality but sacrifize A*'s flexibility.
-In this paper, we use hierarchical techniques to compute heuristic/potential functions.
+In this paper, we use hierarchical techniques to compute heuristic functions.
 We call our technique CH-Potential.
-Additionally, we describe some A* optimizations to accelerate the processing of low degree nodes, which occur in road networks.
+Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
 With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining optimality.
 \end{abstract}
 
@@ -134,12 +134,12 @@ On graphs of this size, quadratic preprocessing time is thus prohibitive.
 In this paper, we consider an algorithm, where the query phase consists of an A* search.
 The preprocessing phase computes auxilary data to efficiently evaluate the heuristic/potential.
 Our setup is very similar to the well-known ALT technique~\cite{gh-cspas-05,DBLP:conf/wea/DellingW07}.
-Following, their terminology, we refer to the heuristic as potential function $\pi$.
+Following, their terminology, we refer to the heuristic as \emph{potential} function $\pi$.
 Further, paths are computed from a source node $s$ to a target node $t$.
 
-We say that a potential $\pi$ is \emph{perfect}, if no tighter potential can be computed in the preprocessing phase.
-The shortest path distances with respect to $w_\ell$ are perfect.
-CH-Potentials compute $w_\ell$ shortest paths and are thus perfect.
+We say that a potential $\pi$ is \emph{tight}, if no tighter potential can be computed in the preprocessing phase.
+The shortest path distances with respect to $w_\ell$ are tight.
+CH-Potentials compute $w_\ell$ shortest paths and are thus tight.
 
 \section{Related Work}
 
@@ -164,13 +164,13 @@ Our primary algorithm design objective is to retain A*'s flexibility.
 
 The most similar approaches to CH-Potentials are ALT and CPD-Heursitics~\cite{DBLP:conf/ijcai/BonoGHS19}.
 Just as our approach, ALT is A*-based.
-However, ALT's potentials are not perfect. 
+However, ALT's potentials are not tight. 
 %
 CPD-Heursitics are a combination of A* and Compressed Path Databases (CPD). 
 A CPD can quickly compute the first edge of a shortest path between any two nodes.
 In \cite{DBLP:conf/ijcai/BonoGHS19}, a CPD~\cite{DBLP:conf/socs/StrasserHB14} is used to create a potential.
 In every potential evaluation, a path to the target is compute, whose length is used as potential.
-The resulting potential is perfect.
+The resulting potential is tight.
 Unfortunately, the CPD used has quadratic preprocessing running times, which is prohibitively expensive on large street networks.
 %
 MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
@@ -183,7 +183,7 @@ The handling of low degree nodes in our A* search is a variation of the techniqu
 \subsection{Oracle-A* \& Comparison with Related Work}
 
 To compare against related work, we introduce the concept of Oracle-A*.
-It has access to a perfect shortest distance array with respect to $w_\ell$ as potential.
+It has access to a shortest distance array with respect to $w_\ell$ as potential, i.e., it is tight.
 This is the tightest potential achievable during preprocessing. 
 The array computation time is unaccounted for, i.e., it is magically filled instantly.
 Oracle-A* is not achievable in practice.
@@ -208,7 +208,7 @@ Flexibility is also often used as building block in multi-agent planning setting
 \section{Contribution \& Outline}
 
 We introduce CH-Potentials in Section~\ref{sec:main-algo}. 
-A two-phase technique to efficiently compute perfect potentials.
+A two-phase technique to efficiently compute tight potentials.
 Combined with A*, this yields an optimal, efficient, and flexibile route planning algorithms.
 Figure~\ref{img:search-space} depicts an example A* search with CH-Potentials.
 Beside the potentials, we describe, in Section\ref{sec:low-deg-improvment}, some improvments to A* to more efficiently process low degree nodes, common in road networks.
@@ -287,7 +287,7 @@ The forward search works analogously.
 A CH query is fast, if the number of nodes reachable via only up- or down-nodes is small.
 On road networks, this is the case as demonstrated in \cite{gssv-erlrn-12,dgrw-gpnc-11,dgpw-crprn-13,dsw-cch-15,hs-gbpo-18}.
 
-Using a CH, we can easily compute perfect A* potentials.
+Using a CH, we can easily compute tight A* potentials.
 In the preprocessing phase, a CH with respect to $w_\ell$ is computed.
 The query phase consists of an A* search, where the evaluation of the potential $\pi(v)$ performs a CH-query from $v$ to $t$.
 %
@@ -653,7 +653,7 @@ For the queries, we perform 10\,000 point-to-point queries where both source and
 \label{sec:conclusion}
 
 We introduce a novel way to compute potentials for A*.
-The potentials are calculated utilizing a CH on a lower bound graph and perfect with regards to that lower bound graph.
+The potentials are calculated utilizing a CH on a lower bound graph and tight with regards to that lower bound graph.
 With these potentials we can speed up A* search for extended route planning problems like route planning with live traffic, time-dependent travel time predictions or user preferences.
 
 %%
