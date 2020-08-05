@@ -91,6 +91,7 @@ namespace "prep" do
     end
   end
 
+  directory osm_europe
   file osm_europe => ["code/osm_import/build/import_osm", osm_eur_src_file] do
     wd = Dir.pwd
     Dir.chdir osm_europe do
@@ -115,7 +116,7 @@ namespace "prep" do
   end
 
   td_graphs.each do |graph|
-    file graph + "lower_bound" do
+    file graph + "lower_bound" => graph do
       Dir.chdir "code/bmw_routing_engine/engine" do
         sh "cargo run --release --bin td_lower_bound -- #{graph}"
       end
