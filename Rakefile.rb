@@ -46,7 +46,8 @@ osm_ger_td = "/algoDaten/zeitz/roadgraphs/osm_ger_td/"
 osm_eur = "/algoDaten/zeitz/roadgraphs/osm_europe/"
 dimacs_graph = "/algoDaten/zeitz/roadgraphs/europe/"
 
-static_graphs = [osm_ger, osm_eur, dimacs_graph]
+# static_graphs = [osm_ger, osm_eur, dimacs_graph]
+static_graphs = [osm_ger]
 td_graphs = [
   "/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/",
   "/algoDaten/graphs/cleaned_td_road_data/de/day/dido/",
@@ -184,14 +185,14 @@ namespace "exp" do
       sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_unmodified -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_unmodified -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_unmodified -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
   end
 end
