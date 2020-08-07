@@ -1,16 +1,21 @@
-\begin{tabular}{lrrr}
+\begin{tabular}{lllllrrr}
 \toprule
-{} & Running Time &     Queue Pops &   Relaxed Arcs \\
-{} &         [ms] & [$\cdot 10^3$] & [$\cdot 10^3$] \\
+ & & & & & Running Time &     Queue Pops &   Relaxed Arcs \\
+ & & & & &         [ms] & [$\cdot 10^3$] & [$\cdot 10^3$] \\
 \midrule
-No Deg2, No Deg3, No SCC, No Pot. &           1\,429.2 &          6\,935.2 &           19\,198.7 \\
-No Deg2, No Deg3, No Pot.         &           1\,213.3 &          6\,115.5 &           17\,002.1 \\
-No Deg3, No Pot.                  &           1\,076.0 &          5\,121.0 &           16\,212.5 \\
-No Pot.                           &            827.1 &          2\,970.6 &           14\,826.7 \\
-No Deg2, No Deg3, No SCC          &            444.5 &           911.3 &            2\,515.2 \\
-No Deg2, No Deg3                  &            388.1 &           819.7 &            2\,268.9 \\
-No Deg3                           &            343.7 &           694.8 &            2\,178.8 \\
-                                  &            273.6 &           403.2 &            2\,017.6 \\
+CH Potentials Query & - & False & False & False &           6\,940.3 &         24\,643.3 &           58\,143.2 \\
+               &   & True  & False & False &           3\,904.1 &         18\,406.2 &           45\,899.3 \\
+               &   &       & True  & False &           3\,521.6 &         15\,758.8 &           44\,928.4 \\
+               &   &       &       & True  &           2\,869.2 &          9\,845.6 &           43\,777.6 \\
+               & CH & False & False & False &           1\,329.7 &          1\,969.6 &            4\,598.5 \\
+               &   & True  & False & False &            754.2 &          1\,323.2 &            3\,210.0 \\
+               &   &       & True  & False &            635.3 &          1\,067.8 &            3\,016.2 \\
+               &   &       &       & True  &            480.1 &           614.4 &            2\,770.8 \\
+               & Oracle & False & False & False &            987.0 &          1\,969.6 &            4\,598.5 \\
+               &   & True  & False & False &            536.0 &          1\,323.2 &            3\,210.0 \\
+               &   &       & True  & False &            446.3 &          1\,067.8 &            3\,016.2 \\
+               &   &       &       & True  &            341.5 &           614.4 &            2\,770.8 \\
+Dijkstra Query & - & False & False & False &           8\,244.2 &             NaN &               NaN \\
 \bottomrule
 \end{tabular}
 

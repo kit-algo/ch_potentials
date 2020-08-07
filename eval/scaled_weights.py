@@ -18,7 +18,7 @@ data = [json.load(open(path)) for path in paths]
 
 queries = pd.DataFrame.from_records([{
     'weight_factor': exp['factor'],
-    'graph': { '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe', '/algoDaten/zeitz/roadgraphs/osm_ger/': 'OSM Germany', '/algoDaten/zeitz/roadgraphs/osm_eur/': 'OSM Europe' }[run['args'][1]],
+    'graph': { '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe', '/algoDaten/zeitz/roadgraphs/osm_ger/': 'OSM Germany', '/algoDaten/zeitz/roadgraphs/osm_europe/': 'OSM Europe' }[run['args'][1]],
     **algo }
     for run in data for exp in run['experiments'] for algo in exp['algo_runs'] if algo.get('algo') == 'CH Potentials Query'])
 
