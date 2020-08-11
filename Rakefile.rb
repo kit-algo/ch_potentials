@@ -153,7 +153,7 @@ namespace "exp" do
   task scaled_weights: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/scaled_weights"] do
     Dir.chdir "code/rust_road_router/engine" do
       static_graphs.each do |graph|
-        sh "cargo run --release --bin chpot_weight_scaling -- #{graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_weight_scaling -- #{graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       end
     end
   end
