@@ -22,7 +22,7 @@ queries['Skip Deg. 3'] = ~queries['features'].str.contains('CHPOT_NO_DEG3')
 
 def heuristic_name(feature_flags):
     if 'CHPOT_ONLY_TOPO' in feature_flags:
-        return '-'
+        return 'Zero'
     elif 'CHPOT_ORACLE' in feature_flags:
         return 'Oracle'
     else:
@@ -30,32 +30,25 @@ def heuristic_name(feature_flags):
 
 queries['Heuristic'] = queries['features'].apply(heuristic_name)
 
-table = queries.groupby(['algo', 'Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3'])[['running_time_ms', 'num_queue_pops', 'num_relaxed_arcs']].mean()
-table['num_relaxed_arcs'] = table['num_relaxed_arcs'] / 1000
-table['num_queue_pops'] = table['num_queue_pops'] / 1000
+table = queries.groupby(['algo', 'Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3'])[['running_time_ms', 'num_queue_pushs']].mean()
+table['num_queue_pushs'] = table['num_queue_pushs'] / 1000
 table = table.round(1)
 
-# table = table.rename(index={
-#     'CHPOT_NO_BCC, CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ': 'No Deg2, No Deg3, No BCC, No Pot.',
-#     'CHPOT_NO_DEG2, CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ':               'No Deg2, No Deg3, No Pot.',
-#     'CHPOT_NO_DEG3, CHPOT_ONLY_TOPO, ':                              'No Deg3, No Pot.',
-#     'CHPOT_ONLY_TOPO, ':                                             'No Pot.',
-#     'CHPOT_NO_BCC, CHPOT_NO_DEG2, CHPOT_NO_DEG3, ':                  'No Deg2, No Deg3, No BCC',
-#     'CHPOT_NO_DEG2, CHPOT_NO_DEG3, ':                                'No Deg2, No Deg3',
-#     'CHPOT_NO_DEG3, ':                                               'No Deg3',
-# })
+table = table.reindex(['Zero', 'CH', 'Oracle'], level=1)
 
-# table = table.reindex(['No Deg2, No Deg3, No BCC, No Pot.', 'No Deg2, No Deg3, No Pot.', 'No Deg3, No Pot.', 'No Pot.',
-#     'No Deg2, No Deg3, No BCC', 'No Deg2, No Deg3', 'No Deg3', ''])
+table = table.reset_index(level=0,drop=True).reset_index(level=[2,3])
 
 lines = table.to_latex(escape=False).split("\n")
 
 lines = lines[:2] + [
-    R" & & & & & Running Time &     Queue Pops &   Relaxed Arcs \\",
-    R" & Heur. & BCC & Deg. 2 & Deg. 3 &         [ms] & [$\cdot 10^3$] & [$\cdot 10^3$] \\"
-] + lines[4:]
+    R" & & & & Running &     Queue \\",
+    R" Heur. & BCC & Deg2 & Deg3 & time [ms] & pushs [$\cdot 10^3$] \\"
+# ] + lines[4:]
+] + [lines[4], lines[17]] + lines[6:14] + [lines[16]] + lines[20:]
 
 output = "\n".join(lines) + "\n"
+output = output.replace('True', '\\cmark')
+output = output.replace('False', '\\xmark')
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
 
 with open("paper/table/building_blocks.tex", 'w') as f:

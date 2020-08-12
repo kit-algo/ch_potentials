@@ -5,6 +5,7 @@ file "paper/ch_potentials.pdf" => [
   "paper/ch_potentials.tex",
   "paper/fig/scaled_weights.pdf",
   "paper/table/applications.tex",
+  "paper/table/graphs.tex",
   "paper/table/building_blocks.tex"] do
 
   Dir.chdir "paper" do
@@ -29,6 +30,14 @@ namespace "table" do
     ] + ["eval/applications.py", "paper/table"] do
 
     sh "eval/applications.py"
+  end
+
+  file "paper/table/graphs.tex" => FileList[
+    "#{exp_dir}/preprocessing/*.out",
+    "#{exp_dir}/applications/*.json",
+    ] + ["eval/graphs.py", "paper/table"] do
+
+    sh "eval/graphs.py"
   end
 
   file "paper/table/building_blocks.tex" => FileList["#{exp_dir}/building_blocks/*.json"] + ["eval/building_blocks.py", "paper/table"] do
