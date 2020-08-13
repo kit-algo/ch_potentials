@@ -94,7 +94,7 @@ Computing a good heuristic is a challenge of its own.
 In contrast, for road networks there also exist hierarchical speedup techniques, which do not need a heuristic.
 They achieve speed and exactness but sacrifice A*'s flexibility.
 In this paper, we use such as Contraction Hierarchies (CH), a hierarchical technique, to compute tight A* heuristics.
-We call our technique CH-Potential.
+We call our technique CH-Potentials.
 With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
 \end{abstract}
@@ -192,7 +192,7 @@ The handling of low degree nodes in our A* search is a variation of the techniqu
 
 To compare against related work, we introduce the concept of Oracle-A*.
 It has access to a shortest distance array with respect to $w_\ell$, i.e., it is tight.
-This is the tightest potential achievable during preprocessing.
+This is the tightest heuristic achievable during preprocessing.
 The array computation time is unaccounted for, i.e., it is magically filled instantly.
 Oracle-A* is not achievable in practice.
 However, it is a lower bound for every algorithm following our setup.
@@ -224,7 +224,7 @@ By comparing against Oracle-A*, we show that no alternative approach can be sign
 
 \section{Algorithm Description}
 
-In this section, we first describe Contraction Hierarchies, then PHAST, and finally CH-Potentials.
+In this section, we first describe Contraction Hierarchies, then PHAST, a CH extension, and finally CH-Potentials.
 
 \label{sec:main-algo}
 
@@ -259,7 +259,7 @@ Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-p
 \subsection{Contraction Hierarchy (CH)}
 
 A CH is a two phase technique to efficiently compute exact, shortest paths.
-It is not flexibile, i.e., $w_q=w_\ell$.
+It is not flexible, i.e., $w_q=w_\ell$.
 For a details, we refer the interested reader to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
@@ -300,7 +300,7 @@ This works, however, while one CH query is fast, answering one for every node ex
 Fortunately, we can do better.
 However, for this we need another component called PHAST~\cite{dgnw-phast-13}.
 
-\subsection{Potentials using PHAST}
+\subsection{PHAST based heuristic}
 
 \begin{algorithm2e}
 \KwData{$P[x]$: tentative distance from $x$ to $t$}
@@ -373,18 +373,17 @@ This calculation is correct, as it computes the minimum up-down $vt$-path distan
 
 The resulting algorithm is the basic CH-potential algorithm.
 It is flexible and exact.
-However, we can still improve the performance.
-A quick investigation reveals, that a significant amount of running time is spent in the heuristic evaluation.
-We therefore investigate methods to evaluate the heuristic less often.
+However, we can still improve the performance by reducing the number of queue operations and heuristic evaluations.
 
 \section{Low Degree A* Improvements}
 
 \label{sec:low-deg-improvment}
 
 Heuristic evaluation is an expensive operation that we want to avoid.
-The heuristic needs to be evaluated when a node is pushed into the queue.
-By avoiding push operations, we can therefore avoid heuristic evaluations.
-This is the objective of this section.
+Together with the queue operations, it makes up a significant amount of the running time of A*.
+The heuristic needs to be evaluated whenever a node is pushed into the queue.
+As our experiments show, the total running time roughly corresponds to the number of queue pushs.
+In this section, we propose optimizations to reduce the number of nodes pushed into the queue.
 
 \subsection{Skip Degree Two Nodes}
 
