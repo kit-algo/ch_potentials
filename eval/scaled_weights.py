@@ -22,7 +22,7 @@ queries = pd.DataFrame.from_records([{
     **algo }
     for run in data for exp in run['experiments'] for algo in exp['algo_runs'] if algo.get('algo') == 'CH Potentials Query'])
 
-plt.figure(figsize=(10.5,4))
+plt.figure(figsize=(10.5,3))
 g = sns.boxplot(data=queries, x='weight_factor', y='running_time_ms', hue='graph', linewidth=0.8, showmeans=True)
 g.set_yscale('log')
 g.set_ylabel('Running Time [ms]')
