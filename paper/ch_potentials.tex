@@ -645,28 +645,29 @@ Our main benchmark instance is a graph of the road network of Germany obtained f
 To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
 For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{https://www.mapbox.com/}}.
-The  data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the link between the nodes.
-It also includes traffic predictions for 38\% of the links as predicted speeds for all five minute periods over the course of a week.
+The  data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
+It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
+We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
 Additionally, have two graphs with traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
-One is an old instance of Germany with traffic predictions from 2006 (4.7M nodes, 10.7M edges) and the other a newer instance of Europe (25.8M nodes, 55.5M edges, from 2017).
+One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
 Table~\ref{tab:graphs} contains an overview over our instances.
 We report preprocessing running times as averages over 10 runs.
-For the queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
+For queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 
 \subparagraph{Experiments}
 We first investigate the effectiveness of the heuristic depending on how tight the lower bound is.
-For that, we take our main graph, use the unmodified travel time metric as the lower bound $w_\ell$, and perform queries on $w_q = \alpha \cdot w_\ell$ where $\alpha$ is a factor $\geq 1$.
+For that, we take our main graph, use the unmodified travel time as the lower bound $w_\ell$, and perform queries on $w_q = \alpha \cdot w_\ell$ where $\alpha$ is a factor $\geq 1$.
 When $\alpha = 1$, the heuristic is as tight as possible.
 With growing $\alpha$ the heuristic degrades.
 Figure~\ref{fig:scaled_weights} depicts the results.
 Clearly, $\alpha$ has significant influence on the running time.
 Average running times range from below a millisecond to a few hundred milliseconds depending on $\alpha$.
 Up to around $\alpha = 1.1$ the running time growth is roughly quadratic before leveling off to something more resembling linear growth.
-We observe a significant amount of heavy outliers sometimes more than an order of magnitude slower than the median.
+We observe a significant amount of heavy outliers -- sometimes more than an order of magnitude slower than the median.
 Generally, running times vary quite strongly even though most queries are long range queries as we draw source and target node uniformly at random.
 The reason is that different queries (even with similar shortest path lengths) are affected differently by growing $\alpha$ depending on the geographic regions the shortest path traverses.
-When $\alpha$ grows, more and more nodes in the area around the shortest paths are explored.
-So when the shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, than when the shortest path goes only through sparse areas.
+As $\alpha$ grows, more and more nodes in the area around the shortest paths are explored.
+So when the shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, then when the shortest path goes only through sparse areas.
 % Conclusions?
 
 \begin{table}
@@ -700,25 +701,26 @@ The greatest speedup is, of course, achieved when applying CH-Potentials to an u
 In that case the performance is comparable to what other state-of-the-art route planning techniques like CH achieve.
 When considering extended problem settings, the performance of CH-Potentials strongly depends on the tightness of $w_\ell$, as previously observed in Figure~\ref{fig:scaled_weights}.
 On one hand, forbidding highways leads to over 40\% longer paths and the smallest speedup over Dijkstra (only 5.3) among all settings.
-On the other hand, incorporating turn restrictions increase path lengths only marginally and CH-Potentials yield a speedup of around 1500 over Dijkstra on the turn expanded graph without any additional implementation complexity. % other techniques need crazy shit, cite turn papers
-Live traffic increases shortest paths lengths by around 15\% longer which yields running times of 125\,ms on average.
-The Mapbox traffic predictions increase shortest path lengths even stronger and running times increase correspondingly.
-The PTV traffic predictions yield much smaller length increases (less than 4\%) which leads to much better running times and speedups.
+On the other hand, incorporating turn restrictions increase path lengths only marginally and CH-Potentials yield a speedup of around 1500 over Dijkstra on the turn expanded graph without any additional implementation complexity.
+Live traffic increases shortest paths lengths by around 15\% longer which yields running times of 127\,ms on average.
+The Mapbox traffic predictions increase shortest path lengths by about 18\%.
+Combined with the additional work from function evaluations this leads to running times around 200\,ms.
+The PTV traffic predictions yield much smaller length increases (less than 4\%) which leads to better running times and speedups.
 Assessing which of these predictions is more realistic is not possible within the scope of this paper.
 Combining Mapbox live traffic and traffic predictions yields running times only slightly slower than traffic predictions alone.
 To the best of our knowledge, no other exact technique so far could combine these two scenarios.
-Additionally adding turn restrictions slows running times down to around 850\,ms which is still a speedup of 7.3 over the baseline despite the length increase only growing by 1.5 percentage points.
-The reason for this is that the turn expanded graph is three times bigger and consists of only one biconnected component, which disables our optimization from Section~\ref{sec:largested-biconnected-component}.
+Additionally adding turn restrictions slows running times down to around 510\,ms despite the length increase only growing by 1.3 percentage points.
+This is still a speedup of 12.2 over the baseline.
+The reason for this is that the turn expanded graph is three times bigger and that the BCC optimization is not applicable for turn-expanded graphs.
 To the best of our knowledge no other approach so far did even attempt handling this combination of scenarios.
-While the achieved speedup in our case is not particularly large, the reason is not the complexity of the scenario but the length increase in the time-dependent data.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-In this paper, we CH-Potentials introduced a fast and exact new A* heuristic for finding shortest paths in road networks.
+In this paper, we introduced CH-Potentials, a fast and exact new A* heuristic for finding shortest paths in road networks.
 The approach is flexible and can handle a multitude of routing scenarios with very small implementation complexity.
-However, the performance of CH-Potentials depends on the tightness of the lower bound, so whether CH-Potentials are fit for a certain application depends on whether a tight lower bound can be derived.
-Nevertheless, our experiments show that CH-Potentials are efficient in extracting distance estimates from a lower bound graph and only around 1.6 times slower than extracting lower bound distances from a precomputed matrix.
+The performance of CH-Potentials depends on the tightness of the lower bound, so whether CH-Potentials are fit for a certain application depends on whether a tight lower bound can be derived.
+Our experiments show that CH-Potentials are efficient in extracting distance estimates from a lower bound graph and only around 1.6 times slower than immediately obtaining these estimates from an hypothetical oracle.
 
 %%
 %% Bibliography
