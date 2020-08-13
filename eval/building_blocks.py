@@ -42,7 +42,7 @@ lines = table.to_latex(escape=False).split("\n")
 
 lines = lines[:2] + [
     R" & & & & Running &     Queue \\",
-    R" Heur. & BCC & Deg2 & Deg3 & time [ms] & pushs [$\cdot 10^3$] \\"
+    R" Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\"
 # ] + lines[4:]
 ] + [lines[4], lines[17]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + [lines[13], lines[16]] + lines[20:]
 

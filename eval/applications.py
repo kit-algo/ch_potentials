@@ -101,7 +101,7 @@ lines = table.to_latex(escape=False).split("\n")
 
 lines = lines[:2] + [
   R" & &   Running &                Queue &     Length & Dijkstra & Speedup \\"
-  R" & & time [ms] & pushs $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\"
+  R" & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\"
 ] + lines[4:13] + ["\\addlinespace"] + lines[13:]
 
 output = "\n".join(lines) + "\n"
