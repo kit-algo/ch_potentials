@@ -129,9 +129,9 @@ Finding a good heuristic that can be evaluated efficiently is difficult.
 
 In this paper, we consider a setup with a preprocessing phase and a query phase.
 The preprocessing phase can be slow and computes auxiliary data that can be used in the query phase, which should be fast.
-The input to the preprocessing phase is the graph weighted with lower bound weights $w_\ell$.
+The input to the preprocessing phase is a directed graph $G=(V,E)$ weighted with lower bound weights $w_\ell$.
 The source/origin $s$ and target/goal $t$ of the path and the actual edge weights $w_q$ are the input to the query phase.
-We require that $w_q(e)\ge w_\ell(e)$ for all edges $e$.
+We require that $w_q(e)\ge w_\ell(e)$ for all edges $e \in E$.
 In the query phase, the path is computed.
 %
 Street networks of continental scale have many millions of nodes.
@@ -141,7 +141,7 @@ On graphs of this size, quadratic preprocessing time is prohibitive.
 In this paper, we consider an algorithm, where the query phase mostly consists of an A* search.
 The preprocessing phase computes auxiliary data to efficiently evaluate the heuristic.
 Our setup is very similar to the well-known ALT technique~\cite{gh-cspas-05,DBLP:conf/wea/DellingW07}.
-We call our algorithm CH-Potentials, as it combines ideas from Contraction Hierarchies (CH)~\cite{gssv-erlrn-12} with A* heuristics, also called potentials in~\cite{gh-cspas-05}.
+We call our algorithm \emph{CH-Potentials}, as it combines ideas from Contraction Hierarchies (CH)~\cite{gssv-erlrn-12} with A* heuristics, also called potentials in~\cite{gh-cspas-05}.
 
 Formally, a heuristic $h$ is a function that maps nodes onto numbers.
 $h$ depends on the target $t$ of the search but not one the source $s$.
