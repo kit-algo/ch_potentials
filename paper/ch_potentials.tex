@@ -88,26 +88,25 @@ Karlsruhe Institute of Technology
 \begin{abstract}
 Efficiently computing flexible and exact routes in continental-sized road networks is a tough challenge.
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical applications.
-A* is the classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
+A* is a classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
 However, A*'s performance depends on the availability of a good heuristic.
 Computing a good heuristic is a challenge of its own.
-To avoid the need for a heuristic, many hierarchical speedup techniques, such as Contraction Hierarchies (CH), have been developped.
-These techniques are not based on A* and therefore do not need a heuristic.
-They achieve speed and exactness but sacrifize A*'s flexibility.
-In this paper, we use hierarchical techniques to compute tight A* heuristics.
+In contrast, for road networks there also exist hierarchical speedup techniques, which do not need a heuristic.
+They achieve speed and exactness but sacrifice A*'s flexibility.
+In this paper, we use such as Contraction Hierarchies (CH), a hierarchical technique, to compute tight A* heuristics.
 We call our technique CH-Potential.
+With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
-With this approach, we combine some of the hierarchical speed with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 Route planning in street networks of continental scale is a well-researched topic with many applications~\cite{bdgmpsww-rptn-16}.
 It is usually formalized as a variant of the classical shortest path problem in weighted graphs.
-Efficiently computing flexible and exact routes is a though challenge.
+Developing flexible techniques to efficiently compute exact routes is a tough challenge.
 \emph{Exact} means that the computed path always has minimum weight.
 \emph{Efficiently} means that the path computation is fast.
-Being able to change the edge weights between path computations is \emph{flexibility}.
+Being able to change the edge weights between path computations or handle more complex edge weights (for example travel times which change over the course of the day obtained through traffic predictions) is \emph{flexibility}.
 
 \begin{figure}
 
@@ -115,68 +114,71 @@ Being able to change the edge weights between path computations is \emph{flexibi
 \includegraphics[width=\columnwidth]{fig/searchspace.png}
 
 
-\caption{Example A* search space with CH-Potentials}
+\caption{Nodes explored by A* with CH-Potentials. Nodes were explored from blue through green to red.}
 \label{img:search-space}
 \end{figure}
 
 
-Dijkstra's algorithm~\cite{d-ntpcg-59} achieves flexiblity and exactness but is comparatively slow.
+Dijkstra's algorithm~\cite{d-ntpcg-59} achieves flexibility and exactness but is comparatively slow.
+Dijkstra's algorithm iteratively explores nodes of the graph with ascending distance from the origin node until the target is reached.
 A classic speedup approach is the well-known A* algorithm~\cite{hnr-afbhd-68}.
-While flexible, A*'s performance crucially depends on the quality of the employed heuristic.
+It changes the order in which nodes are explored by using the distance from the origin plus an estimate of the remaining distance to the target as the ordering criterion.
+Figure~\ref{img:search-space} depicts an example A* search.
+While flexible, A*'s performance crucially depends on the quality of the employed estimating heuristic.
 Finding a good heuristic that can be evaluated efficiently is difficult.
 
 In this paper, we consider a setup with a preprocessing phase and a query phase.
-The preprocessing phase can be slow and computes auxilary data that can be used in the query phase, which should be fast.
+The preprocessing phase can be slow and computes auxiliary data that can be used in the query phase, which should be fast.
 The input to the preprocessing phase is the graph weighted with lower bound weights $w_\ell$.
 The source/origin $s$ and target/goal $t$ of the path and the actual edge weights $w_q$ are the input to the query phase.
 We require that $w_q(e)\ge w_\ell(e)$ for all edges $e$.
 In the query phase, the path is computed.
 %
 Street networks of continental scale have many millions of nodes.
-While the preprocessing phase may be slow, it must eventually finish.
-On graphs of this size, quadratic preprocessing time is thus prohibitive.
+% While the preprocessing phase may be slow, it must eventually finish.
+On graphs of this size, quadratic preprocessing time is prohibitive.
 
 In this paper, we consider an algorithm, where the query phase mostly consists of an A* search.
-The preprocessing phase computes auxilary data to efficiently evaluate the heuristic.
+The preprocessing phase computes auxiliary data to efficiently evaluate the heuristic.
 Our setup is very similar to the well-known ALT technique~\cite{gh-cspas-05,DBLP:conf/wea/DellingW07}.
-We call our algorithm CH-Potentials, as it combines ideas from Contraction Hierarchies (CH)~\cite{gssv-erlrn-12} with A* heuristics, which are called potentials in~\cite{gh-cspas-05}.
+We call our algorithm CH-Potentials, as it combines ideas from Contraction Hierarchies (CH)~\cite{gssv-erlrn-12} with A* heuristics, also called potentials in~\cite{gh-cspas-05}.
 
 Formally, a heuristic $h$ is a function that maps nodes onto numbers.
 $h$ depends on the target $t$ of the search but not one the source $s$.
-Without loose of generality, we assume that $h(t)=0$.
+Without loss of generality, we assume that $h(t)=0$.
 The \emph{tight} heuristic assigns to every node $v$, the length of a shortest $vt$-path.
 All heuristics, for which A* is exact, are lower bounds of the tight heuristic.
-CH-Potentials compute the tight heursitc with respect to $w_\ell$.
+CH-Potentials compute the tight heuristic with respect to $w_\ell$.
 Without access to the query weights $w_q$, which are unavailable during preprocessing, no value of the heuristic can be increased, without loosing A*'s exactness.
-CH-Potentials are optimal in this sense.
+In this sense, CH-Potentials are as tight as possible.
 
 \section{Related Work}
 
 A lot of research focuses on the inflexible setting, i.e., the special case where $w_q = w_\ell$.
-In this setting, mostly hierarchical approaches dominate in termes of running time~\cite{bdgmpsww-rptn-16}.
-A well-known hierarchical technique are Contraction Hierarchies (CH)~\cite{gssv-erlrn-12,dsw-cch-15}.
+In this setting, mostly hierarchical approaches dominate in terms of running time~\cite{bdgmpsww-rptn-16}.
+A well-known hierarchical technique are Contraction Hierarchies (CH)~\cite{gssv-erlrn-12}.
 
 There is a lot of work that extends CH to handle more complex settings.
-For example, in \cite{fns-opca-14,gks-rpfof-10} multi-criteria optimization is studied.
-In \cite{dsw-cch-15}, CH is modified to support Live-Traffic.
-Historic traffic patterns are combined with CH in \cite{swz-sfert-19,bgsv-mtdtt-13,bdpw-dtdrp-16}.
-Specialized variants for electric vehicle routing are developped in \cite{bdgwz-sfpcs-19}.
+For example, in~\cite{fns-opca-14,gks-rpfof-10} multi-criteria optimization is studied.
+In~\cite{dsw-cch-15}, CH is modified to support Live-Traffic.
+Historic traffic patterns are combined with CH in~\cite{swz-sfert-19,bgsv-mtdtt-13,bdpw-dtdrp-16}.
+Specialized variants for electric vehicle routing are developed in~\cite{bdgwz-sfpcs-19}.
 While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
 Further, in every setting the flexibility available at query time is fairly limited and usually encompasses only one very specific setting.
 Combining all these hierarchical extensions is an unsolved problem.
 %
-CH-Potentials is not the first work to combine hierarchical approaches and A* \cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
+CH-Potentials is not the first work to combine hierarchical approaches and A*~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
 However, past work mostly uses A* to accelerate hierarchical approaches even further and sacrifices A*'s flexibility in the process.
 Our primary algorithm design objective is to retain A*'s flexibility.
 
-ALT~\cite{gh-cspas-05} and CPD-Heursitics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with the highest conceptual similarity to CH-Potentials.
+ALT~\cite{gh-cspas-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with the highest conceptual similarity to CH-Potentials.
 Just as our approach, ALT is A*-based.
 However, ALT's heuristic is not tight.
 %
-CPD-Heursitics are a combination of A* and Compressed Path Databases (CPD).
+CPD-Heuristics are a combination of A* and Compressed Path Databases (CPD).
 A CPD can quickly compute the first edge of a shortest path between any two nodes.
-In \cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
-In every potential evaluation, a shortest path to the target is compute, whose length is used as tight heuristic.
+In~\cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
+For every distance estimation, a shortest path to the target is computed, whose length is used as the tight heuristic.
 Unfortunately, the CPD used has quadratic preprocessing running times, which is prohibitively expensive on large street networks.
 %
 MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
@@ -189,7 +191,7 @@ The handling of low degree nodes in our A* search is a variation of the techniqu
 \subsection{Oracle-A* \& Comparison with Related Work}
 
 To compare against related work, we introduce the concept of Oracle-A*.
-It has access to a shortest distance array with respect to $w_\ell$ as potential, i.e., it is tight.
+It has access to a shortest distance array with respect to $w_\ell$, i.e., it is tight.
 This is the tightest potential achievable during preprocessing.
 The array computation time is unaccounted for, i.e., it is magically filled instantly.
 Oracle-A* is not achievable in practice.
@@ -199,15 +201,15 @@ We experimentally show that CH-Potentials are within a factor two of Oracle-A* a
 \subsection{Applications need Flexibility}
 
 Many applications need flexibility.
-In road routing, the most common ones are traffic avoidance, user preferences, and vehicle restrictions.
-Traffic avoidance comes in two forms: Live~\cite{CRP,CCH} and predicted traffic~\cite{td-alt,td-ch}.
+The most common ones are traffic avoidance, user preferences, and vehicle restrictions.
+Traffic avoidance comes in two forms: Live~\cite{dgpw-crprn-13,dsw-cch-15} and predicted traffic~\cite{ndls-bastd-12,bgsv-mtdtt-13}.
 Predicted traffic is often called time-dependent routing.
 %
-User preferences can vary significantly~\cite{DBLP:conf/gis/FunkeS15,DBLP:conf/gis/DellingGGKTW15,DBLP:conf/gis/FunkeLS16}
-For example, for some users shorter routes are more important fast routes.
+User preferences can vary significantly~\cite{DBLP:conf/gis/FunkeS15,DBLP:conf/gis/DellingGGKTW15,DBLP:conf/gis/FunkeLS16}.
+For example, for some users shorter routes are more important than fast routes.
 Others want to avoid tunnels or highways.
 %
-Truck routing differs from car routing because, depending on their load, trucks are not allowed everywhere~\cite{kswz-erptd-20}.
+Truck routing differs from car routing due to night driving bans and other restrictions~\cite{kswz-erptd-20}.
 %
 Flexibility is also often used as building block in multi-agent planning settings~\cite{DBLP:journals/ai/SharonSFS15,DBLP:journals/tciaig/BaierBHH15}.
 %
@@ -215,14 +217,12 @@ Electric Vehicle Routing also requires flexibility~\cite{DBLP:journals/algorithm
 
 \section{Contribution \& Outline}
 
-We introduce CH-Potentials in Section~\ref{sec:main-algo}.
-A two-phase technique to efficiently compute tight potentials.
-Combined with A*, this yields an exact, efficient, and flexibile route planning algorithms.
-Figure~\ref{img:search-space} depicts an example A* search with CH-Potentials.
-Beside the potentials, we describe, in Section\ref{sec:low-deg-improvment}, some improvments to A* to more efficiently process low degree nodes, common in road networks.
-In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing various extended route planning applications and showing how they can be solved using CH-Potentials.
-Finally in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
-By comparing against Oracle-A*, we show that no alternative approach can be significantly faster.
+We introduce CH-Potentials, a two-phase technique to efficiently compute tight heuristics, in Section~\ref{sec:main-algo}.
+Combined with A*, this yields an exact, efficient, and flexible route planning algorithm.
+Beside the heuristic, in Section\ref{sec:low-deg-improvment}, we describe some improvements to A* to more efficiently process low degree nodes, common in road networks.
+In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing various extended route planning applications and how they can be solved using CH-Potentials.
+Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
+By comparing against Oracle-A*, we show that no alternative approach can be significantly faster, assuming that $w_\ell$ is the tightest lower bound that can be known in advance.
 
 \section{Algorithm Description}
 
@@ -318,7 +318,7 @@ Execute Algorithm~\ref{algo:ch-backward}\;
 \label{algo:phast}
 \end{algorithm2e}
 
-PHAST \cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node.
+PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node.
 First the preprocessing phase is executed analogously to the original CH.
 The query phase is divided into two steps.
 The first step is analogously to the CH query:
@@ -667,7 +667,7 @@ Up to around $\alpha = 1.1$ the running time growth is roughly quadratic before 
 We observe a significant amount of heavy outliers sometimes more than an order of magnitude slower than the median.
 Generally, running times vary quite strongly even though most queries are long range queries as we draw source and target node uniformly at random.
 The reason is that different queries (even with similar shortest path lengths) are affected differently by growing $\alpha$ depending on the geographic regions the shortest path traverses.
-When $\alpha$ grows, more and more nodes in the area around the shortest paths are included in the search space.
+When $\alpha$ grows, more and more nodes in the area around the shortest paths are explored.
 So when the shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, than when the shortest path goes only through sparse areas.
 % Conclusions?
 
