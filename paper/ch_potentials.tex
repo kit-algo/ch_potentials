@@ -38,11 +38,11 @@
 \usepackage[algo2e,vlined]{algorithm2e}
 
 \pdfinfo{
-/Title (A* with Fast and Tight Heuristic in Road Networks)
+/Title (A Fast and Tight Heuristic for A* in Road Networks)
 /Author (Ben Strasser, Tim Zeitz)
 /Keywords (shortest path, road graphs, goal-directed search, contraction hierarchy, heuristic search)
 }
-\title{A* with Fast and Tight Heuristic in Road Networks}
+\title{A Fast and Tight Heuristic for A* in Road Networks}
 \author{Ben Strasser\\
 academia@ben-strasser.net\\
 \And
@@ -120,19 +120,18 @@ Being able to change the edge weights between path computations or handle more c
 
 
 Dijkstra's algorithm~\cite{d-ntpcg-59} achieves flexibility and exactness but is comparatively slow.
-Dijkstra's algorithm iteratively explores nodes of the graph with ascending distance from the origin node until the target is reached.
+It iteratively explores nodes of the graph in ascending distance from the source node until the target is reached.
 A classic speedup approach is the well-known A* algorithm~\cite{hnr-afbhd-68}.
-It changes the order in which nodes are explored by using the distance from the origin plus an estimate of the remaining distance to the target as the ordering criterion.
+It changes the order in which nodes are explored by using the distance from the source plus an estimate of the remaining distance to the target as the ordering criterion.
 Figure~\ref{img:search-space} depicts an example A* search.
 While flexible, A*'s performance crucially depends on the quality of the employed estimating heuristic.
-Finding a good heuristic that can be evaluated efficiently is difficult.
+Finding good heuristics that can be evaluated efficiently is difficult.
 
 In this paper, we consider a setup with a preprocessing phase and a query phase.
 The preprocessing phase can be slow and computes auxiliary data that can be used in the query phase, which should be fast.
 The input to the preprocessing phase is a directed graph $G=(V,E)$ weighted with lower bound weights $w_\ell$.
-The source/origin $s$ and target/goal $t$ of the path and the actual edge weights $w_q$ are the input to the query phase.
+The source $s$ and target $t$ of and the actual edge weights $w_q$ are the input to the query phase in which shortest paths are computed.
 We require that $w_q(e)\ge w_\ell(e)$ for all edges $e \in E$.
-In the query phase, the path is computed.
 %
 Street networks of continental scale have many millions of nodes.
 % While the preprocessing phase may be slow, it must eventually finish.
@@ -251,7 +250,7 @@ Make $Q$ only contain $t$ with weight $0$\;
 \centering
 \includegraphics{fig/ch}
 \caption{
-Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-path in $G$. Blue is equaly long up-down $st$-path in $G^+$. $m$ is mid node.
+Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-path in $G$. Blue is equaly long up-down $st$-path in $G^+$. $m$ is the mid node.
 }
 \label{fig:ch}
 \end{figure}
@@ -260,7 +259,7 @@ Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-p
 
 A CH is a two phase technique to efficiently compute exact, shortest paths.
 It is not flexible, i.e., $w_q=w_\ell$.
-For a details, we refer the interested reader to \cite{gssv-erlrn-12,dsw-cch-15}.
+For a details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
 A CH places nodes into levels.
@@ -273,16 +272,16 @@ An \emph{up-down path} is a path where only one node $v$ is more important than 
 $v$ is called the \emph{mid} node.
 An \emph{up path} is a path where the last node is the mid node.
 Similarly, the first node is the mid node of a \emph{down path}.
-Every up and down path is an up-down path.
+% Every up and down path is an up-down path.
 %
 In the preprocessing phase, a CH adds \emph{shortcut} edges to the input graph $G$ to obtain $G^+$.
 This is done by repeatedly contracting unimportant nodes and adding shortcuts between its neighbors.
 See~\cite{gssv-erlrn-12} for the details.
-After the preprocessing, in $G^+$ for pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path with the same length as a shortest path in $G$.
+After the preprocessing, for every pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path in $G^+$ with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for a proof sketch.
-From every shortest path (red) in $G$, a up-down path of equal length in $G+$ (blue) can be constructed.
-We may therefore restrict our search to up-down paths in $G^+$.
-This search is bidirectional.
+From every shortest path (red) in $G$, an up-down path of equal length in $G+$ (blue) exists.
+Thus, we can restrict our search to up-down paths in $G^+$.
+The search is bidirectional.
 The forward search starts from $s$ and only follows up-edges.
 Similarly, the backward search starts at $t$ and only follows down-edges in reversed direction.
 The two searches meet at the mid node.
@@ -290,7 +289,7 @@ Pseudo-code for the backward search, i.e., the path from $m$ to $t$, is presente
 The forward search works analogously.
 %
 A CH query is fast, if the number of nodes reachable via only up- or down-nodes is small.
-On road networks, this is the case as demonstrated in~\cite{gssv-erlrn-12,dgrw-gpnc-11,dgpw-crprn-13,dsw-cch-15,hs-gbpo-18}.
+On road networks, this is the case~\cite{gssv-erlrn-12,dgrw-gpnc-11,dgpw-crprn-13,dsw-cch-15,hs-gbpo-18}.
 
 Using a CH, we can compute a tight A* heuristic.
 In the preprocessing phase, a CH with respect to $w_\ell$ is computed.
@@ -319,7 +318,7 @@ Execute Algorithm~\ref{algo:ch-backward}\;
 PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node.
 First the preprocessing phase is executed analogously to the original CH.
 The query phase is divided into two steps.
-The first step is analogously to the CH query:
+The first step is analogue to the CH query:
 From the target node $t$, all reachable nodes via reversed down-edges are explored.
 Algorithm~\ref{algo:ch-backward} shows this first step.
 The second step iterates over all CH levels from top to bottom.
@@ -331,13 +330,13 @@ However, we will not consider parallelization in this paper.
 We refer to~\cite{dgnw-phast-13} for an in-depth experimental performance analysis.
 Pseudo-code is provided in Algorithm~\ref{algo:phast}.
 Using PHAST, we can compute a tight A* heuristic in another way.
-In the query phase, we first use PHAST to compute the distances from every node to $t$ with respect to the query edge weights $w_\ell$ and store the result in an array $H$.
-In the next step, we run $A^*$ and implement the heuristic function as lookup in the array $H$.
+In the query phase, we first use PHAST to compute the distances from every node to $t$ with respect to the lower bound edge weights $w_\ell$ and store the result in an array $H$.
+Then, we run $A^*$ and implement the heuristic as a lookup in the array $H$.
 
-This PHAST-based algorithm works.
-The heuristic evaluation and by extension the $A^*$ search is indeed fast.
+% This PHAST-based algorithm works.
+The PHAST-based heuristic evaluation and by extension the $A^*$ search is indeed fast.
 However, the PHAST step before the search is comparatively expensive.
-The reason for this is that the distances from all nodes towards $t$ are computed.
+The reason is that the distances towards $t$ are computed for \emph{all} nodes.
 Ideally, we only want to compute the distances from the nodes explored in the $A^*$ search towards $t$.
 
 \subsection{CH-Potentials}
@@ -367,8 +366,8 @@ $B$ is computed as shown in Algorithm~\ref{algo:ch-backward}.
 
 Suppose, we need to compute the potential $\pi(v)$ of a node $v$.
 We do this by first recursively computing the potentials $\pi(u)$ of all nodes for which an up-edge $(v,u)$ exists.
-Afterwards, we compute using $\min_u\{w_\ell(v,u) + \pi(u)\}$ the minimum distance over all up-down paths that contain at least one up-edge.
-As the minimum distance up-down path does not necessarily have to contain an up-edge, we set $\pi(v) = \min \{ B[v], \min_u\{w_\ell(v,u) + \pi(u)\} \}$.
+Afterwards, we compute $d = \min_u\{w_\ell(v,u) + \pi(u)\}$ the minimum distance over all up-down paths that contain at least one up-edge.
+As the shortest up-down path does not necessarily have to contain an up-edge, we set $\pi(v) = \min \{ B[v], d \}$.
 This calculation is correct, as it computes the minimum up-down $vt$-path distance in $G^+$, which corresponds to the minimum $vt$-path distance in a CH.
 
 The resulting algorithm is the basic CH-potential algorithm.
@@ -388,7 +387,7 @@ In this section, we propose optimizations to reduce the number of nodes pushed i
 \subsection{Skip Degree Two Nodes}
 
 We modify A* by processing low degree nodes consecutively without pushing them into the queue.
-Our algorithm makes use of the undirected degree $d(x)$ of a node $x$.
+Our algorithm uses the undirected degree $d(x)$ of a node $x$.
 Formally, $d(x)$ is the number of nodes $y$ such that $(x,y)\in E$ or $(y,x)\in E$.
 
 Analogous to A*, our algorithm stores for every node $x$ a tentative distance $D[x]$.
@@ -443,7 +442,7 @@ A shortest path was found and therefore the algorithm stops early.
 Otherwise, in the second step starts.
 It consists of applying the CH-Potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
 Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
-The final path is the concatenation of all three path parts.
+The final path is the concatenation of all three paths.
 
 \section{Algorithm Extensions}
 \label{sec:extensions}
@@ -510,7 +509,7 @@ We can lower bound the expression as follows:
 \]
 The $\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1})$ expression is the length of some, not necessarily shortest, $yq$-path in $G$ with $w_\ell$.
 It is by definition not smaller than the shortest $yq$-path length in $G$ with $w_\ell$.
-The shortest $yq$-path length is exactly what CH-Potentials compute.
+The shortest $yq$-path length is what CH-Potentials compute.
 The heuristic is therefore a lower bound.
 It is consistent because it is derived from exact shortest paths in $G$ with $w_\ell$.
 
@@ -559,7 +558,7 @@ However in principle, our algorithm works with any representation that enables a
 
 To solve the time-dependent routing problem, we employ a strategy very similar to TD-ALT~\cite{ndls-bastd-12}.
 The main difference is that we use CH-Potentials instead of landmarks to guide the A* search.
-We set $w_\ell(e)$ to the minimum travel time for every edge, i.e., $w_\ell(e) = \min_\tau w_q(e,\tau)$.
+We set $w_\ell(e) = \min_\tau w_q(e,\tau)$, that is the minimum travel time.
 
 We modify the A* search to use the tentative distance at a node $x$ as $\tau$ when evaluating the weight of an outgoing edge $(x,y)$.
 This modification is straight-forward, as our optimizations do not use shortcuts and only traverse edges in forward direction.
@@ -584,18 +583,18 @@ At some point, one wants to switch from live traffic back to the predicted traff
 In this section, we first describe how to use only live traffic and then describe how to combine it with predicted traffic.
 
 To support live traffic, we set $w_\ell$ to the travel time without any congestions.
-$w_q$ is set to the travel time accounting for the current traffic.
+$w_q$ is set to the travel time accounting for current traffic.
 As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
 With this setup, the CH-Potentials algorithms can make use of live traffic.
 
 To combine live traffic with predicted traffic, we define a modified travel time function.
 Denote by $w_p(e,\tau)$ the predicted travel time along edge $e$ at moment $\tau$.
-Further, $w_c(e)$ is the travel time according to the live traffic.
+Further, $w_c(e)$ is the travel time according to live traffic.
 Finally, we denote by $\tau_{\mathrm{soon}}$ the moment up to which we trust the live traffic.
 In our experiments, we set $\tau_{\mathrm{soon}}$ to one hour in the future.
 We need to make sure that the modified travel time function fulfills the no-waiting property.
 For this reason, we cannot make a hard switch at $\tau_{\mathrm{soon}}$.
-Our modified travel time function linearly approaches the predicted travel time with a bounded slope.
+Our modified travel time function linearly approaches the predicted travel time. % with a bounded slope.
 
 Formally, we set $w_q(e,\tau)$ to $w_c(e)$, if $\tau \leq \tau_{\mathrm{soon}}$.
 Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$ is true.
@@ -606,8 +605,8 @@ Finally, we run the modified time-dependent A* described in the previous section
 In our implementation, we to not modify the representation of $w_p$.
 Instead, we evaluate the formulas above each time that the modified travel time function is evaluated.
 
-With this setup, we extended CH-Potentials to support a combination of live and predicted traffic.
-We did not make any modification to our algorithm, that would make a combination with tunnel and/or highway avoidance or turn-aware routing difficult.
+With this setup, CH-Potentials support a combination of live and predicted traffic.
+We did not make any modification to our algorithm, that would hinder a combination with tunnel and/or highway avoidance or turn-aware routing.
 This straight-forward integration of complex routing problems is the strength of the CH-Potential algorithm.
 
 \subsection{Temporary Driving Bans}
@@ -693,7 +692,7 @@ Assuming that $w_\ell$ is the tightest possible lower bound that can be known in
 CH-Potentials performance for different route planning applications.
 We report average running times and number of queue pushs.
 We also report the average length increase, that is how much longer the final shortest distance is compared to the lower bound.
-Finally, we report the average running time of Dijkstras algorithm as a baseline and the speedup of CH-Potentials over the baseline.
+Finally, we report the average running time of Dijkstras algorithm as a baseline and the speedup over this baseline.
 }\label{tab:applications}
 \input{table/applications.tex}
 \end{table*}
@@ -720,7 +719,7 @@ To the best of our knowledge no other approach so far did even attempt handling 
 \label{sec:conclusion}
 
 In this paper, we introduced CH-Potentials, a fast and exact new A* heuristic for finding shortest paths in road networks.
-The approach is flexible and can handle a multitude of routing scenarios with very small implementation complexity.
+The approach is flexible and can handle a multitude of routing scenarios with very little implementation complexity.
 The performance of CH-Potentials depends on the tightness of the lower bound, so whether CH-Potentials are fit for a certain application depends on whether a tight lower bound can be derived.
 Our experiments show that CH-Potentials are efficient in extracting distance estimates from a lower bound graph and only around 1.6 times slower than immediately obtaining these estimates from an hypothetical oracle.
 
