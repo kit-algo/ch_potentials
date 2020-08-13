@@ -209,8 +209,6 @@ User preferences can vary significantly~\cite{DBLP:conf/gis/FunkeS15,DBLP:conf/g
 For example, for some users shorter routes are more important than fast routes.
 Others want to avoid tunnels or highways.
 %
-Truck routing differs from car routing due to night driving bans and other restrictions~\cite{kswz-erptd-20}.
-%
 Flexibility is also often used as building block in multi-agent planning settings~\cite{DBLP:journals/ai/SharonSFS15,DBLP:journals/tciaig/BaierBHH15}.
 %
 Electric Vehicle Routing also requires flexibility~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11}.
@@ -612,6 +610,11 @@ Instead, we evaluate the formulas above each time that the modified travel time 
 With this setup, we extended CH-Potentials to support a combination of live and predicted traffic.
 We did not make any modification to our algorithm, that would make a combination with tunnel and/or highway avoidance or turn-aware routing difficult.
 This straight-forward integration of complex routing problems is the strength of the CH-Potential algorithm.
+
+\subsection{Temporary Driving Bans}
+
+Truck routing differs from car routing due to night driving bans and other restrictions.
+In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials is successfully employed to efficiently find routes for trucks when edges may be blocked during certain times, drivers may need to wait at parking locations, and several routes with different trade-offs between arrival time and route quality may need to be considered.
 
 \section{Evaluation}
 
