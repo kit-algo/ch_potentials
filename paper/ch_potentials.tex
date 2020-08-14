@@ -93,7 +93,7 @@ However, A*'s performance depends on the availability of a good heuristic.
 Computing a good heuristic is a challenge of its own.
 In contrast, for road networks there also exist hierarchical speedup techniques, which do not need a heuristic.
 They achieve speed and exactness but sacrifice A*'s flexibility.
-In this paper, we use such as Contraction Hierarchies (CH), a hierarchical technique, to compute tight A* heuristics.
+In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute tight A* heuristics.
 We call our technique CH-Potentials.
 With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
@@ -102,11 +102,11 @@ Additionally, we describe A* optimizations to accelerate the processing of low d
 \section{Introduction}
 \label{sec:intro}
 Route planning in street networks of continental scale is a well-researched topic with many applications~\cite{bdgmpsww-rptn-16}.
-It is usually formalized as a variant of the classical shortest path problem in weighted graphs.
+It is often formalized as a variant of the classical shortest path problem in weighted graphs.
 Developing flexible techniques to efficiently compute exact routes is a tough challenge.
 \emph{Exact} means that the computed path always has minimum weight.
 \emph{Efficiently} means that the path computation is fast.
-Being able to change the edge weights between path computations or handle more complex edge weights (for example travel times which change over the course of the day obtained through traffic predictions) is \emph{flexibility}.
+Being able to change the edge weights between path computations or handle more complex weights (e.g. travel times depending on the time of the day) is \emph{flexibility}.
 
 \begin{figure}
 
@@ -370,7 +370,7 @@ Afterwards, we compute $d = \min_u\{w_\ell(v,u) + \pi(u)\}$ the minimum distance
 As the shortest up-down path does not necessarily have to contain an up-edge, we set $\pi(v) = \min \{ B[v], d \}$.
 This calculation is correct, as it computes the minimum up-down $vt$-path distance in $G^+$, which corresponds to the minimum $vt$-path distance in a CH.
 
-The resulting algorithm is the basic CH-potential algorithm.
+The resulting algorithm is the basic CH-Potentials algorithm.
 It is flexible and exact.
 However, we can still improve the performance by reducing the number of queue operations and heuristic evaluations.
 
@@ -447,7 +447,7 @@ The final result is the concatenation of both paths.
 
 A* is a very flexible algorithm.
 Many extended problems can therefore be solved using the CH-Potentials algorithm.
-In this section, we describe some extended problems.
+In this section, we describe some extended problems and how they can be solved with CH-Potentials.
 
 \subsection{Avoiding Tunnels and/or Highways}
 \label{sec:no-tunnel-highway}
@@ -464,13 +464,13 @@ This is all that is necessary to make our CH-Potentials algorithm avoid tunnels 
 
 The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
 However in the real world, turn restrictions, such as a forbidden left or right turn, exist.
-Such restrictions are usually modeled using turn weights.
+Such restrictions can be modeled using turn weights~\cite{gv-errnt-11,dgpw-crprn-13,bwzz-cchtc-20}.
+% In this section, we first present the extended problem setting.
+% Afterwards, we describe how it can be solved with CH-Potentials.
 We extend CH-Potentials by using zero as lower bound for every turn weight in the heuristic.
-In this section, we first present the extended problem setting.
-Afterwards, we describe how it can be solved with CH-Potentials.
 
-In the extended problem, a \emph{turn weight} $w_t$ is introduced~\cite{gv-errnt-11,dgpw-crprn-13,bwzz-cchtc-20}.
-$w_t$ maps a pair of incident edges onto the time required to perform the turn.
+% In the extended problem, a \emph{turn weight} $w_t$ is introduced~\cite{gv-errnt-11,dgpw-crprn-13,bwzz-cchtc-20}.
+A \emph{turn weight} $w_t$ maps a pair of incident edges onto the time required to perform the turn.
 Formally, $w_t$ is a function from $V^3$ to $\mathbb{R}^+ \cup \{+\infty\}$.
 A forbidden turn is modeled by setting the corresponding $w_t$ to $+\infty$.
 
@@ -489,12 +489,13 @@ A sequence of expanded nodes in the expanded graph $G'$ corresponds to a sequenc
 The weight of a path in $G'$ is equal to the turn-aware weight of the corresponding path in $G$ minus the irrelevant $w_q(v_1,v_2)$ term.
 Turn-aware shortest paths can thus be computed by searching for shortest paths in the expanded graph.
 
-The simplest combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
-However, this implies computing a CH on the expanded graph.
-This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{gv-errnt-11}.
-We want to avoid these complications.
+% The simplest combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
+% However, this implies computing a CH on the expanded graph.
+% This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{gv-errnt-11}.
+% We want to avoid these complications.
 
-We therefore only apply the A* search to the expanded graph $G'$.
+% We therefore only apply the A* search to the expanded graph $G'$.
+We only apply the A* search to the expanded graph $G'$.
 The heuristic is computed with respect to the input graph $G$.
 Let $(p,q)$ be the target edge and $(x,y)$ the edge for which the A* search wants to compute a heuristic.
 We construct non-turn-aware CH-Potentials towards $q$.
@@ -526,9 +527,9 @@ The primary reason is traffic.
 Recurring traffic can be predicted by observing the traffic in the past.
 It is common \cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19} to represent these predictions as \emph{travel time functions}.
 An edge weight is no longer a scalar value but a function that maps the entry time onto the traversal time.
-Performing this prediction is outside of the scope of this paper.
+% Performing this prediction is outside of the scope of this paper.
 It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
-Again, we first formalize the extended problem setting and then describe our solution with CH-Potentials.
+% Again, we first formalize the extended problem setting and then describe our solution with CH-Potentials.
 
 Formally, $w_q$ is a function from $E\times \mathbb{R}$ to $\mathbb{R}^+$.
 $w_q(e, \tau)$ is the travel time through edge $e$ when entering it at moment $\tau$.
@@ -563,8 +564,7 @@ This modification is straight-forward, as our optimizations do not use shortcuts
 For the correctness proof, we refer to~\cite{dw-lbrdg-07}.
 
 With this setup, we extended CH-Potentials to support time-dependent routing.
-As we were able to keep all travel time functions out of the CH.
-This avoids a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
+As we were able to keep all travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
 
 \subsection{Live and Predicted Traffic}
 \label{sec:live-predicted-traffic}
@@ -605,7 +605,7 @@ Instead, we evaluate the formulas above each time that the modified travel time 
 
 With this setup, CH-Potentials support a combination of live and predicted traffic.
 We did not make any modification to our algorithm, that would hinder a combination with tunnel and/or highway avoidance or turn-aware routing.
-This straight-forward integration of complex routing problems is the strength of the CH-Potential algorithm.
+This straight-forward integration of complex routing problems is the strength of the CH-Potentials algorithm.
 
 \subsection{Temporary Driving Bans}
 
@@ -637,13 +637,13 @@ All other running times are marked as outliers.
 In this section, we present our experimental evaluation.
 Our benchmark machine runs openSUSE Leap 15.1 (kernel 4.12.14), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
 All experiments were performed sequentially.
-Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile with the target-cpu=native option.
+Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile. % with the target-cpu=native option.
 
 \subparagraph{Inputs and Methodology}
 Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{https://download.geofabrik.de/europe/germany-200101.osm.pbf}}.
 To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
-For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{https://www.mapbox.com/}}.
+For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{https://www.mapbox.com}}.
 The  data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
@@ -664,9 +664,9 @@ Average running times range from below a millisecond to a few hundred millisecon
 Up to around $\alpha = 1.1$ the running time growth is roughly quadratic before leveling off to something more resembling linear growth.
 We observe a significant amount of heavy outliers -- sometimes more than an order of magnitude slower than the median.
 Generally, running times vary quite strongly even though most queries are long range queries as we draw source and target node uniformly at random.
-The reason is that different queries (even with similar shortest path lengths) are affected differently by growing $\alpha$ depending on the geographic regions the shortest path traverses.
-As $\alpha$ grows, more and more nodes in the area around the shortest paths are explored.
-So when the shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, then when the shortest path goes only through sparse areas.
+The reason is that different queries (even with similar shortest path lengths) are affected differently by $\alpha$ depending on the geographic regions the shortest path traverses.
+As $\alpha$ grows, more nodes in the area around the shortest paths are explored.
+So when a shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, than when it passes sparse areas.
 % Conclusions?
 
 \begin{table}
@@ -676,7 +676,7 @@ So when the shortest path traverses an area where many nodes are reachable in sh
 \end{table}
 
 In Table~\ref{tab:building_blocks} we investigate the impact of our optimizations.
-We run queries with different heuristic functions: the \emph{Zero} heuristic which turns A* back into the classical algorithm of Dijkstra, our new CH-Potential heuristic, and an \emph{Oracle} heuristic where all distances to $t$ with regards to $w_\ell$ can be obtained immediately.
+We run queries with different heuristic functions: the \emph{Zero} heuristic which turns A* back into the classical algorithm of Dijkstra, our new CH-Potentials heuristic, and an \emph{Oracle} heuristic where all distances to $t$ with regards to $w_\ell$ can be obtained immediately.
 We first observe that each one of our optimizations gains useful speedups regardless of the heuristic used.
 Our optimizations do not only reduce heuristic evaluations but also queue operations which always accelerates the algorithm.
 The number of queue pushs roughly corresponds to the running time for all heuristics.
@@ -697,21 +697,21 @@ Finally, we report the average running time of Dijkstras algorithm as a baseline
 
 Table~\ref{tab:applications} depicts results when applying our algorithm to different route planning problems.
 The greatest speedup is, of course, achieved when applying CH-Potentials to an unmodified graph with $w_q = w_\ell$.
-In that case the performance is comparable to what other state-of-the-art route planning techniques like CH achieve.
-When considering extended problem settings, the performance of CH-Potentials strongly depends on the tightness of $w_\ell$, as previously observed in Figure~\ref{fig:scaled_weights}.
-On one hand, forbidding highways leads to over 40\% longer paths and the smallest speedup over Dijkstra (only 5.3) among all settings.
-On the other hand, incorporating turn restrictions increase path lengths only marginally and CH-Potentials yield a speedup of around 1500 over Dijkstra on the turn expanded graph without any additional implementation complexity.
+In that case, the performance is within an order of magnitude to what other state-of-the-art techniques achieve.
+When considering extended problems, the performance of CH-Potentials strongly depends on the tightness of $w_\ell$.
+On one hand, forbidding highways leads to over 40\% longer paths and the smallest speedup (only 5.3) among all settings.
+On the other hand, incorporating turn restrictions increases path lengths only marginally and CH-Potentials yield a speedup of around 1500 over Dijkstra on the turn expanded graph without any additional implementation complexity.
 Live traffic increases shortest paths lengths by around 15\% longer which yields running times of 127\,ms on average.
 The Mapbox traffic predictions increase shortest path lengths by about 18\%.
-Combined with the additional work from function evaluations this leads to running times around 200\,ms.
+Combined with the additional work from function evaluations, this leads to running times around 200\,ms.
 The PTV traffic predictions yield much smaller length increases (less than 4\%) which leads to better running times and speedups.
-Assessing which of these predictions is more realistic is not possible within the scope of this paper.
+% Assessing which of these predictions is more realistic is not possible within the scope of this paper.
 Combining Mapbox live traffic and traffic predictions yields running times only slightly slower than traffic predictions alone.
-To the best of our knowledge, no other exact technique so far could combine these two scenarios.
+% To the best of our knowledge, no other exact technique so far could combine these two scenarios.
 Additionally adding turn restrictions slows running times down to around 510\,ms despite the length increase only growing by 1.3 percentage points.
-This is still a speedup of 12.2 over the baseline.
 The reason for this is that the turn expanded graph is three times bigger and that the BCC optimization is not applicable for turn-expanded graphs.
-To the best of our knowledge no other approach so far did even attempt handling this combination of scenarios.
+This is still a speedup of 12.2 over the baseline.
+% To the best of our knowledge no other approach so far did even attempt handling this combination of scenarios.
 
 \section{Conclusion}
 \label{sec:conclusion}
