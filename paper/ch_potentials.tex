@@ -622,9 +622,9 @@ In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials is successfully 
 \input{table/graphs.tex}
 \end{table}
 
-\begin{figure*}
+\begin{figure}
 \centering
-\includegraphics[width=\textwidth]{fig/scaled_weights.pdf}
+\includegraphics[width=\linewidth]{fig/scaled_weights.pdf}
 \caption{
 Running times on a logarithmic scale for queries on OSM Ger with scaled edge weights $w_q = \alpha \cdot w_\ell$.
 The boxes cover the range between the first and third quartile.
@@ -632,7 +632,7 @@ The band in the box indicates the median, the diamond the mean.
 The whiskers cover 1.5 times the inter quartile range.
 All other running times are marked as outliers.
 }\label{fig:scaled_weights}
-\end{figure*}
+\end{figure}
 
 In this section, we present our experimental evaluation.
 Our benchmark machine runs openSUSE Leap 15.1 (kernel 4.12.14), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
