@@ -428,21 +428,19 @@ A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
 This reduces the number of explored nodes and thus leads to fewer heuristic evaluations.
 
-In the preprocessing phase, before the CH is created, we compute the subgraph $G_C$, called \emph{core}, induced by the largested biconnected component of the undirected graph underlying $G$.
+In the preprocessing phase, we compute the subgraph $G_C$, called \emph{core}, induced by the largest biconnected component of the undirected graph underlying $G$.
 We do this using Tarjan's algorithm \cite{t-dfslg2-72}.
 For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
 For nodes in the core, $a_v=v$.
 We exploit that all attachment nodes are single node separators and the problem can be decomposed along them.
-The CH-Potentials preprocessing step is only executed for $G_C$.
 
-The query phase is divided into four steps.
-In the first step, we use Dijkstra's algorithm to explore the component that contains $s$ until $a_s$ is reached.
-If this search finds $t$, then $s$ and $t$ are part of the same component.
-A shortest path was found and therefore the algorithm stops early.
-Otherwise, in the second step starts.
-It consists of applying the CH-Potential algorithm restricted to $G_C$ from $a_s$ to $a_t$.
-Finally, in the third step, we search a path from $a_t$ towards $t$ using Dijkstra's algorithm restricted to $t$'s biconnected component.
-The final path is the concatenation of all three paths.
+The query phase is divided into two steps.
+In the first step, we apply A* with CH-Potentials to $G_C$ combined with the component that contains $s$.
+This can be achieved implicitly by removing edges from $G_C$ into other components during preprocessing.
+If $t$ is part of $G_C$ or in the same component as $s$, this A* search finds it.
+Otherwise we find $a_t$.
+In that case, we continue by searching a path from $a_t$ towards $t$ restricted to $t$'s biconnected component.
+The final result is the concatenation of both paths.
 
 \section{Algorithm Extensions}
 \label{sec:extensions}
