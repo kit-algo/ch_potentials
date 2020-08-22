@@ -38,6 +38,7 @@
 
 
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage[algo2e,vlined]{algorithm2e}
 
 \pdfinfo{
@@ -201,6 +202,7 @@ This results in a good but not a tight heuristic.
 The handling of low degree nodes in our A* search is a variation of the techniques used in TopoCore~\cite{DBLP:conf/gis/DibbeltSW15}, which is inspired by~\cite{DBLP:journals/pvldb/FunkeNS14}.
 
 \subsection{Oracle-A* \& Comparison with Related Work}
+\label{sec:oracle}
 
 To compare against related work, we introduce the concept of Oracle-A*.
 It has access to a shortest distance array with respect to $w_\ell$, i.e., it is tight.
@@ -432,7 +434,8 @@ If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
 A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is is in a dead-end, it is unnecessary to explore these nodes.
 
-In the preprocessing phase, we compute the subgraph $G_C$, called \emph{core}, induced by the largest biconnected component of the undirected graph underlying $G$.
+In the preprocessing phase, we compute the subgraph $G_C$, called \emph{core}.
+$G_C$ is induced by the largest biconnected component of the undirected graph underlying $G$.
 We do this using Tarjan's algorithm \cite{t-dfslg2-72}.
 For every node $v$ in the input graph $G$, we store the attachment node $a_v$ to the core.
 For nodes in the core, $a_v=v$.
@@ -663,70 +666,98 @@ All experiments were performed sequentially.
 Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile. % with the target-cpu=native option.
 
 \subparagraph{Inputs and Methodology}
-Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{https://download.geofabrik.de/europe/germany-200101.osm.pbf}}.
-To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
+Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{download.geofabrik.de/europe/germany-200101.osm.pbf}}.
+To obtain the routing graph, we use the import from RoutingKit\footnote{\url{github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
-For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{https://www.mapbox.com}}.
+For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{www.mapbox.com}}.
 The  data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
-Additionally, have two graphs with traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
+Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{ptvgroup.com}}.
+The PTV instances are not OSM-based.
 One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
 Table~\ref{tab:graphs} contains an overview over our instances.
+In this table, we further include the sequential running time necessary to construct the CH.
 We report preprocessing running times as averages over 10 runs.
 For queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 
 \subparagraph{Experiments}
-We first investigate the effectiveness of the heuristic depending on how tight the lower bound is.
-For that, we take our main graph, use the unmodified travel time as the lower bound $w_\ell$, and perform queries on $w_q = \alpha \cdot w_\ell$ where $\alpha$ is a factor $\geq 1$.
-When $\alpha = 1$, the heuristic is as tight as possible.
-With growing $\alpha$ the heuristic degrades.
+The first experiment varies the tightness of the heuristic.
+The lower bound $w_\ell$ is set to the freeflow travel time.
+The query weights $w_q$ are set to $\alpha \cdot w_\ell$, where $\alpha\ge 1$.
+When $\alpha = 1$, the heuristic is tight.
+Increasing $\alpha$ degrades the heuristic's quality.
 Figure~\ref{fig:scaled_weights} depicts the results.
 Clearly, $\alpha$ has significant influence on the running time.
 Average running times range from below a millisecond to a few hundred milliseconds depending on $\alpha$.
-Up to around $\alpha = 1.1$ the running time growth is roughly quadratic before leveling off to something more resembling linear growth.
-We observe a significant amount of heavy outliers -- sometimes more than an order of magnitude slower than the median.
-Generally, running times vary quite strongly even though most queries are long range queries as we draw source and target node uniformly at random.
-The reason is that different queries (even with similar shortest path lengths) are affected differently by $\alpha$ depending on the geographic regions the shortest path traverses.
-As $\alpha$ grows, more nodes in the area around the shortest paths are explored.
-So when a shortest path traverses an area where many nodes are reachable in short distance, the search space grows stronger, than when it passes sparse areas.
-% Conclusions?
+Up to around $\alpha = 1.1$ the running time grows quickly.
+After $\alpha = 1.1$ the growth slows down.
+We observe that the running times for a fixed $\alpha$ vary strongly.
+This is an interesting observation, as with uniform source and target sampling, nearly all queries are long-distance.
+The query distance is thus not the reason.
+After some investigation, we concluded that this is due to non-uniform road graph density.
+Some regions have more roads per area than others.
+The search space of A* is an ellipsoid.
+The number explored A* nodes depends on the density of the area covered by this shape.
+As the density varies, the running times vary.
 
+Table~\ref{tab:building_blocks} shows the impact of our optimizations.
+We run queries with three heuristic.
+The Zero heuristic is simply $h(x)=0$ for all $x$.
+This corresponds to using Dijkstra's algorithm.
+Further, we run queries with our novel CH-Potential heuristic.
+Finally, we use the unattainable lower bound Oracle-A* as described in Section~\ref{sec:oracle}.
+Oracle-A* is unbeatable theoretic lower bound.
+The reported running time of Oracle-A* do \emph{not} account for the heuristic evaluation.
+We include Oracle-A* as it is a lower bound not only for our algorithm but every related work.
 
-In Table~\ref{tab:building_blocks} we investigate the impact of our optimizations.
-We run queries with different heuristic functions: the \emph{Zero} heuristic which turns A* back into the classical algorithm of Dijkstra, our new CH-Potentials heuristic, and an \emph{Oracle} heuristic where all distances to $t$ with regards to $w_\ell$ can be obtained immediately.
-We first observe that each one of our optimizations gains useful speedups regardless of the heuristic used.
-Our optimizations do not only reduce heuristic evaluations but also queue operations which always accelerates the algorithm.
-The number of queue pushs roughly corresponds to the running time for all heuristics.
-When comparing CH-Potentials to the Oracle heuristic we note that CH-Potentials are only a factor of 1.6 slower.
-This clearly shows that CH-Potentials have very little overhead.
-Assuming that $w_\ell$ is the tightest possible lower bound that can be known in advance, no other heuristic can be more than a factor of 1.6 faster than CH-Potentials without sacrificing exactness.
+We observe that the number of queue pushes roughly correlates with running time.
+Further, each of our optimizations reduces the number of queue pushes.
+Very interesting is the comparison with Oracle-A*.
+Our algorithm is only 1.6 times slower than an unachievable theoretic lower bound.
+This means that no competitor algorithm such as ALT or CPD-Heuristics can be significantly faster than CH-Potentials.
 
-Table~\ref{tab:applications} depicts results when applying our algorithm to different route planning problems.
-The greatest speedup is, of course, achieved when applying CH-Potentials to an unmodified graph with $w_q = w_\ell$.
-In that case, the performance is within an order of magnitude to what other state-of-the-art techniques achieve.
-When considering extended problems, the performance of CH-Potentials strongly depends on the tightness of $w_\ell$.
-On one hand, forbidding highways leads to over 40\% longer paths and the smallest speedup (only 5.3) among all settings.
-On the other hand, incorporating turn restrictions increases path lengths only marginally and CH-Potentials yield a speedup of around 1500 over Dijkstra on the turn expanded graph without any additional implementation complexity.
-Live traffic increases shortest paths lengths by around 15\% longer which yields running times of 127\,ms on average.
-The Mapbox traffic predictions increase shortest path lengths by about 18\%.
-Combined with the additional work from function evaluations, this leads to running times around 200\,ms.
-The PTV traffic predictions yield much smaller length increases (less than 4\%) which leads to better running times and speedups.
-% Assessing which of these predictions is more realistic is not possible within the scope of this paper.
-Combining Mapbox live traffic and traffic predictions yields running times only slightly slower than traffic predictions alone.
-% To the best of our knowledge, no other exact technique so far could combine these two scenarios.
-Additionally adding turn restrictions slows running times down to around 510\,ms despite the length increase only growing by 1.3 percentage points.
-The reason for this is that the turn expanded graph is three times bigger and that the BCC optimization is not applicable for turn-expanded graphs.
-This is still a speedup of 12.2 over the baseline.
-% To the best of our knowledge no other approach so far did even attempt handling this combination of scenarios.
+Table~\ref{tab:applications} depicts the running times of CH-Potentials in the various applications, such as those described in Section~\ref{sec:extensions}.
+Speedups compared to extensions of Dijkstra's algorithm for the respective application are depicted.
+We start with the inflexible routing problem where $w_q = w_\ell$.
+This is the only problem variant solved by the basic CH algorithm.
+In this setting, there is a huge speedup of 3243.
+Such large speedups are typical for CH.
+This shows that CH-Potentials gracefully converges to a CH in the $w_q = w_\ell$ special case.
+
+In the other scenarios, the performance of CH-Potentials strongly depends on the quality of the tight heuristic.
+We measure this quality using the length increase of $w_q$ compared to $w_\ell$.
+Forbidding highways results in the largest length increase and in the smallest speedup.
+The other extreme are turn restrictions.
+They have only a small impact on the length increase.
+The achieved speedups are therefore comparable to CH speedups.
+%
+Mapbox live traffic has a length increase of around 15\%, which yields running times of 127\,ms.
+The length increase of Mapbox traffic predictions are about 18\%, and results in a running time of 200\,ms.
+The speedup in the predicted scenario is larger than in the live setting, as the travel time function evaluations slow down Dijkstra's algorithm.
+Combining predicted and live traffic results in a running time only slightly higher than for the predicted scenario.
+Further adding turn restrictions, increases the running times.
+This increase is mostly due to the BCC optimization becoming ineffective when considering turns.
+It is not due to the length increase of using turns.
+With everything activated, our algorithm still has a speedup of 12.2 over the baseline.
+Interestingly, the PTV traffic predictions have a much smaller length increase that the Mapbox predictions.
+This results in smaller running times of our algorithm.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-In this paper, we introduced CH-Potentials, a fast and exact new A* heuristic for finding shortest paths in road networks.
-The approach is flexible and can handle a multitude of routing scenarios with very little implementation complexity.
-The performance of CH-Potentials depends on the tightness of the lower bound, so whether CH-Potentials are fit for a certain application depends on whether a tight lower bound can be derived.
-Our experiments show that CH-Potentials are efficient in extracting distance estimates from a lower bound graph and only around 1.6 times slower than immediately obtaining these estimates from an hypothetical oracle.
+In this paper, we introduced CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and CH for finding shortest paths in road networks.
+The approach can handle a multitude of routing scenarios with very little implementation complexity.
+The performance of CH-Potentials crucially depends on the availability of good weight lower bounds in preprocessing phase.
+Our experiments show, that this availability is highly application dependent.
+We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the heuristic.
+We conclude from this, that to achieve smaller running times with A* based algorithms variations of the problem setting are necessary.
+This leads to multiple avenues for future research.
+
+Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
+Another promising research avenue would be to investigate other graphs than road networks.
+A lot of research into grid maps exists including a series of competitions called GPPC \cite{DBLP:conf/socs/SturtevantTTUKS15}.
+Hierarchical techniques have been shown to work on these graphs \cite{DBLP:conf/aaai/UrasK14}.
 
 %%
 %% Bibliography
