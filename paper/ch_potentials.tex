@@ -468,61 +468,47 @@ Otherwise, $w_q$ is set to the freeflow travel time.
 \subsection{Forbidden Turns and Turn Costs}
 \label{sec:no-turns}
 
-The classical shortest path problem allows to turn from every edge to every other incident edge at every node.
+The classical shortest path problem allows to freely change edges at nodes.
 However in the real world, turn restrictions, such as a forbidden left or right turn, exist.
 Such restrictions can be modeled using turn weights~\cite{gv-errnt-11,dgpw-crprn-13,bwzz-cchtc-20}.
 % In this section, we first present the extended problem setting.
 % Afterwards, we describe how it can be solved with CH-Potentials.
 We extend CH-Potentials by using zero as lower bound for every turn weight in the heuristic.
 
-% In the extended problem, a \emph{turn weight} $w_t$ is introduced~\cite{gv-errnt-11,dgpw-crprn-13,bwzz-cchtc-20}.
-A \emph{turn weight} $w_t$ maps a pair of incident edges onto the time required to perform the turn.
-Formally, $w_t$ is a function from $V^3$ to $\mathbb{R}^+ \cup \{+\infty\}$.
-A forbidden turn is modeled by setting the corresponding $w_t$ to $+\infty$.
-
-A path with nodes $v_1, v_2,\ldots v_k$ has the following \emph{turn-aware path weight}:\[
+% Ich bleibe bei v_i hier, damit keine Verwechselung mit den freien Variablen x,y,z gibt.
+A \emph{turn weight} $w_t$  maps a pair of incident edges onto the turning time or $+\infty$.
+A path with nodes $v_1, v_2,\ldots v_k$ has the following \emph{turn-aware weight}:\[
 w_q(v_1, v_2) + \sum_{i=2}^{k-1}  w_t(v_{i-1},v_i,v_{i+1})  + w_q(v_i,v_{i+1})
-\] The input to the extended problem consists of a source edge and a target edge.
-The objective is to find a path connecting these edges such that the turn-aware path weight is minimized.
-The first term $w_q(v_1, v_2)$ only depends on the source edge.
-As all considered paths share the same source edge, the term is the same for all paths.
-We can therefore ignore it during the optimization.
+\] The objective is to find a path between two given edges with minimum turn-aware weight.
+The first term $w_q(v_1, v_2)$ is the same for all paths, as it only depends on the source edge.
+It can thus be ignored during optimization.
 
-To account for turns, many algorithms construct a \emph{turn-expanded} graph $G'$.
+A common strategy is to construct a \emph{turn-expanded} graph $G'$.
 Edges in the input graph $G$ correspond to \emph{expanded nodes} in $G'$.
-For every pair of successive edges $(x,y)$ and $(y,z)$ in $G$, there is an \emph{expanded edge} in $G'$ with expanded weight $w_t(x,y,z) + w_q(y,z)$.
+For every pair of incident edges $(x,y)$ and $(y,z)$ in $G$, there is an \emph{expanded edge} in $G'$ with expanded weight $w_t(x,y,z) + w_q(y,z)$.
 A sequence of expanded nodes in the expanded graph $G'$ corresponds to a sequence of edges in the input graph $G$.
 The weight of a path in $G'$ is equal to the turn-aware weight of the corresponding path in $G$ minus the irrelevant $w_q(v_1,v_2)$ term.
-Turn-aware shortest paths can thus be computed by searching for shortest paths in the expanded graph.
+The turn-aware routing problem can be solved by searching for paths in $G'$.
 
-% The simplest combination of turn-aware routing with CH-Potentials consists of using the expanded graph as input to the CH-Potential algorithm.
-% However, this implies computing a CH on the expanded graph.
-% This is feasible but has a number of problems such as higher preprocessing running time, increased memory consumption, or more complex code~\cite{gv-errnt-11}.
-% We want to avoid these complications.
+The A* search runs in the expanded $G'$ and uses a heuristic $h'$.
+The CH is constructed for $G$.
+With CH-Potentials, we thus get the tight heuristic $h$.
+We set $h'(x,y) = h(y)$.
 
-% We therefore only apply the A* search to the expanded graph $G'$.
-We only apply the A* search to the expanded graph $G'$.
-The heuristic is computed with respect to the input graph $G$.
-Let $(p,q)$ be the target edge and $(x,y)$ the edge for which the A* search wants to compute a heuristic.
-We construct non-turn-aware CH-Potentials towards $q$.
-The heuristic for the edge $(x,y)$ is equal to the heuristic of $y$.
-
-To prove correctness, consider the turn-aware path weight of a shortest path $v_1,v_2\ldots v_k$ with $v_1=x$, $v_2=y$, $v_{k-1}=p$, and $v_k=q$.
+To prove that $h'(x,y)$ is consistent, consider the turn-aware weight of a path $v_1,v_2\ldots v_k$ with $v_1=x$, $v_2=y$, $v_{k-1}=p$, and $v_k=q$.
 We can lower bound the expression as follows:
 \[
 \sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1}) \le \sum_{i=2}^{k-1} \underbrace{w_t(v_{i-1},v_i,v_{i+1})}_{0\le} + \sum_{i=2}^{k-1} \underbrace{w_q(v_i,v_{i+1})}_{w_\ell(v_i,v_{i+1})\le}
 \]
-The $\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1})$ expression is the length of some, not necessarily shortest, $yq$-path in $G$ with $w_\ell$.
-It is by definition not smaller than the shortest $yq$-path length in $G$ with $w_\ell$.
-The shortest $yq$-path length is what CH-Potentials compute.
+$\sum_{i=2}^{k-1} w_\ell(v_i,v_{i+1})$ is a $yq$-path length in $G$.
+It is no shorter than the shortest $yq$-path length in $G$, which is equal to $h(y)$.
 The heuristic is therefore a lower bound.
 It is consistent because it is derived from exact shortest paths in $G$ with $w_\ell$.
 
-Unfortunately, the undirected graph underlying the expanded graph is always biconnected, if the input graph is strongly connected.
-The optimization described in~\ref{sec:largested-biconnected-component} is therefore ineffective in this setting.
+Sadly, the undirected graph underlying $G'$ is always biconnected, if the input graph is strongly connected.
+The optimization described in Section~\ref{sec:largested-biconnected-component} is therefore ineffective.
 
-With this setup we extend CH-Potentials in a way that keeps all turn-related information out of the CH.
-This allows for a comparatively simple implementation.
+With this setup CH-Potentials support turns without requiring turn information in the CH.
 
 \subsection{Predicted Traffic or Time-Dependent Routing}
 \label{sec:predicted-traffic}
@@ -537,14 +523,14 @@ An edge weight is no longer a scalar value but a function that maps the entry ti
 It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
 % Again, we first formalize the extended problem setting and then describe our solution with CH-Potentials.
 
-Formally, $w_q$ is a function from $E\times \mathbb{R}$ to $\mathbb{R}^+$.
-$w_q(e, \tau)$ is the travel time through edge $e$ when entering it at moment $\tau$.
+Formally, the time-dependent query weight $w_p$ is a function from $E\times \mathbb{R}$ to $\mathbb{R}^+$.
+$w_p(e, \tau)$ is the travel time through edge $e$ when entering it at moment $\tau$.
 The input to the extended problem consists of a source node $s$ and a target node $t$, as in the classical problem formulation.
 Additionally, the input contains a source time $\tau_s$.
 A path with edges $e_1,e_2\ldots e_k$ is weighted using $\alpha_k$, which is defined recursively as follows:\[
 \begin{split}
-\alpha_{1} & = w_q(e_1, \tau_s) \\
-\alpha_{k} & = \alpha_{k-1} + w_q(e_1, \alpha_{k-1})
+\alpha_{1} & = w_p(e_1, \tau_s) \\
+\alpha_{k} & = \alpha_{k-1} + w_p(e_1, \alpha_{k-1})
 \end{split}
 \]
 The objective is to find a path that minimizes $\alpha_k$.
@@ -554,20 +540,14 @@ The necessary modification to A* is analogous.
 Without the no-waiting property the problem is in general NP-hard \cite{or-tnp-89}.
 The no-waiting property states that it is never beneficial to wait at a node before entering an edge.
 Formally stated, the following must hold:\[
-\forall e\in E,\tau\in \mathbb{R},\delta\in \mathbb{R}^+: w_q(e, \tau) \le w_q(e, \tau+\delta) + \delta
+\forall e\in E,\tau\in \mathbb{R},\delta\in \mathbb{R}^+: w_p(e, \tau) \le w_p(e, \tau+\delta) + \delta
 \]
+Our implementation stores edge travel times using piece-wise linear functions.
 
-Usually, travel time functions are stored as piece-wise linear functions.
-Our implementation follows this setup.
-However in principle, our algorithm works with any representation that enables an efficient function evaluation.
-
-To solve the time-dependent routing problem, we employ a strategy very similar to TD-ALT~\cite{ndls-bastd-12}.
+To solve the time-dependent routing problem, we employ a strategy very similar to TD-ALT~\cite{ndls-bastd-12,dw-lbrdg-07}.
 The main difference is that we use CH-Potentials instead of landmarks to guide the A* search.
-We set $w_\ell(e) = \min_\tau w_q(e,\tau)$, that is the minimum travel time.
-
-We modify the A* search to use the tentative distance at a node $x$ as $\tau$ when evaluating the weight of an outgoing edge $(x,y)$.
-This modification is straight-forward, as our optimizations do not use shortcuts and only traverse edges in forward direction.
-For the correctness proof, we refer to~\cite{dw-lbrdg-07}.
+We set $w_\ell(e) = \min_\tau w_p(e,\tau)$, that is the minimum travel time.
+Following TD-ALT, we modify the A* search to use the tentative distance at a node $x$ as $\tau$ when evaluating the weight of an outgoing edge $(x,y)$.
 
 With this setup, we extended CH-Potentials to support time-dependent routing.
 As we were able to keep all travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
@@ -583,34 +563,33 @@ It is possible that it differs from the current travel time significantly, if un
 Accidents are examples of such unexpected events.
 Live traffic data is more accurate for the current moment than predicted data.
 However, just using live traffic data is problematic for long routes as traffic changes while driving.
-At some point, one wants to switch from live traffic back to the predicted traffic.
-In this section, we first describe how to use only live traffic and then describe how to combine it with predicted traffic.
+At some point, one wants to switch from live traffic to the predicted traffic.
+In this section, we first describe a setup with only live traffic and then extend it with predicted traffic.
 
-To support live traffic, we set $w_\ell$ to the travel time without any congestions.
+To support live traffic, we set $w_\ell$ to the freeflow travel time.
 $w_q$ is set to the travel time accounting for current traffic.
 As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
-With this setup, the CH-Potentials algorithms can make use of live traffic.
+This is all that is necessary to combine live traffic and CH-Potentials.ic.
 
-To combine live traffic with predicted traffic, we define a modified travel time function.
+To combine live traffic with predicted traffic, we define a modified travel time function $w_q$ that is then used as query weights.
 Denote by $w_p(e,\tau)$ the predicted travel time along edge $e$ at moment $\tau$.
-Further, $w_c(e)$ is the travel time according to live traffic.
-Finally, we denote by $\tau_{\mathrm{soon}}$ the moment up to which we trust the live traffic.
+Further, $w_c(e)$ is the travel time according to current live traffic.
+Finally, we denote by $\tau_{\mathrm{soon}}$ the moment when we switch to predicted traffic.
 In our experiments, we set $\tau_{\mathrm{soon}}$ to one hour in the future.
 We need to make sure that the modified travel time function fulfills the no-waiting property.
 For this reason, we cannot make a hard switch at $\tau_{\mathrm{soon}}$.
 Our modified travel time function linearly approaches the predicted travel time. % with a bounded slope.
-
+%
 Formally, we set $w_q(e,\tau)$ to $w_c(e)$, if $\tau \leq \tau_{\mathrm{soon}}$.
 Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$ is true.
 If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 We set $w_\ell$ again to the freeflow travel time.
-Finally, we run the modified time-dependent A* described in the previous section on this modified travel time function.
-In our implementation, we to not modify the representation of $w_p$.
-Instead, we evaluate the formulas above each time that the modified travel time function is evaluated.
+We then run the algorithm of Section~\ref{sec:predicted-traffic} with $w_q$ as query weight.
+In our implementation, we to not modify the representation of $w_p$ and evaluate the formulas above at each heuristic evaluation.
 
 With this setup, CH-Potentials support a combination of live and predicted traffic.
-We did not make any modification to our algorithm, that would hinder a combination with tunnel and/or highway avoidance or turn-aware routing.
+Further adding tunnel and/or highway avoidance or turn-aware routing is simple.
 This straight-forward integration of complex routing problems is the strength of the CH-Potentials algorithm.
 
 \subsection{Temporary Driving Bans}
@@ -667,13 +646,13 @@ Our code is written in Rust and compiled with rustc 1.47.0-nightly in the releas
 
 \subparagraph{Inputs and Methodology}
 Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{download.geofabrik.de/europe/germany-200101.osm.pbf}}.
-To obtain the routing graph, we use the import from RoutingKit\footnote{\url{github.com/RoutingKit/RoutingKit}}.
+To obtain the routing graph, we use the import from RoutingKit\footnote{\url{www.github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
 For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{www.mapbox.com}}.
 The  data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
-Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{ptvgroup.com}}.
+Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{www.ptvgroup.com}}.
 The PTV instances are not OSM-based.
 One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
 Table~\ref{tab:graphs} contains an overview over our instances.
@@ -737,7 +716,7 @@ The length increase of Mapbox traffic predictions are about 18\%, and results in
 The speedup in the predicted scenario is larger than in the live setting, as the travel time function evaluations slow down Dijkstra's algorithm.
 Combining predicted and live traffic results in a running time only slightly higher than for the predicted scenario.
 Further adding turn restrictions, increases the running times.
-This increase is mostly due to the BCC optimization becoming ineffective when considering turns.
+This increase is mostly due to the BCC optimization of Section~\ref{sec:largested-biconnected-component} becoming ineffective when considering turns.
 It is not due to the length increase of using turns.
 With everything activated, our algorithm still has a speedup of 12.2 over the baseline.
 Interestingly, the PTV traffic predictions have a much smaller length increase that the Mapbox predictions.
@@ -747,11 +726,11 @@ This results in smaller running times of our algorithm.
 \label{sec:conclusion}
 
 In this paper, we introduced CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and CH for finding shortest paths in road networks.
-The approach can handle a multitude of routing scenarios with very little implementation complexity.
+The approach can handle a multitude of complex, integrated routing scenarios with very little implementation complexity.
 The performance of CH-Potentials crucially depends on the availability of good weight lower bounds in preprocessing phase.
-Our experiments show, that this availability is highly application dependent.
-We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the heuristic.
-We conclude from this, that to achieve smaller running times with A* based algorithms variations of the problem setting are necessary.
+Our experiments show, that this availability highly depends on the application.
+We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the tight heuristic.
+We conclude from this, that to achieve significantly smaller running times with A* based algorithms in road networks, variations of the problem setting are necessary.
 This leads to multiple avenues for future research.
 
 Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
