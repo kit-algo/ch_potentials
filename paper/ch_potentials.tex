@@ -569,7 +569,7 @@ In this section, we first describe a setup with only live traffic and then exten
 To support live traffic, we set $w_\ell$ to the freeflow travel time.
 $w_q$ is set to the travel time accounting for current traffic.
 As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
-This is all that is necessary to combine live traffic and CH-Potentials.ic.
+This is all that is necessary to combine live traffic and CH-Potentials.
 
 To combine live traffic with predicted traffic, we define a modified travel time function $w_q$ that is then used as query weights.
 Denote by $w_p(e,\tau)$ the predicted travel time along edge $e$ at moment $\tau$.
@@ -586,7 +586,7 @@ If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\
 Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 We set $w_\ell$ again to the freeflow travel time.
 We then run the algorithm of Section~\ref{sec:predicted-traffic} with $w_q$ as query weight.
-In our implementation, we to not modify the representation of $w_p$ and evaluate the formulas above at each heuristic evaluation.
+In our implementation, we to not modify the representation of $w_p$ and evaluate the formulas above at each travel time evaluation.
 
 With this setup, CH-Potentials support a combination of live and predicted traffic.
 Further adding tunnel and/or highway avoidance or turn-aware routing is simple.
@@ -595,7 +595,7 @@ This straight-forward integration of complex routing problems is the strength of
 \subsection{Temporary Driving Bans}
 
 Truck routing differs from car routing due to night driving bans and other restrictions.
-In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials is used is such scenario.
+In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
 
@@ -681,12 +681,12 @@ The number explored A* nodes depends on the density of the area covered by this 
 As the density varies, the running times vary.
 
 Table~\ref{tab:building_blocks} shows the impact of our optimizations.
-We run queries with three heuristic.
+We run queries with three heuristics.
 The Zero heuristic is simply $h(x)=0$ for all $x$.
 This corresponds to using Dijkstra's algorithm.
 Further, we run queries with our novel CH-Potential heuristic.
 Finally, we use the unattainable lower bound Oracle-A* as described in Section~\ref{sec:oracle}.
-Oracle-A* is unbeatable theoretic lower bound.
+Oracle-A* is an unbeatable theoretic lower bound.
 The reported running time of Oracle-A* do \emph{not} account for the heuristic evaluation.
 We include Oracle-A* as it is a lower bound not only for our algorithm but every related work.
 
