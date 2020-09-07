@@ -42,11 +42,11 @@
 \usepackage[algo2e,vlined]{algorithm2e}
 
 \pdfinfo{
-/Title (A Fast and Preprocessing-Tight Heuristic for A* in Road Networks)
+/Title (A Fast and Tight Heuristic for A* in Road Networks)
 /Author (Foo Bar)
 /Keywords (shortest path, road graphs, goal-directed search, contraction hierarchy, heuristic search)
 }
-\title{A Fast and Preprocessing-Tight Heuristic for A* in Road Networks}
+\title{A Fast and Tight Heuristic for A* in Road Networks}
 \author{Foo Bar}
 
 
@@ -98,11 +98,11 @@ While Dijkstra's algorithm can be used to solve these problems, it is too slow f
 A* is a classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
 However, A*'s performance depends on the availability of a good heuristic.
 Computing a good heuristic is a challenge of its own.
-Shortest paths can also be quickly computed using hierarchical speedup techniques.
-They are not based on A* and do not use a heuristic.
-Hierarchical techniques are known to work well on road networks.
+On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
+They are not based on A* and do not use a heuristic but compute auxiliary data during a preprocessing phase.
+% Hierarchical techniques are known to work well on road networks.
 They achieve speed and exactness but sacrifice A*'s flexibility.
-In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute preprocessing-tight A* heuristics.
+In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute A* heuristics.
 We call our technique CH-Potentials.
 With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
@@ -115,8 +115,7 @@ It is often formalized as a variant of the classical shortest path problem in we
 Developing flexible techniques to efficiently compute exact routes is a tough challenge.
 \emph{Exact} means that a path of provable minimum weight is computed.
 \emph{Efficiently} means that the path computation is fast.
-Being able to change the edge weights between path computations is \emph{flexibility}.
-Handling complex weights, such as edge weight functions, is another aspect of flexibility.
+Being able to change the edge weights between path computations or handling complex weights, such as edge weight functions, is \emph{flexibility}. % finde es klingt stringenter, wenn jede Eigenschaft genau einen Satz hat.
 
 \begin{figure}
 
@@ -154,7 +153,7 @@ In this paper, we consider an algorithm, where the query phase mostly consists o
 In the preprocessing phase, it computes a Contraction Hierarchy (CH)~\cite{gssv-erlrn-12}.
 The CH is used to efficiently evaluate the heuristic.
 Our setup is very similar to the well-known ALT technique~\cite{gh-cspas-05,DBLP:conf/wea/DellingW07}.
-We call our algorithm \emph{CH-Potentials}, following the ALT terminology.
+Following the ALT terminology, we call our algorithm \emph{CH-Potentials}, as it combines ideas from Contraction Hierarchies (CH)~\cite{gssv-erlrn-12} with A* heuristics.
 
 A heuristic $h$ is a function that maps nodes onto numbers.
 $h$ depends on the target $t$ but not on the source $s$.
@@ -164,7 +163,7 @@ All heuristics, for which A* is exact, are lower bounds of the tight heuristic.
 CH-Potentials compute the tight heuristic with respect to $w_\ell$.
 Without access to the query weights $w_q$, which are unavailable during preprocessing, no value of the heuristic can be increased, without loosing A*'s exactness.
 In this sense, CH-Potentials are as tight as possible and thus optimal.
-We say that this heuristic that is tight with respect to $w_\ell$ is \emph{preprocessing-tight}.
+We say that a heuristic that is tight with respect to $w_\ell$ is \emph{preprocessing-tight}.
 
 \section{Related Work}
 
@@ -182,7 +181,7 @@ Further, in every setting the flexibility available at query time is fairly limi
 Combining all these hierarchical extensions is an unsolved problem.
 %
 CH-Potentials is not the first work to combine hierarchical approaches and A*~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
-However, a lot of past work uses A* to accelerate hierarchical approaches even further and loose A*'s' flexibility.
+However, a lot of past works use A* to accelerate hierarchical approaches even further and loose A*'s' flexibility.
 
 ALT~\cite{gh-cspas-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with high conceptual similarity to CH-Potentials.
 Just as our approach, ALT is A*-based.
@@ -191,7 +190,7 @@ However, ALT's heuristic is not preprocessing-tight.
 CPD-Heuristics are a combination of A* and Compressed Path Databases (CPD).
 A CPD can quickly compute the first edge of a shortest path between any two nodes.
 In~\cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
-For every distance estimation, a shortest path to the target is computed, whose length is used as tight heuristic.
+For every distance estimation, a shortest path to the target is computed, whose length is used as the heuristic value. % du hast mein "the" wieder rausgenommen, aber ohne Artikel klingt das fuer mich einfach falsch... Lasse mich aber gerne eines besseren belehren.
 Unfortunately, the employed CPD's quadratic preprocessing running time is prohibitive on large street networks.
 %
 MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
@@ -232,7 +231,7 @@ Combined with A*, this yields an exact, efficient, and flexible route planning a
 Beside the heuristic, in Section\ref{sec:low-deg-improvment}, we improve A*'s handling of low degree nodes, common in road networks.
 In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing algorithms for various extended route planning applications.
 Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
-By comparing against Oracle-A*, we show that no two-phase alternative exact A* approach can be significantly faster.
+By comparing against Oracle-A*, we show that no other exact two-phase A*-based approach can be significantly faster.
 
 \section{Algorithm Description}
 
@@ -388,9 +387,9 @@ A* with this heuristic is the basic CH-Potentials algorithm.
 
 \label{sec:low-deg-improvment}
 
-Preliminary experiments showed, that most A* running time is spent in heuristic evaluations and queue push operations.
-As both appear in pairs, reducing the number of push operations, is beneficial for both.
-Avoiding push operations on low degree nodes is the focus of this section.
+Preliminary experiments showed, that most A* running time is spent in heuristic evaluations and queue operations. % queue pushs stimmt hier nicht...
+We can reduce both by keeping some nodes out of the queue, as the heuristic needs to be evaluated when a node is pushed into the queue.
+Avoiding pushing low degree nodes into the queue is the focus of this section.
 
 \subsection{Skip Degree Two Nodes}
 
@@ -587,9 +586,10 @@ If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\
 Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 We set $w_\ell$ again to the freeflow travel time.
 We then run the algorithm of Section~\ref{sec:predicted-traffic} with $w_q$ as query weight.
-In our implementation, we to not modify the representation of $w_p$ and evaluate the formulas above at each travel time evaluation.
+In our implementation, we to not modify the representation of $w_p$ but evaluate the formulas above at each travel time evaluation.
 
 With this setup, CH-Potentials support a combination of live and predicted traffic.
+We did not make any modification, that would hinder a combination with other extensions.
 Further adding tunnel and/or highway avoidance or turn-aware routing is simple.
 This straight-forward integration of complex routing problems is the strength of the CH-Potentials algorithm.
 
@@ -677,8 +677,8 @@ This is an interesting observation, as with uniform source and target sampling, 
 The query distance is thus not the reason.
 After some investigation, we concluded that this is due to non-uniform road graph density.
 Some regions have more roads per area than others.
-The search space of A* is an ellipsoid.
-The number explored A* nodes depends on the density of the area covered by this shape.
+% glaub das mit dem ellispoid lenkt eher ab und braeuchte wenn dann noch eine ganze menge extraerklaerungen...
+The number explored A* nodes depends on the density of the search space area.
 As the density varies, the running times vary.
 
 Table~\ref{tab:building_blocks} shows the impact of our optimizations.
@@ -689,18 +689,19 @@ Further, we run queries with our novel CH-Potential heuristic.
 Finally, we use the unattainable lower bound Oracle-A* as described in Section~\ref{sec:oracle}.
 Oracle-A* is an unbeatable theoretic lower bound.
 The reported running time of Oracle-A* do \emph{not} account for the heuristic evaluation.
-We include Oracle-A* as it is a lower bound not only for our algorithm but every related work.
+We include Oracle-A* as it is a lower bound not only for our algorithm but also related work.
 
 We observe that the number of queue pushes roughly correlates with running time.
-Further, each of our optimizations reduces the number of queue pushes.
+Each optimization reduces both queue pushes and running times.
+% Further, each of our optimizations reduces the number of queue pushes.
 Very interesting is the comparison with Oracle-A*.
-Our algorithm is only 1.6 times slower than an unachievable theoretic lower bound.
-This means that no competitor algorithm such as ALT or CPD-Heuristics can be significantly faster than CH-Potentials.
+Our algorithm is only 1.6 times slower than the unachievable theoretic lower bound.
+This means that no competing algorithm such as ALT or CPD-Heuristics can be significantly faster than CH-Potentials.
 
 Table~\ref{tab:applications} depicts the running times of CH-Potentials in the various applications, such as those described in Section~\ref{sec:extensions}.
 Speedups compared to extensions of Dijkstra's algorithm for the respective application are depicted.
 We start with the inflexible routing problem where $w_q = w_\ell$.
-This is the only problem variant solved by the basic CH algorithm.
+This is the problem variant solved by the basic CH algorithm.
 In this setting, there is a huge speedup of 3243.
 Such large speedups are typical for CH.
 This shows that CH-Potentials gracefully converges to a CH in the $w_q = w_\ell$ special case.
@@ -728,10 +729,11 @@ This results in smaller running times of our algorithm.
 
 In this paper, we introduced CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and CH for finding shortest paths in road networks.
 The approach can handle a multitude of complex, integrated routing scenarios with very little implementation complexity.
-The performance of CH-Potentials crucially depends on the availability of good weight lower bounds in preprocessing phase.
+The performance of CH-Potentials crucially depends on the availability of good lower bounds in the preprocessing phase.
 Our experiments show, that this availability highly depends on the application.
 We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the preprocessing-tight heuristic.
-We conclude from this, that to achieve significantly smaller running times with A* based algorithms in road networks, variations of the problem setting are necessary.
+% We conclude from this, that to achieve significantly smaller running times with A* based algorithms in road networks, variations of the problem setting are necessary.
+Achieving significantly smaller running times could still be possible in variations of the problem setting. % hab das mal ein bisschen mehr auf future work hin getrimmt
 This leads to multiple avenues for future research.
 
 Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
