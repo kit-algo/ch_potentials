@@ -35,12 +35,17 @@ table['num_queue_pushs'] = table['num_queue_pushs'] / 1000
 table = table.round(1)
 
 table = table.reindex(['Zero', 'CH', 'Oracle'], level=1)
+table = table.rename(index={
+    'Zero': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{Zero}}',
+    'CH': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{CH-\\Potentials}}}',
+    'Oracle': R'\multirow{2}{*}{Oracle}',
+})
 
 table = table.reset_index(level=0,drop=True).reset_index(level=[2,3])
 
 lines = table.to_latex(escape=False).split("\n")
 
-lines = lines[:2] + [
+lines = [R'\begin{tabular}{clllrr}'] + [lines[1]] + [
     R" & & & & Running &     Queue \\",
     R" Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\"
 # ] + lines[4:]
