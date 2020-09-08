@@ -26,6 +26,8 @@ rake
 ```
 
 This will download all necessary data, run experiments, generate plots and tables and finally regenerate the paper.
+THIS WILL TAKE A LONG TIME!
+With default parameters probably around a day.
 You can use the `NUM_DIJKSTRA_QUERIES` (default 1000) and `CHPOT_NUM_QUERIES` (default 10000) environment variables to configure the number of queries performed for each experiment.
 
 #### Caveats
