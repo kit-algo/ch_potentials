@@ -1,5 +1,7 @@
-raise "No or wrong experiments output dir configured - please set CHPOT_EXP_OUTPUT_DIR env var" unless Dir.exists? ENV['CHPOT_EXP_OUTPUT_DIR'] || ""
-exp_dir = ENV['CHPOT_EXP_OUTPUT_DIR']
+exp_dir = 'exp'
+data_dir = 'data'
+
+only_public = !ENV['ONLY_PUBLIC'].nil?
 
 file "paper/ch_potentials.pdf" => [
   "paper/ch_potentials.tex",
@@ -46,27 +48,30 @@ namespace "table" do
 end
 
 osm_ger_src = 'https://download.geofabrik.de/europe/germany-200101.osm.pbf'
-osm_ger_src_file = '/algoDaten/zeitz/roadgraphs/germany-200101.osm.pbf'
+osm_ger_src_file = "#{data_dir}/germany-200101.osm.pbf"
 osm_eur_src = 'https://download.geofabrik.de/europe-200101.osm.pbf'
-osm_eur_src_file = '/algoDaten/zeitz/roadgraphs/europe-200101.osm.pbf'
+osm_eur_src_file = "#{data_dir}/europe-200101.osm.pbf"
 
-osm_ger = "/algoDaten/zeitz/roadgraphs/osm_ger/"
-osm_ger_td = "/algoDaten/zeitz/roadgraphs/osm_ger_td/"
-osm_eur = "/algoDaten/zeitz/roadgraphs/osm_europe/"
-dimacs_graph = "/algoDaten/zeitz/roadgraphs/europe/"
+osm_ger = "#{data_dir}/osm_ger/"
+osm_ger_td = "#{data_dir}/osm_ger_td/"
+osm_eur = "#{data_dir}/osm_europe/"
+dimacs_graph = "#{data_dir}/europe/"
 
 # static_graphs = [osm_ger, osm_eur, dimacs_graph]
 static_graphs = [osm_ger]
-td_graphs = [
-  "/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/",
-  "/algoDaten/graphs/cleaned_td_road_data/de/day/dido/",
-  osm_ger_td
-]
+td_graphs = []
+unless only_public
+  td_graphs += [
+    "#{data_dir}/ptv17/",
+    "#{data_dir}/ger06/",
+    osm_ger_td
+  ]
+end
 graphs = static_graphs + td_graphs
 
-live_dir = '/algoDaten/mapbox/live-speeds/2019-08-02-15:41/'
-typical_glob = '/algoDaten/mapbox/typical-speeds/**/**/*.csv'
-typical_file = '/algoDaten/mapbox/typical-tuesday-cleaned.csv'
+live_dir = "#{data_dir}/mapbox/live-speeds/2019-08-02-15:41/"
+typical_glob = "#{data_dir}/mapbox/typical-speeds/**/**/*.csv"
+typical_file = "#{data_dir}/mapbox/typical-tuesday-cleaned.csv"
 
 namespace "prep" do
   file typical_file do
@@ -75,11 +80,11 @@ namespace "prep" do
     end
   end
 
-  file osm_ger_src_file do
+  file osm_ger_src_file => data_dir do
     sh "wget -O #{osm_ger_src_file} #{osm_ger_src}"
   end
 
-  file osm_eur_src_file do
+  file osm_eur_src_file => data_dir do
     sh "wget -O #{osm_eur_src_file} #{osm_eur_src}"
   end
 
@@ -87,7 +92,11 @@ namespace "prep" do
   file osm_ger => ["code/osm_import/build/import_osm", osm_ger_src_file] do
     wd = Dir.pwd
     Dir.chdir osm_ger do
-      sh "#{wd}/code/osm_import/build/import_osm #{osm_ger_src_file} #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
+      if only_public
+        sh "#{wd}/code/osm_import/build/import_osm #{osm_ger_src_file}"
+      else
+        sh "#{wd}/code/osm_import/build/import_osm #{osm_ger_src_file} #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
+      end
     end
   end
 
@@ -193,15 +202,20 @@ namespace "exp" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
-      sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_unmodified -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+
+      unless only_public
+        sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      end
+
       sh "cargo run --release --bin chpot_unmodified -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+
+      # sh "cargo run --release --bin chpot_unmodified -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      # sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       # sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       # sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end

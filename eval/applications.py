@@ -7,7 +7,7 @@ import glob
 import os
 import re
 
-base = os.environ['CHPOT_EXP_OUTPUT_DIR']
+base = "exp/"
 paths = glob.glob(base + "applications/*.json")
 data = [json.load(open(path)) for path in paths]
 
@@ -49,12 +49,12 @@ table = queries.groupby(['graph', 'exp']).agg(
     # size=('affected', 'count')
     )
 
-table = table.reindex(['/algoDaten/zeitz/roadgraphs/europe/',
-    '/algoDaten/zeitz/roadgraphs/osm_europe/',
-    '/algoDaten/zeitz/roadgraphs/osm_ger/',
-    '/algoDaten/zeitz/roadgraphs/osm_ger_td/',
-    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/',
-    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/'], level=0) \
+table = table.reindex(['data/europe/',
+    'data/osm_europe/',
+    'data/osm_ger/',
+    'data/osm_ger_td/',
+    'data/ptv17',
+    'data/ger06'], level=0) \
     .reindex(['chpot_td',
     'random_times_2',
     'random_times_10',
@@ -77,12 +77,12 @@ table['speedup'] = table['dijkstra_running_time_ms'] / table['running_time_ms']
 table = table.round(1)
 
 table = table.rename(index={
-    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/': 'TDGer06',
-    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/': 'TDEur17',
-    '/algoDaten/zeitz/roadgraphs/osm_europe/': 'OSM Europe',
-    '/algoDaten/zeitz/roadgraphs/osm_ger/': R'\multirow{8}{*}{OSM Ger}',
-    '/algoDaten/zeitz/roadgraphs/osm_ger_td/': R'\multirow{8}{*}{OSM Ger}',
-    '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe',
+    'data/ger06': 'TDGer06',
+    'data/ptv17': 'TDEur17',
+    'data/osm_europe/': 'OSM Europe',
+    'data/osm_ger/': R'\multirow{8}{*}{OSM Ger}',
+    'data/osm_ger_td/': R'\multirow{8}{*}{OSM Ger}',
+    'data/europe/': 'DIMACs Europe',
     'perfect': 'Unmodified ($w_q=w_\\ell$)',
     'no_highways': 'No Highways',
     'no_tunnels': 'No Tunnels',

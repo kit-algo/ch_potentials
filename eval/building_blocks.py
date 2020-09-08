@@ -7,7 +7,7 @@ import glob
 import os
 import re
 
-base = os.environ['CHPOT_EXP_OUTPUT_DIR']
+base = "exp/"
 paths = glob.glob(base + "building_blocks/*.json")
 data = [json.load(open(path)) for path in paths]
 

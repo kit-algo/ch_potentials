@@ -7,7 +7,7 @@ import glob
 import os
 import re
 
-base = os.environ['CHPOT_EXP_OUTPUT_DIR']
+base = "exp/"
 paths = glob.glob(base + "applications/*.json")
 data = [json.load(open(path)) for path in paths]
 
@@ -39,9 +39,9 @@ preprocessing = pd.DataFrame.from_records([parse_contraction_output(path) for pa
 table = queries.groupby(['graph'])[['num_nodes', 'num_edges']].mean()
 
 table = table.reindex([
-    '/algoDaten/zeitz/roadgraphs/osm_ger/',
-    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/',
-    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/'])
+    'data/osm_ger/',
+    'data/ptv17',
+    'data/ger06'])
 
 table = table.join(preprocessing.groupby('graph').mean())
 table['num_nodes'] = table['num_nodes'] / 1000000.0
@@ -49,12 +49,12 @@ table['num_edges'] = table['num_edges'] / 1000000.0
 table = table.round(1)
 
 table = table.rename(index={
-    '/algoDaten/graphs/cleaned_td_road_data/de/day/dido/': 'TDGer06',
-    '/algoDaten/graphs/cleaned_td_road_data/ptv17-eur-car/day/di/': 'TDEur17',
-    '/algoDaten/zeitz/roadgraphs/osm_europe/': 'OSM Europe',
-    '/algoDaten/zeitz/roadgraphs/osm_ger/': 'OSM Ger',
-    '/algoDaten/zeitz/roadgraphs/osm_ger_td/': 'TD OSM Ger',
-    '/algoDaten/zeitz/roadgraphs/europe/': 'DIMACs Europe',
+    'data/ger06': 'TDGer06',
+    'data/ptv17': 'TDEur17',
+    'data/osm_europe/': 'OSM Europe',
+    'data/osm_ger/': 'OSM Ger',
+    'data/osm_ger_td/': 'TD OSM Ger',
+    'data/europe/': 'DIMACs Europe',
 })
 
 lines = table.to_latex(escape=False).split("\n")
