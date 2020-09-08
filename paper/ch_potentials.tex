@@ -98,14 +98,11 @@ While Dijkstra's algorithm can be used to solve these problems, it is too slow f
 A* is a classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
 However, A*'s performance depends on the availability of a good heuristic.
 Computing a good heuristic is a challenge of its own.
-In road networks, shortest paths can alterantively be quickly computed using hierarchical techniques.
+Shortest paths can also be quickly computed using hierarchical speedup techniques.
 They are not based on A* and do not use a heuristic.
-Hierarchical techniques use a slow preprocessing and fast query phase.
-The preprocessing phase computes auxiliary data that is used in the query phase.
-The auxiliary is independent of origin or destination of the search.
-% Hierarchical techniques are known to work well on road networks.
-Hierarchical techniques achieve speed and exactness but sacrifice A*'s flexibility.
-In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute preprocessing-tight A* heuristics.
+Hierarchical techniques are known to work well on road networks.
+They achieve speed and exactness but sacrifice A*'s flexibility.
+In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute a A* heuristics.
 We call our technique CH-Potentials.
 With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
