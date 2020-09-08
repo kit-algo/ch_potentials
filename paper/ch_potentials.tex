@@ -98,11 +98,14 @@ While Dijkstra's algorithm can be used to solve these problems, it is too slow f
 A* is a classical approach to accelerate Dijkstra's algorithm and is used in many fields such as Experimental Algorithms, Robotics, and Artificial Intelligence.
 However, A*'s performance depends on the availability of a good heuristic.
 Computing a good heuristic is a challenge of its own.
-On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
-They are not based on A* and do not use a heuristic but compute auxiliary data during a preprocessing phase.
+In road networks, shortest paths can alterantively be quickly computed using hierarchical techniques.
+They are not based on A* and do not use a heuristic.
+Hierarchical techniques use a slow preprocessing and fast query phase.
+The preprocessing phase computes auxiliary data that is used in the query phase.
+The auxiliary is independent of origin or destination of the search.
 % Hierarchical techniques are known to work well on road networks.
-They achieve speed and exactness but sacrifice A*'s flexibility.
-In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute A* heuristics.
+Hierarchical techniques achieve speed and exactness but sacrifice A*'s flexibility.
+In this paper, we use Contraction Hierarchies (CH), a hierarchical technique, to compute preprocessing-tight A* heuristics.
 We call our technique CH-Potentials.
 With this approach, we combine some of the speed of hierarchical techniques with the flexibility offered by A* - the best of both worlds - while retaining exactness.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
@@ -190,7 +193,7 @@ However, ALT's heuristic is not preprocessing-tight.
 CPD-Heuristics are a combination of A* and Compressed Path Databases (CPD).
 A CPD can quickly compute the first edge of a shortest path between any two nodes.
 In~\cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
-For every distance estimation, a shortest path to the target is computed, whose length is used as the heuristic value. % du hast mein "the" wieder rausgenommen, aber ohne Artikel klingt das fuer mich einfach falsch... Lasse mich aber gerne eines besseren belehren.
+For every distance estimation, a shortest path to the target is computed, whose length is used as the heuristic value.
 Unfortunately, the employed CPD's quadratic preprocessing running time is prohibitive on large street networks.
 %
 MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
@@ -387,7 +390,7 @@ A* with this heuristic is the basic CH-Potentials algorithm.
 
 \label{sec:low-deg-improvment}
 
-Preliminary experiments showed, that most A* running time is spent in heuristic evaluations and queue operations. % queue pushs stimmt hier nicht...
+Preliminary experiments showed, that most A* running time is spent in heuristic evaluations and queue operations.
 We can reduce both by keeping some nodes out of the queue, as the heuristic needs to be evaluated when a node is pushed into the queue.
 Avoiding pushing low degree nodes into the queue is the focus of this section.
 
@@ -677,7 +680,6 @@ This is an interesting observation, as with uniform source and target sampling, 
 The query distance is thus not the reason.
 After some investigation, we concluded that this is due to non-uniform road graph density.
 Some regions have more roads per area than others.
-% glaub das mit dem ellispoid lenkt eher ab und braeuchte wenn dann noch eine ganze menge extraerklaerungen...
 The number explored A* nodes depends on the density of the search space area.
 As the density varies, the running times vary.
 
@@ -732,8 +734,7 @@ The approach can handle a multitude of complex, integrated routing scenarios wit
 The performance of CH-Potentials crucially depends on the availability of good lower bounds in the preprocessing phase.
 Our experiments show, that this availability highly depends on the application.
 We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the preprocessing-tight heuristic.
-% We conclude from this, that to achieve significantly smaller running times with A* based algorithms in road networks, variations of the problem setting are necessary.
-Achieving significantly smaller running times could still be possible in variations of the problem setting. % hab das mal ein bisschen mehr auf future work hin getrimmt
+Achieving significantly smaller running times could still be possible in variations of the problem setting.
 This leads to multiple avenues for future research.
 
 Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
