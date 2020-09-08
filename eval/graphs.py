@@ -8,6 +8,7 @@ import os
 import re
 
 base = "exp/"
+cwd = os.getcwd()
 paths = glob.glob(base + "applications/*.json")
 data = [json.load(open(path)) for path in paths]
 
@@ -39,9 +40,9 @@ preprocessing = pd.DataFrame.from_records([parse_contraction_output(path) for pa
 table = queries.groupby(['graph'])[['num_nodes', 'num_edges']].mean()
 
 table = table.reindex([
-    'data/osm_ger/',
-    'data/ptv17',
-    'data/ger06'])
+    cwd + '/data/osm_ger/',
+    cwd + '/data/ptv17',
+    cwd + '/data/ger06'])
 
 table = table.join(preprocessing.groupby('graph').mean())
 table['num_nodes'] = table['num_nodes'] / 1000000.0
@@ -49,12 +50,12 @@ table['num_edges'] = table['num_edges'] / 1000000.0
 table = table.round(1)
 
 table = table.rename(index={
-    'data/ger06': 'TDGer06',
-    'data/ptv17': 'TDEur17',
-    'data/osm_europe/': 'OSM Europe',
-    'data/osm_ger/': 'OSM Ger',
-    'data/osm_ger_td/': 'TD OSM Ger',
-    'data/europe/': 'DIMACs Europe',
+    cwd + '/data/ger06': 'TDGer06',
+    cwd + '/data/ptv17': 'TDEur17',
+    cwd + '/data/osm_europe/': 'OSM Europe',
+    cwd + '/data/osm_ger/': 'OSM Ger',
+    cwd + '/data/osm_ger_td/': 'TD OSM Ger',
+    cwd + '/data/europe/': 'DIMACs Europe',
 })
 
 lines = table.to_latex(escape=False).split("\n")

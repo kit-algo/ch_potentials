@@ -19,7 +19,10 @@ Newer versions of these tools are likely to continue working, some past versions
 To run experiments with publicly available data run
 
 ```bash
-ONLY_PUBLIC=1 rake
+git submodule update --init --recursive
+export ONLY_PUBLIC=1
+rake exp:all
+rake
 ```
 
 This will download all necessary data, run experiments, generate plots and tables and finally regenerate the paper.

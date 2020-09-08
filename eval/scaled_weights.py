@@ -13,12 +13,13 @@ import glob
 import os
 
 base = "exp/"
+cwd = os.getcwd()
 paths = glob.glob(base + "scaled_weights/*.json")
 data = [json.load(open(path)) for path in paths]
 
 queries = pd.DataFrame.from_records([{
     'weight_factor': exp['factor'],
-    'graph': { 'data/europe/': 'DIMACs Europe', 'data/osm_ger/': 'OSM Germany', 'data/osm_europe/': 'OSM Europe' }[run['args'][1]],
+    'graph': { cwd + '/data/europe/': 'DIMACs Europe', cwd + '/data/osm_ger/': 'OSM Germany', cwd + '/data/osm_europe/': 'OSM Europe' }[run['args'][1]],
     **algo }
     for run in data for exp in run['experiments'] for algo in exp['algo_runs'] if algo.get('algo') == 'CH Potentials Query'])
 

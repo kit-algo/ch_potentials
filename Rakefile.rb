@@ -1,5 +1,5 @@
-exp_dir = 'exp'
-data_dir = 'data'
+exp_dir = Dir.pwd + '/exp'
+data_dir = Dir.pwd + '/data'
 
 only_public = !ENV['ONLY_PUBLIC'].nil?
 
