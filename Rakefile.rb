@@ -160,9 +160,9 @@ namespace "exp" do
         filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
         sh "echo '#{graph}' >> #{filename}"
         sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
-          "#{graph}/lower_bound_ch/order " +
-          "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
-          "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight " +
+          "/dev/null " +
+          "/dev/null /dev/null /dev/null " +
+          "/dev/null /dev/null /dev/null " +
           ">> #{filename}")
       end
     end
