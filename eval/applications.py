@@ -12,6 +12,7 @@ cwd = os.getcwd()
 paths = glob.glob(base + "applications/*.json")
 data = [json.load(open(path)) for path in paths]
 
+only_public = 'ONLY_PUBLIC' in os.environ
 
 queries = pd.DataFrame.from_records([{
     'exp': exp['experiment'],
@@ -77,12 +78,18 @@ table = table.join(dijkstra_queries.groupby(['graph', 'exp']).agg(dijkstra_runni
 table['speedup'] = table['dijkstra_running_time_ms'] / table['running_time_ms']
 table = table.round(1)
 
+if only_public:
+    ger_name = R'\multirow{4}{*}{OSM Ger}'
+else:
+    ger_name = R'\multirow{8}{*}{OSM Ger}'
+
+
 table = table.rename(index={
     cwd + '/data/ger06': 'TDGer06',
     cwd + '/data/ptv17': 'TDEur17',
     cwd + '/data/osm_europe/': 'OSM Europe',
-    cwd + '/data/osm_ger/': R'\multirow{8}{*}{OSM Ger}',
-    cwd + '/data/osm_ger_td/': R'\multirow{8}{*}{OSM Ger}',
+    cwd + '/data/osm_ger/': ger_name,
+    cwd + '/data/osm_ger_td/': ger_name,
     cwd + '/data/europe/': 'DIMACs Europe',
     'perfect': 'Unmodified ($w_q=w_\\ell$)',
     'no_highways': 'No Highways',
@@ -103,7 +110,12 @@ lines = table.to_latex(escape=False).split("\n")
 lines = lines[:2] + [
   R" & &   Running &                Queue &     Length & Dijkstra & Speedup \\"
   R" & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\"
-] + lines[4:13] + ["\\addlinespace"] + lines[13:]
+]
+
+if only_public:
+    lines += lines[4:]
+else:
+    lines[4:13] + ["\\addlinespace"] + lines[13:]
 
 output = "\n".join(lines) + "\n"
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
