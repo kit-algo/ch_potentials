@@ -105,17 +105,17 @@ table = table.rename(index={
     'random_times_2': 'Random $\\times 2$',
 })
 
-lines = table.to_latex(escape=False).split("\n")
+orig_lines = table.to_latex(escape=False).split("\n")
 
-lines = lines[:2] + [
+lines = orig_lines[:2] + [
   R" & &   Running &                Queue &     Length & Dijkstra & Speedup \\"
   R" & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\"
 ]
 
 if only_public:
-    lines += lines[4:]
+    lines += orig_lines[4:]
 else:
-    lines[4:13] + ["\\addlinespace"] + lines[13:]
+    lines += orig_lines[4:13] + ["\\addlinespace"] + orig_lines[13:]
 
 output = "\n".join(lines) + "\n"
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
