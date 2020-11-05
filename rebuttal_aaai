@@ -20,6 +20,8 @@ The power of CH-Potentials is that these relevant but nasty real-world effects a
 We never need to reason about what happens when trying to construct shortcuts with the above mentioned extensions.
 Shortcuts are only constructed on w_l.
 
+w_q can be modified by a person that does not know how CHs work.
+
 Many papers have been written on extending CHs, which use shortcuts.
 There is an entire PhD thesis on how predicted traffic interacts with CH shortcuts.
 It is a difficult topic.
@@ -66,6 +68,11 @@ CH-Potentials are way faster than these times.
 Further, neither CRP nor CCH support w_q edge entry times.
 Predicted traffic is therefore difficult.
 
+The strength of CRP/CCH lies in scenarios where many queries are performed on the same set of weights.
+For some scenarios, such as live traffic, this is a good fit.
+We are therefore currently researching ways to combine CCH with CH-Potentials.
+Unfortunately, we do not yet have results that are ready for publication.
+
 # Answers to Reviewer 3
 
 > in Section 6.5, the authors mention a "preliminary version of CH-Potentials."
@@ -82,23 +89,28 @@ Oracle-A* is implemented by running each query twice and only measuring the time
 During the first run, all necessary distances are memoized and accessed in the second run.
 
 > There is not enough comparison to the existing literature.
-> For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
 
 Oracle-A* is a lower bound on what is achievable with heuristic-tuning.
 We show that we are very close to Oracle-A*.
 By extension, no other heuristic-tuning work exists that can significantly outperform CH-Potentials.
 Indirectly, this is therefore a comparison with many papers, including ALT and CPD-heuristics.
 
+We believe that ALT and CPD-heuristics are the primary related works.
+Against which other works do you want to see a comparison?
+
+> For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
+
 Our preprocessing running times are reported in Table 1.
 
-The CPD used performs n one-to-all Dijkstra searches during preprocessing.
+The CPD used, named SRC, performs n one-to-all Dijkstra searches during preprocessing.
 On OSM Ger such a Dijkstra search takes about 2s.
 The graph has 16M nodes.
 We estimate a preprocessing time of 370 days.
 This is prohibitively long.
-To verify our estimation, we obtained their code and started the preprocessing.
+To verify our estimation, we obtained the original SRC code and started the preprocessing.
 We aborted it after 48 h.
 CH-Potentials need 5 min.
+We did not include these numbers as to us it seems like needlessly bashing an otherwise excellent paper.
 
 Ignoring the infeasible preprocessing, their work is subject to the Oracle-A* lower bound.
 Solving the preprocessing problem would thus not result in an algorithm outperforming CH-Potentials.
