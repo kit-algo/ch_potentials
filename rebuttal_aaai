@@ -1,5 +1,3 @@
-# Comments for all reviewers
-
 We want to thank all reviewers for their detailed and helpful feedback.
 
 Several question came up on the nature of the query model and w_q, how this enables flexibility and how all of these extensions are a valuable contribution.
@@ -10,14 +8,13 @@ For the scope of this rebuttal, we hope to clarify it in the following paragraph
 w_q is implemented as a procedure that takes an edge and computes a weight at query time.
 The output is a value that must not be smaller than w_l.
 w_q can be arbitrary code as long as it fits this description.
-In C++ terms, you can think of w_q as a lambda that the query algorithm takes.
-w_q can, in theory, change for every query.
-What this w_q procedure does is independent of the main algorithm and solely depends on the extensions considered:
+In C++ terms, you can think of w_q as a lambda parameter to the query which change for every query.
+What w_q does is independent of the main algorithm and depends on the extensions considered:
 
 * For static and live traffic weights, w_q is an array lookup.
-* For highway and tunnel avoidance, w_q is an if-else-branch that checks the highway and/or tunnel edge property and depending on the result performs an array lookup for the static edge travel time.
-* For predicted traffic, w_q performs a binary search in an array of sorted breakpoints (also called interpolation points) for the edge entry time and then performs a linear interpolation to determine the edge traversal time.
-* In real-world applications, even more bizarre legal restrictions appear. Examples are time-restriction, turn restrictions, seasonal road closures, closures that depend on the hazard level of the load of the vehicle, and more.
+* For highway and tunnel avoidance, w_q is an if-else-branch that checks the edge property and either returns infinity or the edge travel time.
+* For predicted traffic, w_q evaluates a piecewise linear function.
+* In real-world applications, other restrictions may appear. Time-restriction, turn restrictions, seasonal road closures, closures that depend on the hazard level of the load of the vehicle, and more.
 
 The power of CH-Potentials is that all these relevant but sometimes nasty real-world restrictions are confined to w_q.
 We never need to reason about what happens when trying to construct shortcuts with the above mentioned extensions.
@@ -26,20 +23,17 @@ Shortcuts are only constructed on w_l.
 Many papers have been written on extending CHs.
 There is an entire PhD theses on how predicted traffic interacts with CH shortcuts.
 Changing w_q is trivial in comparison.
-This separation of concerns makes supporting extension (and combinations of extensions) vastly easier than directly extending a CH.
+This separation of concerns makes supporting extension (and their combinations) vastly easier than directly extending a CH.
 
-# Common response to Reviewer 1 and 3
+# Response to Reviewer 1 and 3
 
 > [Reviewer 1] How you can proof the flexibility of your algorithm? (inherited from A*)
 > [Reviewer 3] Section 6 [Extensions] does not really have a place in this paper.
 
-Inflexible is well-defined in a mathematical sense, it states w_q = w_l.
-However, flexible is defined more informally as being able to easily extend an algorithm to do more than that and change weights at query time.
-Dijkstra's algorithm is the prime example of a flexible algorithm.
-Extended scenarios can often be solved easily by adding an if-branch at the right place.
-As there is no formal precise definition of flexible, we cannot provide a mathematical proof that CH-Potential is flexible.
+Inflexible is well-defined in a mathematical sense, i.e. w_q = w_l.
+However, flexible is defined more informally as being able to easily extend an algorithm and handle whatever w_q is.
+Thus, we cannot provide a mathematical proof that CH-Potential is flexible.
 We therefore chose to make our argument by listing extension of various complexity level.
-As the list is long, we claim that our algorithm is flexible.
 This is the motivation for the existence of Section 6.
 
 # Answers to Reviewer 1
@@ -49,12 +43,11 @@ This is the motivation for the existence of Section 6.
 The cited paper introduced CH.
 As CH is an ingredient for our algorithm we touched on the subject in lines 534 - 539.
 We stated that our algorithm achieves similar speedups as a CH for the special case of w_q = w_l.
-However, we did not provide CH running times, which we would like to improve:
+However, we did not provide CH running times, which is indeed a number that we should report:
 Running CH queries on OSM Ger takes on average 0.163ms.
 So the A* search of CH-Potentials some overhead, but the running time is in the same order of magnitude.
 This confirms our statement that CH-Potentials converge towards a CH query for w_q = w_l.
 
-> The intuitive ideas behind CH presented are enough to have big picture how CH works. [...]
 > I am not familiar with CH. A deeper explanation could be useful.
 
 We agree with this comment but could not devote more space to an explanation due to the page limit.
@@ -69,23 +62,19 @@ Core-ALT contracts parts of the input graph away and inserts shortcut edges.
 As discussed above, shortcuts (using w_q) are exactly the element that prevent flexibility.
 If you are referring to some other work, we would be glad to learn what work you reference.
 
-> it would be interesting to see how their approach fares against techniques like CRP or CCH [...].
-> This raises another issue: how exactly are the query weights w_q provided at query time?
+> it would be interesting to see how their approach fares against techniques like CRP or CCH [...]
+> how exactly are the query weights w_q provided at query time?
 > As an edge cost array? If so, just providing this probably dwarfs the time required for the actual query routine.
 
-In the live-traffic scenario there are two ways, that w_q could be provided.
-When w_q is an array in memory which would be constantly modified between queries, CRP/CCH would not fare very well, because one would need to rerun the customization for every query - which would take a couple of seconds per query.
-When w_q is provided as a completely new set of weights between a bigger number of queries, than moving the data around in memory would indeed take a significant amount of time and CRP/CCH would definitely be a better choice for a practical application.
+w_q could be an array in memory which would be constantly modified between queries.
+Then, CRP/CCH would not fare very well, because one would need to rerun the customization for every query - which would take seconds per query.
+When modifications happen less frequently the cost of running customization algorithms and moving arrays around in memory and would be amortized and CRP/CCH would indeed be a better choice.
 However, it is trivially possible to replace the CH in CH-Potentials with a CCH.
 In fact, this already implemented (see Supplementary Material code/rust_road_router/engine/src/algo/ch_potentials.rs) and we also performed experiments with CCH-Potentials, but did not report the results due to space constraints and to keep the paper simpler.
 
 # Answers to Reviewer 3
 
-> The case-study in this paper is to compute routes on the German road network.
-
-For the predicted traffic setting, we also consider a significantly larger central Europe graph.
-
-> On this topic, in Section 6.5, the authors mention a "preliminary version of CH-Potentials."
+> in Section 6.5, the authors mention a "preliminary version of CH-Potentials."
 > But they do not explain how the current submission differs.
 > If this is work built on top of previously published results, they must clearly indicate it.
 
@@ -97,8 +86,7 @@ This submission is the first reviewed paper that describes CH-Potentials in deta
 > How is the Oracle-A* implemented?
 
 Oracle-A* is implemented by running each query twice and only measuring the time for the second run.
-During the first run, all necessary w_l distances will be memoized.
-During the second run, the distances can be accessed immediately.
+During the first run, all necessary w_l distances will be memoized and can be accessed immediately in the second run.
 
 > There is not enough comparison to the existing literature.
 > For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
@@ -109,7 +97,7 @@ CPD performs n one-to-all Dijkstra searches during preprocessing.
 On OSM Ger such a Dijkstra search takes about 2s, the graph has 16M nodes.
 This results in an estimated preprocessing time of 370 days.
 Quadratic preprocessing time is indeed prohibitive on large road networks.
-To prove this point experimentally, we obtained the CPD code and ran the preprocessing for 48h.
+We also obtained the CPD code and ran the preprocessing for 48h.
 As expected, the preprocessing did not finish within this time.
 We omitted these numbers from the paper because we do not want to bash the work of other people.
 
@@ -117,7 +105,6 @@ Also, we compare against Oracle-A* which is a lower bound running time for every
 We show that we are close to Oracle-A*.
 By extension, no algorithm with a similar setting exists that can significantly outperform CH-Potentials.
 
-> Finally, I am unsure about the relevance of some of the results.
 > It seems the algorithm really is: compute a CH, route with A*.
 > If so, I do not think it is applicable -- at least efficiently -- to dynamic networks such as those described in Section 6.
 
@@ -132,21 +119,19 @@ If you provide a reference we would gladly learn from it and cite the paper.
 
 > The paper outlines methods for skipping degree 2 and degree 3 nodes.
 > The results show diminishing returns, but non-negligible improvements for skipping higher degree nodes.
-> (1) Is there a generalization for skipping degree N nodes and
-> (2) do you think it would be worthwhile to pursue higher degree skipping in these experiments?
-> (3) Do you think the benefit of the skipping is graph specific?
-      If you were to have used another road network, would the best "maximum" degree skip be the same or the value 3 used in this paper?
+> 1. Is there a generalization for skipping degree N nodes and
+> 2. do you think it would be worthwhile to pursue higher degree skipping in these experiments?
+> 3. Do you think the benefit of the skipping is graph specific?
+>    If you were to have used another road network, would the best "maximum" degree skip be the same or the value 3 used in this paper?
 
 Our ideas are motivated by the TopoCore paper [2] which goes into detail about some of these questions.
 For TopoCore, low degree nodes are contracted.
 Contracting nodes of degree higher than 3 inserts more new edges than it removes.
-It is possible to think of our node skipping as lazy version of the contractions considered in TopoCore.
+It is possible to think of our node skipping as lazy version of the contractions in TopoCore.
 
 1. Yes
 2. We do not think that its worthwhile due to the reasons state in [2]
 3. The benefit is graph specific: we can only skip low degree nodes if there are any. However, due to the reasons discussed in [2], skipping nodes of degree higher than 3 should never pay off.
-
-
 
 [1] Geisberger, R.; Sanders, P.; Schultes, D.; and Vetter, C. 2012. Exact Routing in Large Road Networks Using Contraction Hierarchies. Transportation Science 46(3): 388–404.
 
