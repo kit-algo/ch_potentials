@@ -24,33 +24,20 @@ Many papers have been written on extending CHs.
 There is an entire PhD theses on how predicted traffic interacts with CH shortcuts.
 Changing w_q is trivial in comparison.
 This separation of concerns makes supporting extension (and their combinations) vastly easier than directly extending a CH.
-
-# Response to Reviewer 1 and 3
-
-> [Reviewer 1] How you can proof the flexibility of your algorithm? (inherited from A*)
-> [Reviewer 3] Section 6 [Extensions] does not really have a place in this paper.
-
-Inflexible is well-defined in a mathematical sense, i.e. w_q = w_l.
-However, flexible is defined more informally as being able to easily extend an algorithm and handle whatever w_q is.
-Thus, we cannot provide a mathematical proof that CH-Potential is flexible.
-We therefore chose to make our argument by listing extension of various complexity level.
-This is the motivation for the existence of Section 6.
+Demonstrating this, and thus proving the flexibility of our approach is the purpose of Section 6.
 
 # Answers to Reviewer 1
 
-> I recommend to compare to [...] [1] [...].
+> I recommend to compare to [...] [1 (CH Journal)] [...].
 
-The cited paper introduced CH.
-As CH is an ingredient for our algorithm we touched on the subject in lines 534 - 539.
-We stated that our algorithm achieves similar speedups as a CH for the special case of w_q = w_l.
-However, we did not provide CH running times, which is indeed a number that we should report:
+We stated that our algorithm converges to CH for the w_q = w_l case.
+However, we did not provide experimental evidence for this which is indeed an oversight that we would like to fix:
 Running CH queries on OSM Ger takes on average 0.163ms.
-So the A* search of CH-Potentials some overhead, but the running time is in the same order of magnitude.
-This confirms our statement that CH-Potentials converge towards a CH query for w_q = w_l.
+Thus, the overhead of CH-Potential over plain CH is within a factor 4.
 
 > I am not familiar with CH. A deeper explanation could be useful.
 
-We agree with this comment but could not devote more space to an explanation due to the page limit.
+We agree with this but could not devote more space to an explanation due to the page limit.
 Given more space, we would like to change this.
 
 # Answers to Reviewer 2
@@ -70,7 +57,8 @@ w_q could be an array in memory which would be constantly modified between queri
 Then, CRP/CCH would not fare very well, because one would need to rerun the customization for every query - which would take seconds per query.
 When modifications happen less frequently the cost of running customization algorithms and moving arrays around in memory and would be amortized and CRP/CCH would indeed be a better choice.
 However, it is trivially possible to replace the CH in CH-Potentials with a CCH.
-In fact, this already implemented (see Supplementary Material code/rust_road_router/engine/src/algo/ch_potentials.rs) and we also performed experiments with CCH-Potentials, but did not report the results due to space constraints and to keep the paper simpler.
+In fact, this already implemented (supplementary material code/rust_road_router/engine/src/algo/ch_potentials.rs).
+We even performed experiments for CCH-Potentials but did not report the results due to space constraints and to keep the paper simpler.
 
 # Answers to Reviewer 3
 
@@ -79,8 +67,8 @@ In fact, this already implemented (see Supplementary Material code/rust_road_rou
 > If this is work built on top of previously published results, they must clearly indicate it.
 
 Going into details here is difficult in a double-blind review process.
-There exists a short Arxiv preprint version of our paper to claim the idea.
-There exists published work that only describes a truck specific scenarios but for the actual algorithm only refers to the Arxiv version of our work.
+There exists a Arxiv preprint version of our paper to claim the idea.
+There exists published work that only describes a truck specific scenario but for the actual algorithm only refers to the Arxiv version of our work.
 This submission is the first reviewed paper that describes CH-Potentials in detail.
 
 > How is the Oracle-A* implemented?
@@ -91,24 +79,25 @@ During the first run, all necessary w_l distances will be memoized and can be ac
 > There is not enough comparison to the existing literature.
 > For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
 
-First, our preprocessing running times are reported in Table 1.
-Second, we wrote "*quadratic* preprocessing *running time* is prohibitive".
+Our preprocessing running times are reported in Table 1.
+We wrote "*quadratic* preprocessing *running time* is prohibitive".
 CPD performs n one-to-all Dijkstra searches during preprocessing.
 On OSM Ger such a Dijkstra search takes about 2s, the graph has 16M nodes.
 This results in an estimated preprocessing time of 370 days.
 Quadratic preprocessing time is indeed prohibitive on large road networks.
 We also obtained the CPD code and ran the preprocessing for 48h.
-As expected, the preprocessing did not finish within this time.
+As expected, it did not finish.
 We omitted these numbers from the paper because we do not want to bash the work of other people.
 
-Also, we compare against Oracle-A* which is a lower bound running time for every algorithm with the same setting as CH-Potentials.
+Also, we compare against Oracle-A* which is a lower bound running time for every algorithm in this setting.
 We show that we are close to Oracle-A*.
-By extension, no algorithm with a similar setting exists that can significantly outperform CH-Potentials.
+By extension, no algorithm in this setting exists that can significantly outperform CH-Potentials.
 
 > It seems the algorithm really is: compute a CH, route with A*.
 > If so, I do not think it is applicable -- at least efficiently -- to dynamic networks such as those described in Section 6.
 
-Our experiments detailed in Section 7 clearly show that our algorithm is efficient on large very dynamic road networks.
+All extensions from Section 6 were evaluated in Section 7.
+Our experiments clearly show that our algorithm is efficient on large dynamic road networks.
 
 # Answers to Reviewer 4
 
@@ -117,12 +106,7 @@ Our experiments detailed in Section 7 clearly show that our algorithm is efficie
 We do not know what paper you are referring to.
 If you provide a reference we would gladly learn from it and cite the paper.
 
-> The paper outlines methods for skipping degree 2 and degree 3 nodes.
-> The results show diminishing returns, but non-negligible improvements for skipping higher degree nodes.
-> 1. Is there a generalization for skipping degree N nodes and
-> 2. do you think it would be worthwhile to pursue higher degree skipping in these experiments?
-> 3. Do you think the benefit of the skipping is graph specific?
->    If you were to have used another road network, would the best "maximum" degree skip be the same or the value 3 used in this paper?
+> [Questions regarding skipping higher degree nodes:]
 
 Our ideas are motivated by the TopoCore paper [2] which goes into detail about some of these questions.
 For TopoCore, low degree nodes are contracted.
