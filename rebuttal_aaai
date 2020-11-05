@@ -5,10 +5,10 @@ Apparently, we failed to communicate that clearly.
 This is a weakness in our presentation that we must address.
 For the scope of this rebuttal, we hope to clarify it in the following paragraphs.
 
-w_q is implemented as a procedure that takes an edge ID and the edge entry time as parameter.
+w_q is implemented as a procedure that takes an edge ID and the edge entry time as parameters.
 It computes a weight at query time, which must not be smaller than w_l.
 w_q can be arbitrary code as long as it fits this description.
-In C++ terms, you can think of w_q as a lambda parameter to the query which can change for every query.
+In C++ terms, you can think of w_q as a lambda parameter to the main algorithm which can change for every query.
 What w_q does is independent of the main algorithm and depends on the extensions considered:
 
 * For static and live traffic weights, w_q is an array lookup.
@@ -21,11 +21,11 @@ We never need to reason about what happens when trying to construct shortcuts wi
 Shortcuts are only constructed on w_l.
 
 Many papers have been written on extending CHs, which use shortcuts.
-There is an entire PhD theses on how predicted traffic interacts with CH shortcuts.
+There is an entire PhD thesis on how predicted traffic interacts with CH shortcuts.
 It is a difficult topic.
 Changing w_q is trivial in comparison.
 
-This separation of concerns makes supporting extension (and their combinations) vastly easier than directly extending a CH.
+This separation of concerns makes supporting extensions (and their combinations) vastly easier than directly extending a CH.
 Demonstrating this, and thus proving the flexibility of our approach is the purpose of Section 6.
 
 We know of no paper that managed to combine all presented extensions as direct CH extension.
@@ -38,7 +38,7 @@ For the w_q = w_l case, our algorithm is similar to CH.
 CH queries on OSM Ger take 0.163 ms.
 We'll add this number to Table 3.
 For w_q = w_l, CH-Potentials are at 0.6 s.
-Extending CH for w_q != w_l is difficult.
+Extending CH for w_q != w_l is difficult for the reasons discussed above.
 
 > I am not familiar with CH. A deeper explanation could be useful.
 
@@ -52,6 +52,7 @@ There is a major difference between the Core-ALT line of work and CH-Potentials.
 Core-ALT contracts parts of the input graph and inserts shortcut edges.
 To create these shortcuts, one must reason about how they interact with the extensions used.
 For CH-Potentials this is not necessary. 
+
 If you are referring to some other work, please provide a reference. 
 We would like to learn about it!
 
@@ -61,8 +62,8 @@ Our model assumes that the weights change for every query.
 For every query, a customization must thus be executed.
 A full, sequential CRP/CCH customization takes seconds.
 Partial customization exists but depending on the extensions used would also be slow as too many weights change.
-CH-Potentials is way faster than these times.
-Further, neither CRP nor CCH support edge entry time.
+CH-Potentials are way faster than these times.
+Further, neither CRP nor CCH support w_q edge entry times.
 Predicted traffic is therefore difficult.
 
 # Answers to Reviewer 3
@@ -73,20 +74,20 @@ Predicted traffic is therefore difficult.
 There exists an Arxiv preprint version of our paper to claim the idea.
 There exists published work that describes a truck specific extension but refers to the Arxiv version for the algorithm.
 This submission is the first reviewed paper that describes CH-Potentials in detail.
-The truck extension is not desribed in this submission.
+The truck extension is not described in this submission.
 
 > How is the Oracle-A* implemented?
 
 Oracle-A* is implemented by running each query twice and only measuring the time for the second run.
-During the first run, all necessary distances will be memoized and can be accessed immediately in the second run.
+During the first run, all necessary distances are memoized and accessed in the second run.
 
 > There is not enough comparison to the existing literature.
 > For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
 
-Oracle-A* is a lower bound running time on what is achievable with heuristic-tuning.
-We show that we are close to Oracle-A*.
-By extension, no other heuristic implementation exists that can significantly outperform CH-Potentials.
-Indirectly, this is a comparison with many papers, including ALT and CPD-heuristics.
+Oracle-A* is a lower bound on what is achievable with heuristic-tuning.
+We show that we are very close to Oracle-A*.
+By extension, no other heuristic-tuning work exists that can significantly outperform CH-Potentials.
+Indirectly, this is therefore a comparison with many papers, including ALT and CPD-heuristics.
 
 Our preprocessing running times are reported in Table 1.
 
@@ -112,7 +113,7 @@ Our experiments clearly show that our algorithm is efficient on large dynamic ro
 
 > There is previous work on such techniques in the heuristic search community, but it doesn't seem to be mentioned.
 
-We do not know what paper you are referring but want to learn from it.
+We do not know what paper you are referring to but want to learn from it.
 Please, provide a reference.
 We will also cite it.
 
