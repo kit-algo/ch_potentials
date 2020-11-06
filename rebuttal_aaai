@@ -22,29 +22,27 @@ Shortcuts are only constructed on w_l.
 
 w_q can be modified by a person that does not know how CHs work.
 
-Many papers have been written on extending CHs, which use shortcuts.
+Many papers have been written on extending CHs.
 There is an entire PhD thesis on how predicted traffic interacts with CH shortcuts.
-It is a difficult topic.
 Changing w_q is trivial in comparison.
-
 This separation of concerns makes supporting extensions (and their combinations) vastly easier than directly extending a CH.
 Demonstrating this, and thus proving the flexibility of our approach is the purpose of Section 6.
 
-We know of no paper that managed to combine all presented extensions as direct CH extension.
+We know of no paper that managed to combine all presented extensions directly into a CH extension.
 
 # Answers to Reviewer 1
 
 > I recommend to compare to [...] [1 (CH Journal)] [...].
 
 For the w_q = w_l case, our algorithm is similar to CH.
-CH queries on OSM Ger take 0.163 ms.
-We'll add this number to Table 3.
-For w_q = w_l, CH-Potentials are at 0.6 s.
+CH queries on OSM Ger take 0.163ms.
+For w_q = w_l, CH-Potentials are at 0.6ms.
+We'll add this comparison to Section 7.
 Extending CH for w_q != w_l is difficult for the reasons discussed above.
 
 > I am not familiar with CH. A deeper explanation could be useful.
 
-We agree with this but doing so in the given page limit is difficult.
+We agree but doing so in the given page limit is difficult.
 
 # Answers to Reviewer 2
 
@@ -53,25 +51,23 @@ We agree with this but doing so in the given page limit is difficult.
 There is a major difference between the Core-ALT line of work and CH-Potentials.
 Core-ALT contracts parts of the input graph and inserts shortcut edges.
 To create these shortcuts, one must reason about how they interact with the extensions used.
-For CH-Potentials this is not necessary. 
-
-If you are referring to some other work, please provide a reference. 
-We would like to learn about it!
+For CH-Potentials this is not necessary.
+If you are referring to some other work, we would be happy to cite it and learn from it.
 
 > it would be interesting to see how their approach fares against techniques like CRP or CCH [...]
+> how exactly are the query weights w_q provided at query time?
+> As an edge cost array? If so, just providing this probably dwarfs the time required for the actual query routine.
 
-Our model assumes that the weights change for every query. 
-For every query, a customization must thus be executed.
-A full, sequential CRP/CCH customization takes seconds.
-Partial customization exists but depending on the extensions used would also be slow as too many weights change.
-CH-Potentials are way faster than these times.
-Further, neither CRP nor CCH support w_q edge entry times.
-Predicted traffic is therefore difficult.
+In terms of pure query performance, CRP/CCH would outperform CH-Potentials.
+However, these approaches have a second phase of preprocessing which has to be executed when weights change (the customization) which takes seconds (sequentially).
+Our model assumes that the weights can change for every query.
+For life traffic we would implement this by modifying the edge cost array between queries, so the time for that is small.
+A CH-Potentials query is thus faster than the combined CRP/CCH customization and query.
+But the argument for CH-Potentials is not that it might outperform other approaches given the right query model but its flexibility.
+CRP/CCH are difficult to extend due to the same reasons as CH.
 
-The strength of CRP/CCH lies in scenarios where many queries are performed on the same set of weights.
-For some scenarios, such as live traffic, this is a good fit.
-We are therefore currently researching ways to combine CCH with CH-Potentials.
-Unfortunately, we do not yet have results that are ready for publication.
+The advantages of CCH can actually be exploited by CH-Potentials:
+Replacing the CH in CH-Potentials through a CCH is trivially possible and we are actively researching what can be done with CCH-Potentials.
 
 # Answers to Reviewer 3
 
@@ -98,7 +94,7 @@ Indirectly, this is therefore a comparison with many papers, including ALT and C
 We believe that ALT and CPD-heuristics are the primary related works.
 Against which other works do you want to see a comparison?
 
-> For example, the authors dismiss one competing algorithm on the grounds that the "pre-processing is prohibitive" but do not take their approach's pre-processing into account in the results.
+> For example, the authors dismiss one competing algorithm on the grounds that the "[quadratic] pre-processing [running time] is prohibitive" but do not take their approach's pre-processing into account in the results.
 
 Our preprocessing running times are reported in Table 1.
 
@@ -108,9 +104,9 @@ The graph has 16M nodes.
 We estimate a preprocessing time of 370 days.
 This is prohibitively long.
 To verify our estimation, we obtained the original SRC code and started the preprocessing.
-We aborted it after 48 h.
-CH-Potentials need 5 min.
-We did not include these numbers as to us it seems like needlessly bashing an otherwise excellent paper.
+We aborted it after 48h.
+CH-Potentials need 5min.
+We did not include these numbers as to us it seems like needlessly bashing an excellent paper.
 
 Ignoring the infeasible preprocessing, their work is subject to the Oracle-A* lower bound.
 Solving the preprocessing problem would thus not result in an algorithm outperforming CH-Potentials.
@@ -118,7 +114,7 @@ Solving the preprocessing problem would thus not result in an algorithm outperfo
 > It seems the algorithm really is: compute a CH, route with A*.
 > If so, I do not think it is applicable -- at least efficiently -- to dynamic networks such as those described in Section 6.
 
-All extensions from Section 6 were evaluated in Section 7.
+All extensions from Section 6 (except 6.5) were evaluated in Section 7.
 Our experiments clearly show that our algorithm is efficient on large dynamic road networks.
 
 # Answers to Reviewer 4
@@ -141,5 +137,4 @@ TopoCore does not contract nodes of degree 4 or higher as doing so inserts more 
 3. Yes, the effectiveness depends on the number of low degree nodes which is graph specific.
 
 [1] Geisberger; Sanders; Schultes; Vetter 2012. Exact Routing in Large Road Networks Using Contraction Hierarchies. Transportation Science
-
-[2] Dibbelt; Strasser; Wagner 2015. Fast exact shortest path and distance queries on road networks with parametrized costs. SIGSPATIAL 
+[2] Dibbelt; Strasser; Wagner 2015. Fast exact shortest path and distance queries on road networks with parametrized costs. SIGSPATIAL
