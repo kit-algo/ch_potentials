@@ -65,9 +65,10 @@ For life traffic we would implement this by modifying the edge cost array betwee
 A CH-Potentials query is thus faster than the combined CRP/CCH customization and query.
 But the argument for CH-Potentials is not that it might outperform other approaches given the right query model but its flexibility.
 CRP/CCH are difficult to extend due to the same reasons as CH.
+For example, predicted traffic is difficult with CRP/CCH.
 
-The advantages of CCH can actually be exploited by CH-Potentials:
-Replacing the CH in CH-Potentials through a CCH is trivially possible and we are actively researching what can be done with CCH-Potentials.
+CCH can be combined CH-Potentials:
+Replacing the CH in CH-Potentials through a CCH is possible and we are actively researching what can be done with CCH-Potentials.
 
 # Answers to Reviewer 3
 
@@ -103,7 +104,7 @@ On OSM Ger such a Dijkstra search takes about 2s.
 The graph has 16M nodes.
 We estimate a preprocessing time of 370 days.
 This is prohibitively long.
-To verify our estimation, we obtained the original SRC code and started the preprocessing.
+To verify our estimation, we ran the original SRC preprocessing.
 We aborted it after 48h.
 CH-Potentials need 5min.
 We did not include these numbers as to us it seems like needlessly bashing an excellent paper.
