@@ -180,6 +180,7 @@ namespace "exp" do
     Dir.chdir "code/rust_road_router/engine" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-oracle' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_simple_scale_dijkstra --features '' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
@@ -193,6 +194,10 @@ namespace "exp" do
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       end
     end
   end
