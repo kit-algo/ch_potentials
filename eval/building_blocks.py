@@ -25,6 +25,8 @@ def heuristic_name(feature_flags):
         return 'Zero'
     elif 'CHPOT_ORACLE' in feature_flags:
         return 'Oracle'
+    elif 'CHPOT_ALT' in feature_flags:
+        return 'ALT'
     else:
         return 'CH'
 
@@ -34,9 +36,10 @@ table = queries.groupby(['algo', 'Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3
 table['num_queue_pushs'] = table['num_queue_pushs'] / 1000
 table = table.round(1)
 
-table = table.reindex(['Zero', 'CH', 'Oracle'], level=1)
+table = table.reindex(['Zero', 'ALT', 'CH', 'Oracle'], level=1)
 table = table.rename(index={
     'Zero': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{Zero}}',
+    'ALT': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{ALT}}',
     'CH': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{CH-\\Potentials}}}',
     'Oracle': R'\multirow{2}{*}{Oracle}',
 })
@@ -49,7 +52,7 @@ lines = [R'\begin{tabular}{clllrr}'] + [lines[1]] + [
     R" & & & & Running &     Queue \\",
     R" Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\"
 # ] + lines[4:]
-] + [lines[4], lines[17]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + [lines[13], lines[16]] + lines[20:]
+] + [lines[4], lines[21]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + lines[13:17] + ["\\addlinespace"] + [lines[17], lines[20]] + lines[24:]
 
 output = "\n".join(lines) + "\n"
 output = output.replace('True', '\\cmark')
