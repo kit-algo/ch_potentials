@@ -52,7 +52,7 @@ lines = [R'\begin{tabular}{clllrr}'] + [lines[1]] + [
     R" & & & & Running &     Queue \\",
     R" Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\"
 # ] + lines[4:]
-] + [lines[4], lines[21]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + lines[13:17] + ["\\addlinespace"] + [lines[17], lines[20]] + lines[24:]
+] + [lines[4], lines[21]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + lines[13:17] + ["\\addlinespace"] + [lines[17], lines[20]] + lines[25:]
 
 output = "\n".join(lines) + "\n"
 output = output.replace('True', '\\cmark')
