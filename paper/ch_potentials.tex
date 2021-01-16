@@ -79,20 +79,24 @@ Additionally, we describe A* optimizations to accelerate the processing of low d
 \label{sec:intro}
 The past decade has seen a plethora of research on route planning in large street networks~\cite{bdgmpsww-rptn-16}.
 Routing a user through a road network can be formalized as the shortest path problem in weighted graphs.
-Road intersections become nodes.
-Road segments become edges.
-The weight of an edge is the time a car needs to traverse the road segment.
+Nodes represent intersections.
+Roads are modeled using edges.
+Edges are weighted by their traversal times.
 The problem can be solved with Dijkstra's algorithm~\cite{d-ntpcg-59}.
-However, on continental sized networks, it is too slow for many applications.
+Unfortunately, on continental sized networks, it is too slow for many applications.
 Thus, speed-up techniques have been developed.
-A popular example for such a technique, which has been successfully used in many real world applications, is Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
-CH exploit the inherent hierarchy of road networks.
-In a preprocessing step, additional shortcut edges are inserted, which allow skipping over unimportant parts of the network during query time.
-Another technique, also successfully employed in practice, is Multi-Level-Dijkstra~(MLD)~\cite{dgpw-crprn-13} better known as CRP.
-It also exploits the hierarchy of road networks using shortcut edges.
+One popular example are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
+They have been used successfully in many real world applications\todo{citation?}.
+A CH exploits the inherent hierarchy of road networks.
+In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant roads during query time.
+A further popular example is Multi-Level-Dijkstra~(MLD)~\todo{pre CRP zitat?} also known as CRP~\cite{dgpw-crprn-13}.
+It is also used in practice~\todo{citation, bing blog?}.
+MLD also also uses shortcut edges.
 Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
-Their implementation complexity is also quite manageable.
-This makes them very attractive in practice.
+% --- Unser Argument ist, dass die zu komplex zum erweitern sind... da passen diese 
+%     Sätze nicht in die Story
+% Their implementation complexity is also quite manageable.    
+% This makes them very attractive in practice.
 
 \begin{figure}
 \centering
@@ -101,34 +105,40 @@ This makes them very attractive in practice.
 \label{img:search-space}
 \end{figure}
 
-However, for many real world routing applications, this basic model turns out to be too simple.
-For realistic routing, many additional features need to be considered.
-This includes but is not limited to turn costs and restrictions, live traffic, user preferences, traffic predictions, temporary driving bans for certain types of vehicles and many more.
-Hierarchical speed-up techniques can be extended to support these features.
-However, each feature requires significant effort.
-Many combinations of specific techniques with certain extensions have their own dedicated research paper(s).
-Adding these features introduces significant additional implementation complexity.
-Supporting combinations of extensions is at least non-trivial, oftentimes downright impossible.
+Unfortunately, for many real world applications, this basic graph model is too simplistic.
+Many additional features need to be considered.
+% --- ich habe turn costs weg gelassen, weil wir die nicht in den experimenten haben, ich will keiner Reviewer auf blöde Ideeen bringen
+% --- ich habe temporary driving bans weg gelassen, weil wir das nicht in den Experimenten haben und ich "we can do all of the above features" claimen möchte
+This includes turn restrictions, live traffic, user preferences, traffic predictions.%, temporary driving bans for certain types of vehicles.
+Specific applications often have additional application-specific requirements.
+Extending Dijkstra's algorithm to support these features is usually easy.
+On the other hand, while extending hierarchical speed-up techniques is possible, the algorithm development is vastly more complex.
+For every feature, dedicated research paper(s) exist that extend CH.
+Supporting the combination of several features is even harder. 
+For example, we are not aware of any work combining all features mentioned above.
+In this paper, we describe an algorithm that handles the combination of all mentioned features.
 
-In this work, we propose a novel building block for routing algorithms which drastically improves on this extensibility problem with very little implementation complexity.
-For this, we revisit goal-directed search (A*).
-Goal directed search is a simple extension of Dijkstra's algorithm.
-An estimate of the remaining distance to the target is used, to change the order in which nodes are traversed during the search.
-This guides the search towards the target.
-See Figure~\ref{img:search-space} for an example of nodes traversed during a goal-directed search.
-This approach is far easier to extend.
-Many extensions can be supported without modifying the distance estimation at all.
-The downside is that the effectiveness of this approach highly depends on the tightness of the estimate.
-There has been extensive research on goal-directed search in the past~\cite{}.
-However, on road networks, previous approaches could not deliver performance on par with hierarchical techniques.
-We introduce CH-Potentials, a new distance estimation function which can efficiently compute tight distance estimates.
-\todo{tight}
-CH-Potentials are a simple combination of existing approaches.
-CH-Potentials use hierarchical speed-up techniques but only indirectly through goal directed search.
-This new building block allows handling extensions orthogonal to the speed-up technique.
-\todo{contribution - no better heuristic possible}
-% By comparing against Oracle-A*, we show that no other exact two-phase A*-based approach can be significantly faster.
-In addition, we propose optimizations for Dijkstra's/A*'s handling of low-degree nodes, common in road networks.
+% --- mit "novel" und "propose" muss man vorsichtig sein, wegen SEA paper von letztem Jahr
+We describe an algorithmic building block that mostly decouples feature development from the hierarchical speed-up algorithm.
+Our goal is to simplify incorporating new features.
+We build upon the A* algorithm \cite{A* literature}.
+A* is a goal-directed variant of Dijkstra's algorithm.
+It uses a heuristic\todo{heuristic vs potential} to guide the search towards the goal.
+A heuristic is function that maps a node $v$ onto a lower bound of the distance from $v$ to the goal.
+A*'s running time crucially depends on how tight this lower bound is.
+Further, evaluating the heuristic must be fast.
+The free flow travel time to the goal is a valid heuristic for most features.
+In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
+However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
+In this paper, we describe CH-Potentials, a technique that achieves both goals.
+Internally, the heuristic uses a CH.
+Fortunately, this is an implementation detail from the perspective of the A*.
+To support a new feature, we only need to modify the A* algorithm.
+The heuristic core containing the CH remains untouched.
+Extending A* is vastly easier than extending a CH.
+This enables us to design an algorithms that supports a multitude of features.
+In addition, we describe optimizations for handling of low-degree nodes, common in road networks.
+These low degree optimizations are applicable to Dijkstra's algorithm and A*.
 
 The rest of the paper is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
