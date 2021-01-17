@@ -198,6 +198,47 @@ In this section, we first discuss the framework in which CH-Potentials can be us
 Then, we describe the building blocks of CH-Potentials: Contraction Hierarchies and PHAST, a CH extension.
 Finally, we introduce the CH-Potentials heuristic.
 
+\subsection{Formal Setup: Inputs, Outputs, and Phases}
+
+Throughout this paper, we consider a two phase setup with an off-line preprocessing phase and an on-line query phase.
+The input to the preprocessing phase is data that is static, such as the road network and freeflow travel times.
+On the other hand, the input to the query phase changes a lot.
+For example, the source and the target nodes are query inputs.
+Further, the user preferences and live traffic are query inputs.
+The preprocessing phase may be slow and computes auxiliary data.
+The query phase obtains this auxiliary data as input and performs the path computation.
+
+Formally, the input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$.
+$w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
+In this paper, $w_\ell$ is always the freeflow travel time.
+The output is auxiliary data that enables an efficient heuristic function $h_t(x)$.
+$h_t(x)$ is the exact distance from $x$ to $t$ in $G_\ell$.
+
+The formal inputs of the query phase depend on the considered features.
+In the simplest case, the input is a query weight $w_q$, and source and target nodes $s$ and $t$.
+It is guaranteed that $w_\ell(e) \le w_q(e)$ for all edges $e$.
+The output is a shortest $st$-path with respect to $w_q$.
+The query has access to the $h_t$ heuristic function.
+An example of the simple case is live-traffic.
+In this case, $w_q$ is an array of live travel times.
+
+With more complex features, the inputs become more complex.
+The extended query weight $w_q(e,\tau,p)$ has three parameters: the edge $e$, the edge entry time $\tau$, and the user preferences $p$.
+Beside $s$ and $t$ the input contains a departure time $\tau_s$.
+The distance of a path $e_1,e_2\ldots$ is defined as $w_q(e_1,\tau_s,p)+w_q(e_2,\tau_s+w_q(e_1,\tau_s,p),p)+\cdots$
+Further, the query input contains a graph $G_q$ with nodes and edges differing from $G_\ell$.
+To be able to use the $h$ heuristic, the query implementation need to have two node mapping functions $\phi$ and $\psi$ that relate nodes in $G_\ell$ and $G_q$ as follows:
+$h_{\phi(t)}(\psi(x))$ must lower bound the distance from $x$ to $t$ in $G_q$.
+
+Applications requiring many features have an inherent complexity.
+The departure and entry times are needed for prediction traffic.
+The user preference parameter is needed for tunnel and highway avoidance.
+The differentiation between $G_\ell$ and $G_q$ is needed to support turn costs and restrictions.
+
+This application complexity translates into the complex query inputs. 
+Fortunately, the preprocessing inputs are unaffected.
+A highlight of our technique is that all features can be supported without changing the preprocessing at all.
+
 \subsection{Framework}
 
 We consider a two-phase setup.
