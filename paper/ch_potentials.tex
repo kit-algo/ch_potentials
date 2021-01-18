@@ -489,7 +489,7 @@ It is consistent because it is derived from exact shortest paths in $G$ with $w_
 Sadly, the undirected graph underlying $G'$ is always biconnected, if the input graph is strongly connected.
 The optimization described in Section~\ref{sec:largested-biconnected-component} is therefore ineffective.
 
-With this setup CH-Potentials support turns without requiring turn information in the CH.
+With this setup, CH-Potentials support turns without requiring turn information in the CH.
 
 \subsection{Predicted Traffic or Time-Dependent Routing}
 \label{sec:predicted-traffic}
@@ -629,7 +629,10 @@ All other running times are marked as outliers.
 }\label{fig:scaled_weights}
 \end{figure}
 
-The first experiment varies the tightness of the heuristic.
+The performance of A* depends on the tightness of the heuristic.
+CH-Potentials computes optimal distance estimates with respect to $w_\ell$.
+However, for most applications, there will be a gap between $w_q$ and $w_\ell$ (otherwise we could use an unmodified CH).
+We evaluate the impact of the difference between $w_q$ and $w_\ell$ on the performance of A*.
 The lower bound $w_\ell$ is set to the freeflow travel time.
 The query weights $w_q$ are set to $\alpha \cdot w_\ell$, where $\alpha\ge 1$.
 % When $\alpha = 1$, the heuristic is tight.
@@ -641,7 +644,7 @@ Average running times range from below a millisecond to a few hundred millisecon
 Up to around $\alpha = 1.1$ the running time grows quickly.
 After $\alpha = 1.1$ the growth slows down.
 This illustrates both the strengths and limits of our approach and goal directed search in general.
-Goal directed search (and thus CH-Potentials) can only achieve competitive running times if the application allows for a sufficiently tight heuristic.
+CH-Potentials can only achieve competitive running times if the application allows for a sufficiently tight lower bounds at preprocessing time.
 
 We observe that the running times for a fixed $\alpha$ vary strongly.
 This is an interesting observation, as with uniform source and target sampling, nearly all queries are long-distance.
