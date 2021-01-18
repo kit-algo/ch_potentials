@@ -88,15 +88,11 @@ Thus, speed-up techniques have been developed.
 One popular example are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
 They have been used successfully in many real world applications\todo{citation?}.
 A CH exploits the inherent hierarchy of road networks.
-In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant roads during query time.
+In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network during query time.
 A further popular example is Multi-Level-Dijkstra~(MLD)~\todo{pre CRP zitat?} also known as CRP~\cite{dgpw-crprn-13}.
 It is also used in practice~\todo{citation, bing blog?}.
 MLD also also uses shortcut edges.
 Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
-% --- Unser Argument ist, dass die zu komplex zum erweitern sind... da passen diese 
-%     Sätze nicht in die Story
-% Their implementation complexity is also quite manageable.    
-% This makes them very attractive in practice.
 
 \begin{figure}
 \centering
@@ -106,37 +102,35 @@ Both approaches achieve speed-ups of at least three orders of magnitude over Dij
 \end{figure}
 
 Unfortunately, for many real world applications, this basic graph model is too simplistic.
-Many additional features need to be considered.
-% --- ich habe temporary driving bans weg gelassen, weil wir das nicht in den Experimenten haben und ich "we can do all of the above features" claimen möchte
-This includes turn costs and restrictions, live traffic, user preferences, traffic predictions.%, temporary driving bans for certain types of vehicles.
-Specific applications often have additional application-specific requirements.
+For realistic routing, many additional features need to be considered.
+This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions.%, temporary driving bans for certain types of vehicles.
+Some applications may have additional application-specific requirements.
 Extending Dijkstra's algorithm to support these features is usually easy.
-On the other hand, while extending hierarchical speed-up techniques is possible, the algorithm development is vastly more complex.
+Extending hierarchical speed-up techniques is also possible.
+However, the algorithm development is vastly more complex.
 For every feature, dedicated research paper(s) exist that extend CH.
-Supporting the combination of several features is even harder. 
+Supporting the combination of several features is even harder.
 For example, we are not aware of any work combining all features mentioned above.
-In this paper, we describe an algorithm that handles the combination of all mentioned features.
+In this paper, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
 
-% --- mit "novel" und "propose" muss man vorsichtig sein, wegen SEA paper von letztem Jahr
-We describe an algorithmic building block that mostly decouples feature development from the hierarchical speed-up algorithm.
-Our goal is to simplify incorporating new features.
-We build upon the A* algorithm \cite{A* literature}.
+Our approach decouples extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{}.
 A* is a goal-directed variant of Dijkstra's algorithm.
-It uses a heuristic\todo{heuristic vs potential} to guide the search towards the goal.
-A heuristic is function that maps a node $v$ onto a lower bound of the distance from $v$ to the goal.
-A*'s running time crucially depends on how tight this lower bound is.
+See Figure~\ref{img:search-space} for an example of nodes traversed during an A* search.
+A* uses a \emph{heuristic} to guide the search towards the goal.
+A heuristic is function that maps a node $v$ onto an estimate of the distance from $v$ to the goal.
+A*'s running time crucially depends on how tight this estimate is.
 Further, evaluating the heuristic must be fast.
-The free flow travel time to the goal is a valid heuristic for most features.
-In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
-However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
-In this paper, we describe CH-Potentials, a technique that achieves both goals.
+% The free flow travel time to the goal is a valid heuristic for most features.
+% In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
+% However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
+In this paper, we describe CH-Potentials, a heuristic that achieves both goals.
 Internally, the heuristic uses a CH.
 Fortunately, this is an implementation detail from the perspective of the A*.
 To support a new feature, we only need to modify the A* algorithm.
 The heuristic core containing the CH remains untouched.
 Extending A* is vastly easier than extending a CH.
-This enables us to design an algorithms that supports a multitude of features.
-In addition, we describe optimizations for handling of low-degree nodes, common in road networks.
+This enables us to design algorithms that support a multitude of features.
+In addition, we describe query optimizations for handling of low-degree nodes, common in road networks.
 These low degree optimizations are applicable to Dijkstra's algorithm and A*.
 
 The rest of the paper is organized as follows.
@@ -200,71 +194,31 @@ Finally, we introduce the CH-Potentials heuristic.
 
 \subsection{Formal Setup: Inputs, Outputs, and Phases}
 
-Throughout this paper, we consider a two phase setup with an off-line preprocessing phase and an on-line query phase.
-The input to the preprocessing phase is data that is static, such as the road network and freeflow travel times.
-On the other hand, the input to the query phase changes a lot.
-For example, the source and the target nodes are query inputs.
-Further, the user preferences and live traffic are query inputs.
-The preprocessing phase may be slow and computes auxiliary data.
-The query phase obtains this auxiliary data as input and performs the path computation.
-
-Formally, the input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$.
-$w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
-In this paper, $w_\ell$ is always the freeflow travel time.
-The output is auxiliary data that enables an efficient heuristic function $h_t(x)$.
-$h_t(x)$ is the exact distance from $x$ to $t$ in $G_\ell$.
-
-The formal inputs of the query phase depend on the considered features.
-In the simplest case, the input is a query weight $w_q$, and source and target nodes $s$ and $t$.
-It is guaranteed that $w_\ell(e) \le w_q(e)$ for all edges $e$.
-The output is a shortest $st$-path with respect to $w_q$.
-The query has access to the $h_t$ heuristic function.
-An example of the simple case is live-traffic.
-In this case, $w_q$ is an array of live travel times.
-
-With more complex features, the inputs become more complex.
-The extended query weight $w_q(e,\tau,p)$ has three parameters: the edge $e$, the edge entry time $\tau$, and the user preferences $p$.
-Beside $s$ and $t$ the input contains a departure time $\tau_s$.
-The distance of a path $e_1,e_2\ldots$ is defined as $w_q(e_1,\tau_s,p)+w_q(e_2,\tau_s+w_q(e_1,\tau_s,p),p)+\cdots$
-Further, the query input contains a graph $G_q$ with nodes and edges differing from $G_\ell$.
-To be able to use the $h$ heuristic, the query implementation need to have two node mapping functions $\phi$ and $\psi$ that relate nodes in $G_\ell$ and $G_q$ as follows:
-$h_{\phi(t)}(\psi(x))$ must lower bound the distance from $x$ to $t$ in $G_q$.
-
-Applications requiring many features have an inherent complexity.
-The departure and entry times are needed for prediction traffic.
-The user preference parameter is needed for tunnel and highway avoidance.
-The differentiation between $G_\ell$ and $G_q$ is needed to support turn costs and restrictions.
-
-This application complexity translates into the complex query inputs. 
-Fortunately, the preprocessing inputs are unaffected.
-A highlight of our technique is that all features can be supported without changing the preprocessing at all.
-
-\subsection{Framework}
-
-We consider a two-phase setup.
-In the preprocessing phase, we are given a lower bound graph $G_\ell$ with lower bound weights $w_\ell$.
-The lower bound weights are single scalar numbers for each edge.
-We now perform some precomputation, i.e. apply the Contraction Hierarchy preprocessing to this graph.
-This generates some auxiliary data which we will use in the query phase to efficiently compute distance estimates.
-We will do so with the heuristic function $h_t(x)$ where $x$ and $t$ are nodes from $G_\ell$.
-The heuristic function returns the shortest distance from $x$ to $t$ with respect to $w_\ell$.
-Before each query, the heuristic has to be initialized with the target node $t$.
-We will discuss the implementation of this heuristic function and the initialization later in this section.
-
-In the query phase, we have a query graph $G_q$ with query weights $w_q$ and a mapping $T$ which maps nodes from $G_q$ to $G_\ell$.
-For most applications, $G_q = G_\ell$ and $T$ will be the identity.
-The query weights $w_q$ are the main mechanism to implement different applications with CH-Potentials.
-In some cases, $w_q$ will be simple scalar values like the lower bound weights.
-However, for $w_q$ this is not a requirement.
+In this paper, we consider different applications, with slightly different problem models.
+The goal is always to quickly answer many shortest path queries.
+For the purpose of describing our framework, we establish a shared notation:
+Input to each query are nodes $s$ and $t$, and a graph $G$ with query weights $w_q$.
+However, the precise formal inputs of the query and what exactly $w_q$ represents depends on the application.
+In the simplest case, $w_q$ will be scalar edge weights.
+However, this is not a requirement.
 It can be any function that computes a weight for an edge.
 This function can also take additional parameters from the state of the search.
+For example, in the case of live-traffic, $w_q$ represents scalar edge weights.
+However, values of $w_q$ might change between queries.
+In the case of traffic predictions, $w_q$ is a function which maps the edge entry time to the traversal time and the query takes an additional departure time parameter.
 
-The query phase then is to execute A* on $G_q$.
-Before running the search, the heuristic will be initialized with the target $T(t)$.
-The distance estimate for a node $x$ from $G_q$ can be computed as $h_{T(t)}(T(x))$.
-For CH-Potentials to find correct distances, $w_q \geq w_\ell$ has to hold for all arcs.
-\todo{Correctness Argument? Stichwort: Consistent/Montone heuristic}
-\todo{Describe A*?}
+To enable quick shortest path computations, we consider a two phase setup with an additional off-line preprocessing phase before the on-line query phase.
+The input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$ and a node mapping function $\phi$.
+$w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
+We require that $w_q(uv)$ is greater or equal to the shortest distance from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
+The output of the preprocessing is auxiliary data that enables an efficient heuristic function $h_t(x)$.
+$h_t(x)$ is the exact distance from $\phi(x)$ to $\phi(t)$ in $G_\ell$.
+In the applications considered in this paper, $w_\ell$ is always the freeflow travel time.
+
+The query phase uses this heuristic in an A* search between nodes $s$ and $t$ on $G_q$ and $w_q$.
+The exact implementation of this A* search depend on the application.
+Our approach only provides the heuristic $h_t$ for the A* search.
+In contrast, the preprocessing phase remains the same for all applications.
 
 \subsection{Contraction Hierarchy (CH)}
 
