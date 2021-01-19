@@ -536,8 +536,6 @@ As we were able to keep all travel time functions out of the CH, we avoid a lot 
 \subsection{Live and Predicted Traffic}
 \label{sec:live-predicted-traffic}
 
-\todo{talk about CCH-Pot}
-
 Beside predicted traffic, we also consider live traffic.
 Live traffic refers to the current traffic situation.
 It is important to distinguish between predicted and live traffic.
@@ -575,6 +573,19 @@ With this setup, CH-Potentials support a combination of live and predicted traff
 We did not make any modification, that would hinder a combination with other extensions.
 Further adding tunnel and/or highway avoidance or turn-aware routing is simple.
 This straight-forward integration of complex routing problems is the strength of the CH-Potentials algorithm.
+
+\subsubsection{Three-Phase Setups}
+
+Supporting live traffic is also possible with a three-phase setup:
+A slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
+The customization phase is run regularly and incorporates updates to the weights into the auxiliary data.
+CRP~\cite{dgpw-crprn-13} and Customizable CH~(CCH)~\cite{dsw-cch-15} follow this setup.
+Luckily, a CCH is just a CH with some additional properties.
+The CH in CH-Potentials can be replaced by a CCH without further modifications.
+Thus, CCH-Potentials could also support a three-phase setup.
+For applications which allow for a three-phase setup, CCH-Potentials are likely a better choice for supporting live traffic.
+However, evaluating CCH-Potentials is beyond the scope of this paper.
+We focus on evaluating CH-Potentials as a building block in the two-phase setup.
 
 \subsection{Temporary Driving Bans}
 
