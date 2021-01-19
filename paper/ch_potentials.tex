@@ -590,7 +590,10 @@ We focus on evaluating CH-Potentials as a building block in the two-phase setup.
 \subsection{Temporary Driving Bans}
 
 Truck routing differs from car routing due to night driving bans and other restrictions.
-In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials is used for such a scenario.
+In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials\footnote{
+In~\cite{kswz-erptd-20}, CH-Potentials are only used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
+The paper does not describe any of the contribution of this paper.
+} is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
 \todo{cite correct Closures Version}
@@ -636,7 +639,7 @@ Running times on a logarithmic scale for queries on OSM Ger with scaled edge wei
 The boxes cover the range between the first and third quartile.
 The band in the box indicates the median, the diamond the mean.
 The whiskers cover 1.5 times the inter quartile range.
-All other running times are marked as outliers.
+All other running times are indicated as outliers.
 }\label{fig:scaled_weights}
 \end{figure}
 
