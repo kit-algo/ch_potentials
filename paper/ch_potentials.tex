@@ -155,7 +155,7 @@ MLD/CRP also supports turn costs.
 Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
 In~\cite{dsw-cch-15}, CH is extended to Customizable CH (CCH), which also supports exchanging weights and thus supporting user preferences and live traffic.
 CH is extended to support turn costs in~\cite{}, CCH in~\cite{bwzz-cchtc-20}.
-Traffic predictions are combined with CH in~\cite{swz-sfert-19,bgsv-mtdtt-13}.
+Traffic predictions are combined with CH in~\cite{swz-sfert-20,bgsv-mtdtt-13}.
 \todo{cite correct CATCHUp Version}
 \todo{improve! and discuss hierarchical extensions and what they achieve and their difficulties in more details}
 Specialized variants for electric vehicle routing are developed in~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11}.
@@ -498,7 +498,7 @@ The classical shortest path problem assumes that edge weights are scalars.
 However in practice, travel times vary along an edge.
 The primary reason is traffic.
 Recurring traffic can be predicted by observing the traffic in the past.
-It is common \cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19} to represent these predictions as \emph{travel time functions}.
+It is common \cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-20} to represent these predictions as \emph{travel time functions}.
 An edge weight is no longer a scalar value but a function that maps the entry time onto the traversal time.
 % Performing this prediction is outside of the scope of this paper.
 It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
@@ -531,7 +531,7 @@ We set $w_\ell(e) = \min_\tau w_p(e,\tau)$, that is the minimum travel time.
 Following TD-ALT, we modify the A* search to use the tentative distance at a node $x$ as $\tau$ when evaluating the weight of an outgoing edge $(x,y)$.
 
 With this setup, we extended CH-Potentials to support time-dependent routing.
-As we were able to keep all travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-19}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
+As we were able to keep all travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-20}, which create shortcuts of travel time functions to combine hierarchical speedup techniques with time-dependent routing.
 
 \subsection{Live and Predicted Traffic}
 \label{sec:live-predicted-traffic}
@@ -590,13 +590,12 @@ We focus on evaluating CH-Potentials as a building block in the two-phase setup.
 \subsection{Temporary Driving Bans}
 
 Truck routing differs from car routing due to night driving bans and other restrictions.
-In~\cite{kswz-erptd-20}, a preliminary version of CH-Potentials\footnote{
-In~\cite{kswz-erptd-20}, CH-Potentials are only used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
+In~\cite{kswz-erptd-p-20}, a preliminary version of CH-Potentials\footnote{
+In~\cite{kswz-erptd-p-20}, CH-Potentials are used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
 The paper does not describe any of the contribution of this paper.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
-\todo{cite correct Closures Version}
 
 \section{Evaluation}
 
