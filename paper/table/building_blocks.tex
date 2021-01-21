@@ -1,25 +1,15 @@
-\begin{tabular}{clllrr}
+\begin{tabular}{clllrrrr}
 \toprule
- & & & & Running &     Queue \\
- Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\
+       & BCC & Deg2 & Deg3 & Zero & ALT & CH-Pot. & Oracle \\
 \midrule
-\multirow{4}{*}{\rotatebox[origin=c]{90}{Zero}} & \xmark &        \xmark &        \xmark &           1\,981.2 &           7\,887.2 \\
-                        & \cmark  &        \xmark &        \xmark &           1\,253.1 &           6\,326.5 \\
-                        & \cmark  &         \cmark &        \xmark &            713.6 &           2\,915.7 \\
-                        & \cmark  &         \cmark &         \cmark &            558.9 &           1\,689.8 \\
-\addlinespace
-\multirow{4}{*}{\rotatebox[origin=c]{90}{ALT}} & \xmark &        \xmark &        \xmark &            279.5 &            859.4 \\
-                        & \cmark  &        \xmark &        \xmark &            217.3 &            684.1 \\
-                        & \cmark  &         \cmark &        \xmark &            117.3 &            301.3 \\
-                        & \cmark  &         \cmark &         \cmark &             88.3 &            178.4 \\
-\addlinespace
-\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{CH-\\Potentials}}} & \xmark &        \xmark &        \xmark &             50.6 &            138.0 \\
-                        & \cmark  &        \xmark &        \xmark &             36.3 &            114.0 \\
-                        & \cmark  &         \cmark &        \xmark &             18.8 &             42.1 \\
-                        & \cmark  &         \cmark &         \cmark &             15.7 &             26.0 \\
-\addlinespace
-\multirow{2}{*}{Oracle} & \xmark &        \xmark &        \xmark &             32.0 &            138.0 \\
-                        & \cmark  &         \cmark &         \cmark &              9.5 &             26.0 \\
+\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Running\\time [ms]}}} & \xmark &        \xmark &        \xmark &  1\,981.2 &  279.5 &   50.6 &    32.0 \\
+                                                                                    & \cmark  &        \xmark &        \xmark &  1\,253.1 &  217.3 &   36.3 &    23.9 \\
+                                                                                    & \cmark  &         \cmark &        \xmark &   713.6 &  117.3 &   18.8 &    11.8 \\
+                                                                                    & \cmark  &         \cmark &         \cmark &   558.9 &   88.3 &   15.7 &     9.5 \\
+\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Queue\\pushs [$\cdot 10^3$]}}} & \xmark &        \xmark &        \xmark &  7\,887.2 &  859.4 &  138.0 &   138.0 \\
+                                                                                    & \cmark  &        \xmark &        \xmark &  6\,326.5 &  684.1 &  114.0 &   114.0 \\
+                                                                                    & \cmark  &         \cmark &        \xmark &  2\,915.7 &  301.3 &   42.1 &    42.1 \\
+                                                                                    & \cmark  &         \cmark &         \cmark &  1\,689.8 &  178.4 &   26.0 &    26.0 \\
 \bottomrule
 \end{tabular}
 

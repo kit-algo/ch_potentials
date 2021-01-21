@@ -32,27 +32,24 @@ def heuristic_name(feature_flags):
 
 queries['Heuristic'] = queries['features'].apply(heuristic_name)
 
-table = queries.groupby(['algo', 'Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3'])[['running_time_ms', 'num_queue_pushs']].mean()
+queries_subset = queries.loc[lambda x: ((x['algo'] == 'Dijkstra Query') & (x['Heuristic'] == 'Zero')) | ((x['algo'] != 'Dijkstra Query') & ~((x['Heuristic'] == 'Zero') & ~x['BCC'] & ~x['Skip Deg. 2'] & ~x['Skip Deg. 3']))]
+
+table = queries_subset.groupby(['Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3'])[['running_time_ms', 'num_queue_pushs']].mean()
 table['num_queue_pushs'] = table['num_queue_pushs'] / 1000
 table = table.round(1)
-
-table = table.reindex(['Zero', 'ALT', 'CH', 'Oracle'], level=1)
-table = table.rename(index={
-    'Zero': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{Zero}}',
-    'ALT': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{ALT}}',
-    'CH': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{CH-\\Potentials}}}',
-    'Oracle': R'\multirow{2}{*}{Oracle}',
-})
-
-table = table.reset_index(level=0,drop=True).reset_index(level=[2,3])
+table = table.unstack(0).stack(0) \
+    .swaplevel(2, 3).swaplevel(1,2).swaplevel(0,1) \
+    .loc[['running_time_ms', 'num_queue_pushs']][['Zero', 'ALT', 'CH', 'Oracle']].reset_index(level=[2,3]) \
+    .rename(index={
+        'running_time_ms': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Running\\time [ms]}}}',
+        'num_queue_pushs': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Queue\\pushs [$\cdot 10^3$]}}}',
+    })
 
 lines = table.to_latex(escape=False).split("\n")
 
-lines = [R'\begin{tabular}{clllrr}'] + [lines[1]] + [
-    R" & & & & Running &     Queue \\",
-    R" Heur. & BCC & Deg2 & Deg3 & time [ms] & [$\cdot 10^3$] \\"
-# ] + lines[4:]
-] + [lines[4], lines[21]] + lines[6:9] + ["\\addlinespace"] + lines[9:13] + ["\\addlinespace"] + lines[13:17] + ["\\addlinespace"] + [lines[17], lines[20]] + lines[25:]
+lines = [R'\begin{tabular}{clllrrrr}'] + [lines[1]] + [
+    R"       & BCC & Deg2 & Deg3 & Zero & ALT & CH-Pot. & Oracle \\"
+] + lines[4:]
 
 output = "\n".join(lines) + "\n"
 output = output.replace('True', '\\cmark')
