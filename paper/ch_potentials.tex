@@ -89,7 +89,7 @@ One popular example are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
 They have been used successfully in many real world applications\todo{citation?}.
 A CH exploits the inherent hierarchy of road networks.
 In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network during query time.
-A further popular example is Multi-Level-Dijkstra~(MLD)~\todo{pre CRP zitat?} also known as CRP~\cite{dgpw-crprn-13}.
+A further popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
 It is also used in practice~\todo{citation, bing blog?}.
 MLD also also uses shortcut edges.
 Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
@@ -113,7 +113,7 @@ Supporting the combination of several features is even harder.
 For example, we are not aware of any work combining all features mentioned above.
 In this paper, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
 
-Our approach decouples extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{}.
+Our approach decouples extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
 A* is a goal-directed variant of Dijkstra's algorithm.
 See Figure~\ref{img:search-space} for an example of nodes traversed during an A* search.
 A* uses a \emph{heuristic} to guide the search towards the goal.
@@ -154,10 +154,10 @@ This enable user preferences and live traffic.
 MLD/CRP also supports turn costs.
 Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
 In~\cite{dsw-cch-15}, CH is extended to Customizable CH (CCH), which also supports exchanging weights and thus supporting user preferences and live traffic.
-CH is extended to support turn costs in~\cite{}, CCH in~\cite{bwzz-cchtc-20}.
+CH is extended to support turn costs in~\cite{gv-errnt-11}, CCH in~\cite{bwzz-cchtc-20}.
 Traffic predictions are combined with CH in~\cite{swz-sfert-20,bgsv-mtdtt-13}.
-\todo{cite correct CATCHUp Version}
 \todo{improve! and discuss hierarchical extensions and what they achieve and their difficulties in more details}
+\todo{cite traffic aware routing}
 Specialized variants for electric vehicle routing are developed in~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11}.
 While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
 Further, in every setting the flexibility available at query time is fairly limited.
@@ -165,10 +165,9 @@ Combining all these hierarchical extensions is an unsolved problem.
 %
 CH-Potentials is not the first work to combine hierarchical approaches and A*~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
 However, a lot of past works use A* to accelerate hierarchical approaches even further and loose A*'s flexibility.
-\todo{cite traffic aware routing}
 %
 
-ALT~\cite{gh-cspas-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with high conceptual similarity to CH-Potentials.
+ALT~\cite{gh-cspas-05,gw-cppsp-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with high conceptual similarity to CH-Potentials.
 Just as our approach, ALT is A*-based.
 % However, ALT's heuristic is not preprocessing-tight.
 %
@@ -651,7 +650,6 @@ The query weights $w_q$ are set to $\alpha \cdot w_\ell$, where $\alpha\ge 1$.
 % When $\alpha = 1$, the heuristic is tight.
 Increasing $\alpha$ degrades the heuristic's quality.
 Figure~\ref{fig:scaled_weights} depicts the results.
-\todo{decrease figure height}
 Clearly, $\alpha$ has significant influence on the running time.
 Average running times range from below a millisecond to a few hundred milliseconds depending on $\alpha$.
 Up to around $\alpha = 1.1$ the running time grows quickly.
@@ -678,12 +676,12 @@ We compare CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
 Second, we compare against our own implementation\footnote{
-We use 16 landmarks generate with the avoid strategy.
+We use 16 landmarks generate with the avoid~\cite{gw-cppsp-05} strategy.
 We store all landmark distances consecutive for each node.
 This increases cache efficiency when reading many distances for the same node.
 We do not disable some landmarks during the query, but use all landmarks all the time.
 Also, we do not employ bidirectional search because we want to evaluate and compare the building block CH-Potentials in its simplest and most flexible form.
-} of ALT~\cite{}.
+} of ALT~\cite{gw-cppsp-05}.
 Finally we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, that is it is the most efficient heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
