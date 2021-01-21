@@ -209,7 +209,7 @@ In the case of traffic predictions, $w_q$ is a function which maps the edge entr
 To enable quick shortest path computations, we consider a two phase setup with an additional off-line preprocessing phase before the on-line query phase.
 The input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$ and a node mapping function $\phi$.
 $w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
-We require that $w_q(uv)$ is greater or equal to the shortest distance from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
+We require that $w_q(u,v)$ is greater or equal to the shortest distance $\operatorname{dist}_\ell(\phi(u), \phi(v))$ from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
 The output of the preprocessing is auxiliary data that enables an efficient heuristic function $h_t(x)$.
 $h_t(x)$ is the exact distance from $\phi(x)$ to $\phi(t)$ in $G_\ell$.
 In the applications considered in this paper, $w_\ell$ is always the freeflow travel time.
@@ -218,6 +218,13 @@ The query phase uses this heuristic in an A* search between nodes $s$ and $t$ on
 The exact implementation of this A* search depend on the application.
 Our approach only provides the heuristic $h_t$ for the A* search.
 In contrast, the preprocessing phase remains the same for all applications.
+
+Our heuristic is always \emph{feasible}~\cite{hnr-afbhd-68}, i.e. $w_q(u,v) - h_t(u) + h_t(v)$ holds for all edges.
+By requirement and because of the triangle inequality the following holds:
+\[
+w_q(u,v) - h_t(u) + h_t(v) \geq \operatorname{dist}_\ell(\phi(u), \phi(v)) - \operatorname{dist}_\ell(\phi(u), \phi(t)) + \operatorname{dist}_\ell(\phi(v), \phi(t)) \geq 0
+\]
+Thus, A* will always determine the correct shortest distances.
 
 \subsection{Contraction Hierarchy (CH)}
 
@@ -464,13 +471,14 @@ It can thus be ignored during optimization.
 
 We solve this problem by constructing a \emph{turn-expanded} graph as $G_q$.
 Edges in the input graph $G_\ell$ correspond to \emph{expanded nodes} in $G_q$.
-For every pair of incident edges $(x,y)$ and $(y,z)$ in $G_\ell$, there is an \emph{expanded edge} in $G_q$ with expanded weight $w_t(x,y,z) + w_q(y,z)$.
+For every pair of incident edges $(x,y)$ and $(y,z)$ in $G_\ell$, there is an \emph{expanded edge} in $G_q$ with expanded weight $w_t(x,y,z) + w_\ell(y,z)$.
 A sequence of expanded nodes in the expanded graph $G_q$ corresponds to a sequence of edges in the input graph $G_\ell$.
 The weight of a path in $G_q$ is equal to the turn-aware weight of the corresponding path in $G_\ell$ minus the irrelevant $w_\ell(v_1,v_2)$ term.
 Thus, the turn-aware routing problem can be solved by searching for shortest paths in $G_q$.
 
 In this scenario, preprocessing and query use different graphs $G_\ell$ and $G_q$.
 We define the node mapping function $\phi$ as $\phi(x,y) = y$.
+Obviously, $w_q(xy, yz) = w_t(x,y,z) + w_\ell(y,z) \geq \operatorname{dist}_\ell(\phi(x,y), \phi(y,z))$ and this approach yields a feasible heuristic.
 Sadly, the undirected graph underlying $G_q$ is always biconnected, if the input graph is strongly connected.
 The optimization described in Section~\ref{sec:largested-biconnected-component} is therefore ineffective.
 With this setup, CH-Potentials support turns without requiring turn information in the CH.
