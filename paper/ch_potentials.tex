@@ -64,7 +64,6 @@ A* is a classical approach to accelerate Dijkstra's algorithm.
 A* can support many extended scenarios without much additional implementation complexity.
 However, A*'s performance depends on the availability of a good heuristic to estimate distances.
 Computing tight distance estimates is a challenge on its own.
-\todo{tight}
 On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
 They achieve speed and exactness but sacrifice A*'s flexibility and are not as extensible.
 In this paper, we present an algorithm to efficiently extract distance estimates for A* from Contraction Hierarchies (CH), a hierarchical technique.
@@ -146,8 +145,7 @@ There is a lot of work that extends hierarchical speed-up techniques to more com
 For example, in~\cite{gv-errnt-11} turn information is integrated into CH.
 The proposed approach achieves fast queries but preprocessing becomes an order of magnitude slower compared to classical CH.
 A considerable amount of research and engineering effort has been put into studying the combination of traffic predictions with CH.
-Several papers~\cite{} and an entire dissertation~\cite{} have been published on the subject.
-\todo{cite td stuff}
+Several papers~\cite{bdsv-tdch-09,bgns-tdcha-10,klsv-dtdch-10,bgsv-mtdtt-13} and an entire dissertation~\cite{b-tdrpc-14} have been published on the subject.
 Different techniques with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
 Recently, a new approach has been published~\cite{swz-sfert-20} which simultaneously achieves all three goals but only at the cost of considerable implementation complexity.
 %
@@ -155,8 +153,7 @@ CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant 
 For this, a faster, second preprocessing phase is introduced which can be run regularly to update weights.
 In theory, this enables the integration of live traffic and user preferences.
 In practice, live traffic feed data is imperfect.
-Computing ``good'' routes without undesired detours due to artifacts in the data requires additional algorithmic extensions~\cite{}.
-\todo{cite traffic aware routing}
+Computing ``good'' routes without undesired detours due to artifacts in the data requires additional algorithmic extensions~\cite{dss-tarrn-18}.
 CRP also supports turn costs.
 Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
 However, on continental sized networks, the proposed approach can only compute approximate shortest distances (rather than paths).
