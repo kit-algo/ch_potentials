@@ -87,10 +87,10 @@ Thus, speed-up techniques have been developed.
 One popular example are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
 They have been used successfully in many real world applications\todo{citation?}.
 A CH exploits the inherent hierarchy of road networks.
-In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network during query time.
-A further popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
-It is also used in practice~\todo{citation, bing blog?}.
-MLD also also uses shortcut edges.
+In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network at query time.
+Another popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
+It is also used in practice~\cite{bingblog}.
+MLD also uses shortcut edges.
 Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
 
 \begin{figure}
@@ -122,13 +122,13 @@ Further, evaluating the heuristic must be fast.
 % The free flow travel time to the goal is a valid heuristic for most features.
 % In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
 % However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
-In this paper, we describe CH-Potentials, a heuristic that achieves both goals.
+In this paper, we describe CH-Potentials, a heuristic that achieves both.
 Internally, the heuristic uses a CH.
 Fortunately, this is an implementation detail from the perspective of the A*.
 To support a new feature, we only need to modify the A* algorithm.
 The heuristic core containing the CH remains untouched.
 Extending A* is vastly easier than extending a CH.
-This enables us to design algorithms that support a multitude of features.
+This enables us to design algorithms for a multitude of features.
 In addition, we describe query optimizations for handling of low-degree nodes, common in road networks.
 These low degree optimizations are applicable to Dijkstra's algorithm and A*.
 
@@ -149,7 +149,7 @@ Several papers~\cite{bdsv-tdch-09,bgns-tdcha-10,klsv-dtdch-10,bgsv-mtdtt-13} and
 Different variants with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
 Recently, a new approach has been published~\cite{swz-sfert-20} which simultaneously achieves competitive results in all three aspects but only at the cost of considerable implementation complexity.
 %
-CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of Multi-Level Dijkstra~(MLD)~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
+CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of MLD~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
 For this, a faster, second preprocessing phase is introduced.
 It can be run regularly to update weights.
 In theory, this enables the integration of live traffic and user preferences.
@@ -223,7 +223,7 @@ The exact implementation of this A* search depend on the application.
 Our approach only provides the heuristic $h_t$ for the A* search.
 In contrast, the preprocessing phase remains the same for all applications.
 
-Our heuristic is always \emph{feasible}~\cite{hnr-afbhd-68}, i.e. $w_q(u,v) - h_t(u) + h_t(v)$ holds for all edges.
+Our heuristic is always \emph{feasible}~\cite{hnr-afbhd-68}, i.e. $w_q(u,v) - h_t(u) + h_t(v) \geq 0$ holds for all edges.
 By requirement and because of the triangle inequality the following holds:
 \[
 w_q(u,v) - h_t(u) + h_t(v) \geq \operatorname{dist}_\ell(\phi(u), \phi(v)) - \operatorname{dist}_\ell(\phi(u), \phi(t)) + \operatorname{dist}_\ell(\phi(v), \phi(t)) \geq 0
@@ -291,7 +291,7 @@ Pseudo-code for the backward search, i.e., the path from $m$ to $t$, is presente
 The forward search works analogously.
 %
 A CH query is fast, if the number of nodes reachable via only up- or down-nodes is small.
-On road networks, this is the case~\cite{gssv-erlrn-12,dgrw-gpnc-11,dgpw-crprn-13}.
+On road networks, this is the case~\cite{gssv-erlrn-12,dgpw-crprn-13}.
 On graphs with low treewidth, this is also the case~\cite{dsw-cch-15,hs-gbpo-18}.
 
 Using the CH query algorithm, we can already give a simple heuristic.
@@ -584,7 +584,7 @@ This straight-forward integration of complex routing problems is the strength of
 Supporting live traffic is also possible with a three-phase setup:
 A slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
 The customization phase is run regularly and incorporates updates to the weights into the auxiliary preprocessing data.
-CRP~\cite{dgpw-crprn-13} and Customizable CH~(CCH)~\cite{dsw-cch-15} follow this setup.
+CRP~\cite{dgpw-crprn-13} and CCH~\cite{dsw-cch-15} follow this setup.
 Luckily, a CCH is just a CH with some additional properties.
 The CH in CH-Potentials can be replaced by a CCH without further modifications.
 Thus, CCH-Potentials could also support a three-phase setup.
@@ -649,7 +649,7 @@ All other running times are indicated as outliers.
 
 The performance of A* depends on the tightness of the heuristic.
 CH-Potentials computes optimal distance estimates with respect to $w_\ell$.
-However, for most applications, there will be a gap between $w_q$ and $w_\ell$ (otherwise we could use an unmodified CH).
+However, for most applications, there will be a gap between $w_q$ and $w_\ell$ (otherwise one could use CH without A*).
 We evaluate the impact of the difference between $w_q$ and $w_\ell$ on the performance of A*.
 The lower bound $w_\ell$ is set to the freeflow travel time.
 The query weights $w_q$ are set to $\alpha \cdot w_\ell$, where $\alpha\ge 1$.
@@ -753,18 +753,17 @@ This results in smaller running times of our algorithm.
 
 In this paper, we introduced CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and CH for finding shortest paths in road networks.
 The approach can handle a multitude of complex, integrated routing scenarios with very little implementation complexity.
-The performance of CH-Potentials crucially depends on the availability of good lower bounds in the preprocessing phase.
+CH-Potentials provides \emph{exact} distances with respect to lower bound weights known at preprocessing time as an A* heuristic.
+Thus, the query performance of CH-Potentials crucially depends on the availability of good lower bounds in the preprocessing phase.
 Our experiments show, that this availability highly depends on the application.
-We experimentally show that the running time of our algorithm is within a factor 1.6 of a hypothetical A* variant that can instantly evaluate the preprocessing-tight heuristic.
-\todo{preprocessing tight}
+We also show that the overhead of our heuristic is within a factor 1.6 of a hypothetical A*-heuristic that can instantly access lower bound distances.
 Achieving significantly smaller running times could still be possible in variations of the problem setting.
-This leads to multiple avenues for future research.
+% This leads to multiple avenues for future research.
 
 Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
 Another promising research avenue would be to investigate other graphs than road networks.
 A lot of research into grid maps exists including a series of competitions called GPPC \cite{DBLP:conf/socs/SturtevantTTUKS15}.
 Hierarchical techniques have been shown to work on these graphs \cite{DBLP:conf/aaai/UrasK14}.
-\todo{der paragraph war eher so fuer die AAAI, oder?}
 
 %%
 %% Bibliography
