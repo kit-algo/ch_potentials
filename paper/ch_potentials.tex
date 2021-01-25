@@ -136,59 +136,58 @@ The rest of the paper is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
 CH-Potentials, our new distance estimation function is introduced in Section~\ref{sec:main-algo}.
 Section~\ref{sec:low-deg-improvment} discusses our improvements for the handling of low-degree nodes.
-In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply our technique to different practical applications.
+In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply the approach to different practical applications.
 Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
 
 \section{Related Work}\label{sec:related_work}
 
 There is a lot of work that extends hierarchical speed-up techniques to more complex settings~\cite{bdgmpsww-rptn-16}.
 For example, in~\cite{gv-errnt-11} turn information is integrated into CH.
-The proposed approach achieves fast queries but preprocessing becomes an order of magnitude slower compared to classical CH.
+% The proposed approach achieves fast queries but preprocessing becomes an order of magnitude slower compared to classical CH.
 A considerable amount of research and engineering effort has been put into studying the combination of traffic predictions with CH.
 Several papers~\cite{bdsv-tdch-09,bgns-tdcha-10,klsv-dtdch-10,bgsv-mtdtt-13} and an entire dissertation~\cite{b-tdrpc-14} have been published on the subject.
-Different techniques with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
-Recently, a new approach has been published~\cite{swz-sfert-20} which simultaneously achieves all three goals but only at the cost of considerable implementation complexity.
+Different variants with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
+Recently, a new approach has been published~\cite{swz-sfert-20} which simultaneously achieves competitive results in all three aspects but only at the cost of considerable implementation complexity.
 %
 CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of Multi-Level Dijkstra~(MLD)~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
-For this, a faster, second preprocessing phase is introduced which can be run regularly to update weights.
+For this, a faster, second preprocessing phase is introduced.
+It can be run regularly to update weights.
 In theory, this enables the integration of live traffic and user preferences.
 In practice, live traffic feed data is imperfect.
 Computing ``good'' routes without undesired detours due to artifacts in the data requires additional algorithmic extensions~\cite{dss-tarrn-18}.
 CRP also supports turn costs.
 Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
-However, on continental sized networks, the proposed approach can only compute approximate shortest distances (rather than paths).
+On continental sized networks, TD-CRP can only compute approximate shortest distances (rather than paths).
 %
 In~\cite{dsw-cch-15}, CH is extended to Customizable CH (CCH).
 CCH also has a second preprocessing phase where weights can be altered.
 Supporting turn costs in CCH was studied in~\cite{bwzz-cchtc-20}.
-Turn integration still causes a slowdown of at least factor three to the second preprocessing phase.
+% Turn integration still causes a slowdown of at least factor three to the second preprocessing phase.
 Other extensions studied include electric vehicle routing~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11} or multi-criteria optimization~\cite{fns-opca-14,gks-rpfof-10}.
 %
 While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
-Further, in every setting the flexibility available at query time is fairly limited.
+Further, in every extension the flexibility available at query time is fairly limited.
 Combining these hierarchical extensions is an unsolved problem.
 
 CH-Potentials is not the first work to combine hierarchical approaches and A*~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
-However, a lot of past works use A* to accelerate hierarchical approaches even further and loose A*'s flexibility.
-%
+However, previous works mostly focused on accelerating hierarchical approaches further rather than exploiting A*'s flexibility.
 
 ALT~\cite{gh-cspas-05,gw-cppsp-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with high conceptual similarity to CH-Potentials.
-Just as our approach, ALT is A*-based.
+% Just as our approach, ALT is A*-based.
+ALT has been combined with shortcuts~\cite{bdsssw-chgds-10} and also extended for dynamic graphs~\cite{dw-lbrdg-07} and time-dependent routing~\cite{ndls-bastd-12,dn-crdtd-12}.
 % However, ALT's heuristic is not preprocessing-tight.
 %
 CPD-Heuristics are a combination of A* and Compressed Path Databases (CPD).
 A CPD can quickly compute the first edge of a shortest path between any two nodes.
 In~\cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
 For every distance estimation, a shortest path to the target is computed, whose length is used as the heuristic value.
-Unfortunately, the employed CPD's quadratic preprocessing running time is prohibitive on large street networks.
+Unfortunately, the employed CPD's quadratic preprocessing running time is problematic on large street networks.
 %
-MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
+% MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
 %
-In~\cite{DBLP:conf/ijcai/0002UJAKK18} the weighted graph is embedded into Euclidean space using FastMap such that distances in space and distances in the graph roughly correspond.
-The Euclidean distance is then used as A* heuristic.
+In~\cite{DBLP:conf/ijcai/0002UJAKK18} the weighted graph is embedded into Euclidean space using FastMap. % such that distances in space and distances in the graph roughly correspond.
+The Euclidean distance is then used as a distance estimate for A*.
 % This results in a good but not a preprocessing-tight heuristic.
-%
-The handling of low degree nodes in our A* search is a variation of the techniques used in TopoCore~\cite{DBLP:conf/gis/DibbeltSW15}, which is inspired by~\cite{DBLP:journals/pvldb/FunkeNS14}.
 
 \section{Algorithm}\label{sec:main-algo}
 
@@ -380,6 +379,7 @@ A* with this heuristic is the basic CH-Potentials algorithm.
 Preliminary experiments showed, that a significant amount of query running time is spent in heuristic evaluations and queue operations.
 We can reduce both by keeping some nodes out of the queue, as the heuristic needs to be evaluated when a node is pushed into the queue.
 Avoiding pushing low degree nodes into the queue is the focus of this section.
+The techniques discussed here are a lazy variant of the ideas used in TopoCore~\cite{DBLP:conf/gis/DibbeltSW15}.
 
 We modify A* by processing low degree nodes consecutively without pushing them into the queue.
 Our algorithm uses the undirected degree $d(x)$ of a node $x$.
@@ -682,7 +682,7 @@ We compare CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
 Second, we compare against our own implementation\footnote{
-We use 16 landmarks generate with the avoid~\cite{gw-cppsp-05} strategy.
+We use 16 landmarks generate with the avoid strategy~\cite{gw-cppsp-05}.
 We store all landmark distances consecutive for each node.
 This increases cache efficiency when reading many distances for the same node.
 We do not disable some landmarks during the query, but use all landmarks all the time.
