@@ -58,14 +58,15 @@
 %% article.
 \begin{abstract}
 We study exact, efficient and practical algorithms for route planning in large road networks.
-Realistic routing often requires integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
-While Dijkstra's algorithm can be used to solve these problems, it is too slow for many practical applications.
+Routing applications often requires integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
+While Dijkstra's algorithm can be used to solve these problems, it is too slow for many applications.
 A* is a classical approach to accelerate Dijkstra's algorithm.
 A* can support many extended scenarios without much additional implementation complexity.
-However, A*'s performance depends on the availability of a good heuristic to estimate distances.
+However, A*'s performance depends on the availability of a good heuristic that estimates distances.
 Computing tight distance estimates is a challenge on its own.
 On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
-They achieve speed and exactness but sacrifice A*'s flexibility and are not as extensible.
+They achieve speed and exactness but sacrifice A*'s flexibility.
+Extending them to certain practical applications can be hard.
 In this paper, we present an algorithm to efficiently extract distance estimates for A* from Contraction Hierarchies (CH), a hierarchical technique.
 We call our heuristic CH-Potentials.
 Our approach allows decoupling the supported extensions from the hierarchical speed-up technique.
@@ -91,7 +92,7 @@ In a preprocessing step, additional shortcut edges are inserted, which allow ski
 Another popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
 It is also used in practice~\cite{bingblog}.
 MLD also uses shortcut edges.
-Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
+Both approaches achieve speed-ups of three orders of magnitude over Dijkstra's algorithm.
 
 \begin{figure}
 \centering
@@ -597,7 +598,8 @@ We focus on evaluating CH-Potentials as a simple building block in the two-phase
 Truck routing differs from car routing due to night driving bans and other restrictions.
 In~\cite{kswz-erptd-p-20}, a preliminary version of CH-Potentials\footnote{
 In~\cite{kswz-erptd-p-20}, CH-Potentials are used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
-The paper does not describe any of the contribution of this paper.
+Our submitted paper is the finished version of the ArXiv preprint.
+The submitted paper does not describe any of the contribution of \cite{kswz-erptd-p-20}.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
@@ -682,11 +684,12 @@ We compare CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
 Second, we compare against our own implementation\footnote{
-We use 16 landmarks generate with the avoid strategy~\cite{gw-cppsp-05}.
-We store all landmark distances consecutive for each node.
-This increases cache efficiency when reading many distances for the same node.
-We do not disable some landmarks during the query, but use all landmarks all the time.
-Also, we do not employ bidirectional search because we want to evaluate and compare the building block CH-Potentials in its simplest and most flexible form.
+We use 16 landmarks generate with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
+%We store all landmark distances consecutive for each node.
+%This increases cache efficiency when reading many distances for the same node.
+%We do not disable some landmarks during the query, but use all landmarks all the time.
+Our ALT implementation is uni-directional, as a bidirectional search creates problems for some settings, such as predicted traffic.
+%Also, we do not employ bidirectional search because we want to evaluate and compare the building block CH-Potentials in its simplest and most flexible form.
 } of ALT~\cite{gw-cppsp-05}.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is the most efficient heuristic possible in our model.
@@ -745,7 +748,7 @@ Further adding turn restrictions, increases the running times.
 This increase is mostly due to the BCC optimization of Section~\ref{sec:largested-biconnected-component} becoming ineffective when considering turns.
 It is not due to the length increase of using turns.
 With everything activated, our algorithm still has a speedup of 12.2 over the baseline.
-Interestingly, the PTV traffic predictions have a much smaller length increase that the Mapbox predictions.
+Interestingly, the PTV traffic predictions have a much smaller length increase than the Mapbox predictions.
 This results in smaller running times of our algorithm.
 
 \section{Conclusion}
