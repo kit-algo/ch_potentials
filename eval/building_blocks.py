@@ -16,9 +16,9 @@ queries = pd.DataFrame.from_records([{
     **algo }
     for run in data for exp in run.get('experiments', []) for algo in exp['algo_runs'] if algo.get('algo') in ['CH Potentials Query', 'Dijkstra Query']])
 
-queries['BCC'] = ~queries['features'].str.contains('CHPOT_NO_BCC')
-queries['Skip Deg. 2'] = ~queries['features'].str.contains('CHPOT_NO_DEG2')
-queries['Skip Deg. 3'] = ~queries['features'].str.contains('CHPOT_NO_DEG3')
+queries['BCC'] = (queries['algo'] == 'CH Potentials Query') & ~queries['features'].str.contains('CHPOT_NO_BCC')
+queries['Skip Deg. 2'] = (queries['algo'] == 'CH Potentials Query') & ~queries['features'].str.contains('CHPOT_NO_DEG2')
+queries['Skip Deg. 3'] = (queries['algo'] == 'CH Potentials Query') & ~queries['features'].str.contains('CHPOT_NO_DEG3')
 
 def heuristic_name(feature_flags):
     if 'CHPOT_ONLY_TOPO' in feature_flags:
