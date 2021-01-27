@@ -58,7 +58,7 @@
 %% article.
 \begin{abstract}
 We study exact, efficient and practical algorithms for route planning in large road networks.
-Routing applications often requires integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
+Routing applications often require integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many applications.
 A* is a classical approach to accelerate Dijkstra's algorithm.
 A* can support many extended scenarios without much additional implementation complexity.
@@ -92,6 +92,7 @@ In a preprocessing step, additional shortcut edges are inserted, which allow ski
 Another popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
 It is also used in practice~\cite{bingblog}.
 MLD also uses shortcut edges.
+% ich haette das at least eigentlich schon gerne drin. CH erreicht wesentlich mehr als 3 groessenordnungen
 Both approaches achieve speed-ups of three orders of magnitude over Dijkstra's algorithm.
 
 \begin{figure}
@@ -599,6 +600,11 @@ Truck routing differs from car routing due to night driving bans and other restr
 In~\cite{kswz-erptd-p-20}, a preliminary version of CH-Potentials\footnote{
 In~\cite{kswz-erptd-p-20}, CH-Potentials are used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
 Our submitted paper is the finished version of the ArXiv preprint.
+% der punkt macht fuer mich keinen Sinn.
+% Dass wir keine der Contributions von kswz-erptd-p-20 beschreiben ist ja offensichtlich, sieht ja jeder in dem Abschnitt.
+% Wichtiger finde ich, dass kswz-erptd-p-20 nix von uns beschreibt.
+% Das meinte ich zumindest mit dem Satz den du geloescht hast.
+% Aber der jetzt folgende Satz sagt nur, dass unser paper hier nix von kswz-erptd-p-20 beschreibt.
 The submitted paper does not describe any of the contribution of \cite{kswz-erptd-p-20}.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
@@ -684,12 +690,9 @@ We compare CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
 Second, we compare against our own implementation\footnote{
-We use 16 landmarks generate with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
-%We store all landmark distances consecutive for each node.
-%This increases cache efficiency when reading many distances for the same node.
-%We do not disable some landmarks during the query, but use all landmarks all the time.
-Our ALT implementation is uni-directional, as a bidirectional search creates problems for some settings, such as predicted traffic.
-%Also, we do not employ bidirectional search because we want to evaluate and compare the building block CH-Potentials in its simplest and most flexible form.
+We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
+Our ALT implementation is uni-directional.
+In this work, we do not consider bidirectional search as it creates problems for some settings, such as predicted traffic.
 } of ALT~\cite{gw-cppsp-05}.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is the most efficient heuristic possible in our model.
