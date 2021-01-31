@@ -104,7 +104,7 @@ Both approaches achieve speed-ups of at least three orders of magnitude over Dij
 
 Unfortunately, for many real world applications, this basic graph model is too simplistic.
 For realistic routing, many additional features need to be considered.
-This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions.%, temporary driving bans for certain types of vehicles.
+This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions. %, temporary driving bans for certain types of vehicles.
 Some applications may have additional application-specific requirements.
 Extending Dijkstra's algorithm to support these features is usually easy.
 Extending hierarchical speed-up techniques is also possible.
@@ -221,7 +221,7 @@ $h_t(x)$ is the exact distance from $\phi(x)$ to $\phi(t)$ in $G_\ell$.
 In the applications considered in this paper, $w_\ell$ is always the freeflow travel time.
 
 The query phase uses this heuristic in an A* search between nodes $s$ and $t$ on $G_q$ and $w_q$.
-The exact implementation of this A* search depend on the application.
+The exact implementation of this A* search depends on the application.
 Our approach only provides the heuristic $h_t$ for the A* search.
 In contrast, the preprocessing phase remains the same for all applications.
 
@@ -605,7 +605,7 @@ Our submitted paper is the finished version of the ArXiv preprint.
 % Wichtiger finde ich, dass kswz-erptd-p-20 nix von uns beschreibt.
 % Das meinte ich zumindest mit dem Satz den du geloescht hast.
 % Aber der jetzt folgende Satz sagt nur, dass unser paper hier nix von kswz-erptd-p-20 beschreibt.
-\cite{kswz-erptd-p-20} does not describe any of the contribution of this paper.
+\cite{kswz-erptd-p-20} does not describe any of the contributions of this paper.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
@@ -695,7 +695,7 @@ Our ALT implementation is uni-directional.
 In this work, we do not consider bidirectional search as it creates problems for some settings, such as predicted traffic.
 } of ALT~\cite{gw-cppsp-05}.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
-This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is the most efficient heuristic possible in our model.
+This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is faster than the fastest heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
 Thus, the reported running times of Oracle-A* do \emph{not} account for any heuristic evaluation.
 Comparing against Oracle-A* allows us to measure the overhead of the heuristic evaluation of CH-Potentials.
