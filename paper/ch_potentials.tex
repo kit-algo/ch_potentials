@@ -719,7 +719,7 @@ This means that no competing algorithm such as ALT or CPD-Heuristics can be sign
 \begin{table*}
 \centering
 \caption{
-CH and CH-Potentials performance for different route planning applications.
+CH-Potentials performance for different route planning applications.
 We report average running times and number of queue pushes.
 We also report the average length increase, that is how much longer the final shortest distance is compared to the lower bound.
 Finally, we report the average running time of Dijkstra's algorithm as a baseline and the speedup over this baseline.
@@ -727,14 +727,12 @@ Finally, we report the average running time of Dijkstra's algorithm as a baselin
 \input{table/applications.tex}
 \end{table*}
 
-Table~\ref{tab:applications} mainly depicts the running times and CH-Potentials in the various applications, such as those described in Section~\ref{sec:extensions}.
-For comparison, we also report CH running times.
-A basic CH can only handle the $w_q = w_\ell$ case.
-Speedups compared to extensions of Dijkstra's algorithm for the respective application are depicted.
+Table~\ref{tab:applications} depicts the running times of CH-Potentials in various applications, such as those described in Section~\ref{sec:extensions}.
+We report speedups compared to extensions of Dijkstra's algorithm for each application respectively.
 We start with the base case where $w_q = w_\ell$.
-This is the problem variant solved by the basic CH algorithm (a CH query takes 0.163\,ms on average on this graph).
-CH achieves query running times of 0.16\,ms on average.
-CH-Potentials are roughly four times slower but still achieve a huge speedup over Dijkstra of 3243.
+This is the problem variant solved by the basic CH algorithm.
+CH achieves average query running times of 0.16\,ms on OSM Ger.
+CH-Potentials are roughly four times slower but still achieve a huge speedup of 3243 over Dijkstra.
 Such large speedups are typical for CH.
 This shows that CH-Potentials gracefully converges toward a CH in the $w_q = w_\ell$ special case.
 
@@ -767,11 +765,11 @@ Our experiments show, that this availability highly depends on the application.
 We also show that the overhead of our heuristic is within a factor 1.6 of a hypothetical A*-heuristic that can instantly access lower bound distances.
 Achieving significantly faster running times could still be possible in variations of the problem setting.
 % This leads to multiple avenues for future research.
-%
-Dropping the provable exactness requirement using a setup similar to anytime A* \cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
-Another research avenue is investigating non-road graph types.
-Much grid map research exists with series of competitions called GPPC \cite{DBLP:conf/socs/SturtevantTTUKS15}.
-Hierarchical approaches work on these graphs \cite{DBLP:conf/aaai/UrasK14}.
+
+Dropping the provable exactness requirement using a setup similar to anytime A*~\cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
+Another promising research avenue would be to investigate graphs other than road networks.
+A lot of research into grid maps exists including a series of competitions called GPPC~\cite{DBLP:conf/socs/SturtevantTTUKS15}.
+Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:conf/aaai/UrasK14}.
 
 %%
 %% Bibliography
