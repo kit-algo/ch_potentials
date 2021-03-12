@@ -1,13 +1,13 @@
 %%
-%% This is file `lipics-v2019.cls'.
-%% 
+%% This is file `lipics-v2021.cls'.
+%%
 %% -----------------------------------------------------------------
 %% Author:     Dagstuhl Publishing & le-tex publishing services
-%% 
+%%
 %% This file is part of the lipics package for preparing
 %% LIPICS articles.
-%% 
-%% Copyright (C) 2018 Schloss Dagstuhl
+%%
+%% Copyright (C) 2020 Schloss Dagstuhl
 %%
 %% This work may be distributed and/or modified under the
 %% conditions of the LaTeX Project Public License, either version 1.3
@@ -18,13 +18,13 @@
 %% version 2005/12/01 or later.
 %%
 %% This work has the LPPL maintenance status `maintained'.
-%% 
-%% The Current Maintainer of this work is 
+%%
+%% The Current Maintainer of this work is
 %% Schloss Dagstuhl (publishing@dagstuhl.de).
 %% -----------------------------------------------------------------
-%% 
-\ProvidesClass{lipics-v2019}
-    [2019/07/19 v2.2 LIPIcs articles]
+%%
+\ProvidesClass{lipics-v2021}
+    [2021/02/25 v3.1.1 LIPIcs articles]
 \NeedsTeXFormat{LaTeX2e}[2015/01/01]
 \emergencystretch1em
 \advance\hoffset-1in
@@ -130,11 +130,12 @@
   \@xsect{#5}}
 \def\@seccntformat#1{\csname the#1\endcsname}
 \def\@biblabel#1{\textcolor{lipicsGray}{\sffamily\bfseries#1}}
+\def\EventLogoHeight{25}
 \def\copyrightline{%
   \ifx\@hideLIPIcs\@undefined
     \ifx\@EventLogo\@empty
     \else
-      \setbox\@tempboxa\hbox{\includegraphics[height=42\p@]{\@EventLogo}}%
+      \setbox\@tempboxa\hbox{\includegraphics[height=\EventLogoHeight\p@]{\@EventLogo}}%
       \rlap{\hspace\textwidth\hspace{-\wd\@tempboxa}\hspace{\z@}%
             \vtop to\z@{\vskip-0mm\unhbox\@tempboxa\vss}}%
     \fi
@@ -145,10 +146,10 @@
       \ifx\@EventLongTitle\@empty\else\@EventLongTitle.\\\fi
       \ifx\@EventEditors\@empty\else
         \@Eds: \@EventEditors
-        ; Article~No.\,\@ArticleNo; pp.\,\@ArticleNo:\thepage--\@ArticleNo:\pageref{LastPage}%
+        ; Article~No.\,\@ArticleNo; pp.\,\@ArticleNo:\thepage--\@ArticleNo:\number\numexpr\getpagerefnumber{TotPages}%
         \\
       \fi
-      \setbox\@tempboxa\hbox{\includegraphics[height=14\p@,trim=0 15 0 0]{lipics-logo-bw}}%
+      \setbox\@tempboxa\hbox{\IfFileExists{lipics-logo-bw.pdf}{\includegraphics[height=14\p@,trim=0 15 0 0]{lipics-logo-bw}}{\includegraphics[height=14\p@, width=62pt]{example-image-plain}}}%
       \hspace*{\wd\@tempboxa}\enskip
       \href{https://www.dagstuhl.de/lipics/}%
            {Leibniz International Proceedings in Informatics}\\
@@ -188,6 +189,10 @@
 \DeclareOption{anonymous}{\let\authoranonymous\relax}
 \DeclareOption{thm-restate}{\let\usethmrestate\relax}
 \DeclareOption{authorcolumns}{\let\authorcolumns\relax}
+\let\compactauthor\relax
+\DeclareOption{oldauthorstyle}{\let\compactauthor\@empty}
+\DeclareOption{compactauthor}{\let\compactauthor\relax}
+\DeclareOption{pdfa}{\let\pdfa\relax}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{article}}
 \ProcessOptions
 \LoadClass[twoside,notitlepage,fleqn]{article}
@@ -340,7 +345,7 @@
 	        \string\contitem
 	        \string\title{\@title}%
 	        \string\author{\@authorsfortoc}%
-	        \string\page{\@ArticleNo:\thepage--\@ArticleNo:\number\numexpr\getpagerefnumber{LastPage}}}%
+	        \string\page{\@ArticleNo:\thepage--\@ArticleNo:\number\numexpr\getpagerefnumber{TotPages}}}%
       \closeout\tocfile
     \egroup
   \par}
@@ -368,6 +373,10 @@
                                        {3.25ex \@plus1ex \@minus .2ex}%
                                        {-1em}%
                                       {\sffamily\normalsize\bfseries}}
+\newcommand{\proofsubparagraph}{\@startsection{subparagraph}{5}{\z@}%
+                                       {3.25ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                      {\color{lipicsGray}\sffamily\normalsize\bfseries}}
 \setlength\leftmargini  \parindent
 \setlength\leftmarginii {1.2em}
 \setlength\leftmarginiii{1.2em}
@@ -401,8 +410,9 @@
                {\ifnum\@listdepth=\@ne\global\@nobotseplisttrue\fi\endlist}
 \renewcommand*\descriptionlabel[1]{%
   \hspace\labelsep\textcolor{lipicsGray}{\sffamily\bfseries\mathversion{bold}#1}}
+\def\topmattervskip{0.7}
 \renewenvironment{abstract}{%
-  \vskip0.7\bigskipamount
+  \vskip\topmattervskip\bigskipamount
   \noindent
   \rlap{\color{lipicsLineGray}\vrule\@width\textwidth\@height1\p@}%
   \hspace*{7mm}\fboxsep1.5mm\colorbox[rgb]{1,1,1}{\raisebox{-0.4ex}{%
@@ -410,14 +420,14 @@
   \vskip3\p@
   \fontsize{9}{12}\selectfont
   \noindent\ignorespaces}
-  {\vskip0.7\baselineskip\noindent
+  {\vskip\topmattervskip\baselineskip\noindent
    \subjclassHeading
    \ifx\@ccsdescString\@empty
      \textcolor{red}{Author: Please fill in 1 or more \string\ccsdesc\space macro}%
    \else
      \@ccsdescString
    \fi
-   \vskip0.7\baselineskip
+   \vskip\topmattervskip\baselineskip
    \noindent\keywordsHeading
    \ifx\@keywords\@empty
      \textcolor{red}{Author: Please fill in \string\keywords\space macro}%
@@ -426,30 +436,32 @@
    \fi
    \ifx\@hideLIPIcs\@undefined
      \ifx\@DOIPrefix\@empty\else
-       \vskip0.7\baselineskip\noindent
-       \doiHeading\href{https://doi.org/\@DOIPrefix.\@EventAcronym.\@EventYear.\@ArticleNo}{\@DOIPrefix.\@EventAcronym.\@EventYear.\@ArticleNo}%
+       \vskip\topmattervskip\baselineskip\noindent
+       \doiHeading\href{https://doi.org/\@lipicsdoi}{\@lipicsdoi}%
      \fi
    \fi
    \ifx\@category\@empty\else
-     \vskip0.7\baselineskip\noindent
+     \vskip\topmattervskip\baselineskip\noindent
      \categoryHeading\@category
    \fi
    \ifx\@relatedversion\@empty\else
-     \vskip0.7\baselineskip\noindent
-     \relatedversionHeading\@relatedversion
+     \vskip\topmattervskip\baselineskip\noindent
+     \relatedversionHeading\ifx\authoranonymous\relax\textcolor{red}{Anonymous related version(s)}\else\@relatedversion\fi
    \fi
    \ifx\@supplement\@empty\else
-     \vskip0.7\baselineskip\noindent
-     \supplementHeading\@supplement
+     \vskip\topmattervskip\baselineskip\noindent
+     \supplementHeading\ifx\authoranonymous\relax\textcolor{red}{Anonymous supplemenatary material}\else\@supplement\fi
    \fi
    \ifx\@funding\@empty\else
-     \vskip0.7\baselineskip\noindent
+     \vskip\topmattervskip\baselineskip\noindent
      \fundingHeading\ifx\authoranonymous\relax\textcolor{red}{Anonymous funding}\else\@funding\fi
    \fi
    \ifx\@acknowledgements\@empty\else
-     \vskip0.7\baselineskip\noindent
+     \vskip\topmattervskip\baselineskip\noindent
      \acknowledgementsHeading\ifx\authoranonymous\relax\textcolor{red}{Anonymous acknowledgements} \else\@acknowledgements\fi
-   \fi}
+   \fi
+	\protected@write\@auxout{}{\string\gdef\string\@pageNumberEndAbstract{\thepage}}%
+	}% end abstract
 \renewenvironment{thebibliography}[1]
   {\if@noskipsec \leavevmode \fi
    \par
@@ -479,10 +491,12 @@
    \clubpenalty4000
    \@clubpenalty \clubpenalty
    \widowpenalty4000%
-   \sfcode`\.\@m}
+   \sfcode`\.\@m\protected@write\@auxout{}{\string\gdef\string\@pageNumberStartBibliography{\thepage}}}
   {\def\@noitemerr
      {\@latex@warning{Empty `thebibliography' environment}}%
+   \protected@write\@auxout{}{\string\gdef\string\@pageNumberEndBibliography{\thepage}}%
    \endlist}
+\g@addto@macro\appendix{\immediate\write\@auxout{\string\gdef\string\@pageNumberStartAppendix{\thepage}}}%
 \renewcommand\footnoterule{%
   \kern-8\p@
   {\color{lipicsBulletGray}\hrule\@width40mm\@height1\p@}%
@@ -493,7 +507,26 @@
     \hb@xt@1em{\@makefnmark\hss}#1}
 \usepackage{microtype}
 \usepackage[utf8]{inputenc}
+\IfFileExists{glyphtounicode.tex}{
+\input glyphtounicode
+\pdfgentounicode=1
+}{}%
 \IfFileExists{lmodern.sty}{\RequirePackage{lmodern}}{}
+\IfFileExists{fontawesome5.sty}{%
+\RequirePackage{fontawesome5}%
+\IfFileExists{orcid.pdf}{%
+\def\orcidsymbol{\includegraphics[height=9\p@]{orcid}}
+}{
+\def\orcidsymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries \faOrcid}}%
+}
+\def\mailsymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries \faIcon[regular]{envelope}}}%
+\def\homesymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries \faHome}}%
+}{%
+\ClassWarning{Package fontawesome5 not installed}{Please install package fontawesome5}
+\def\orcidsymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries ORCID}}
+\def\mailsymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries @}}%
+\def\homesymbol{\textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries H}}%
+}%
 \RequirePackage[T1]{fontenc}
 \RequirePackage{textcomp}
 \RequirePackage[mathscr]{eucal}
@@ -522,7 +555,7 @@
 \RequirePackage{babel}
 \RequirePackage[tbtags,fleqn]{amsmath}
 \AtBeginDocument{
-	\@ifpackageloaded{enumitem}{\ClassWarning{Package 'enuitem' incompatible}{Don't use package 'enumitem'; Package enumerate preloaded!}}{}
+	\@ifpackageloaded{enumitem}{\ClassWarning{Package 'enumitem' incompatible}{Don't use package 'enumitem'; Package enumerate preloaded!}}{}
 	\@ifpackageloaded{paralist}{\ClassWarning{Package 'paralist' incompatible}{Don't use package 'paralist'; Package enumerate preloaded!}}{}
 }
 \RequirePackage{enumerate}
@@ -576,32 +609,101 @@
   \patchBothAmsMathEnvironmentsForLineno{alignat}%
   \patchBothAmsMathEnvironmentsForLineno{gather}%
   \patchBothAmsMathEnvironmentsForLineno{multline}}
-\RequirePackage{lastpage}
-\RequirePackage{hyperref}
-\AtBeginDocument{
-	\pdfstringdefDisableCommands{% 
-		\let\thanks\@gobble
-		\let\footnote\@gobble
-		\def\footnotemark{}
-		\def\cs#1{\textbackslash #1}% 
-		\let\normalfont\@empty
-		\let\scshape\@empty
-		\def\and{and }%
-		\def\,{ }
-	}
-	\hypersetup{
-		breaklinks=true,
-		pdfborder={0 0 0},
-		pdftitle={\@title},
-		pdfauthor={\ifx\authoranonymous\relax Anonymous author(s) \else \@authorsforpdf \fi},
-		pdfkeywords={\@keywords},
-		pdfcreator={LaTeX with lipics-v2019.cls and hyperref.sty},
-		%TODO Find way to move information to correct fields in pdf metadata
-		pdfsubject={LIPIcs, Vol.\@SeriesVolume, \@EventShortTitle; Copyright (C) \ifx\authoranonymous\relax Anonymous author(s) \else \@copyrightholder; \fi licensed under Creative Commons License CC-BY}
-		%pdflicenseurl={https://creativecommons.org/licenses/by/3.0/},
-		%pdfcopyright={Copyright (C), \@copyrightholder; licensed under Creative Commons License CC-BY},
-	}
+\let\usehyperxmp\@empty%
+\ifx\pdfa\relax%
+  \IfFileExists{hyperxmp.sty}{%
+    \RequirePackage{hyperxmp}%
+    \@ifpackagelater{hyperxmp}{2019/04/05}{%
+      \let\usehyperxmp\relax%
+    }{%
+      \ClassWarning{Package hyperxmp outdated}{You are using an outdated version of the package hyperxmp. Please update!}%
+    }}{}%
+\fi%
+\IfFileExists{totpages.sty}{
+  \RequirePackage{totpages}
+}{
+	\ClassWarning{Package totpages not installed}{Please install package totpages}
+	\newcounter{TotPages}
+	\setcounter{TotPages}{99}
 }
+\ifx\usehyperxmp\relax%
+  \RequirePackage[pdfa,unicode]{hyperref}%
+\else%
+  \RequirePackage[unicode]{hyperref}%
+\fi%
+\let\C\relax%
+\let\G\relax%
+\let\F\relax%
+\let\U\relax%
+\pdfstringdefDisableCommands{%
+	\let\thanks\@gobble%
+	\let\footnote\@gobble%
+	\def\footnotemark{}%
+	\def\cs#1{\textbackslash #1}%
+	\let\normalfont\@empty%
+	\let\scshape\@empty%
+	\def\and{and }%
+	\def\,{ }%
+	\def\textrightarrow{ -> }%
+	\let\mathsf\@empty%
+}%
+\hypersetup{
+	breaklinks=true,
+	pdfencoding=unicode,
+	bookmarksnumbered,
+	pdfborder={0 0 0},
+	pdfauthor={ }
+}%
+\AtBeginDocument{
+\ifx\usehyperxmp\relax
+\hypersetup{
+pdftitle={\@title},
+pdfauthor={\ifx\authoranonymous\relax Anonymous author(s) \else \@authorsforpdf \fi},
+pdfkeywords={\@keywords},
+pdfproducer={LaTeX with lipics-v2021.cls},
+pdfsubject={LIPIcs, Vol.\@SeriesVolume, \@EventShortTitle},
+pdfcopyright = { Copyright (C) \ifx\authoranonymous\relax Anonymous author(s) \else \@copyrightholder; \fi licensed under Creative Commons License CC-BY 4.0},
+pdflang={en},
+pdfmetalang={en},
+pdfpublisher={Schloss Dagstuhl -- Leibniz-Zentrum für Informatik, Dagstuhl Publishing, Germany},
+pdflicenseurl={https://creativecommons.org/licenses/by/4.0/},
+pdfpubtype={LIPIcs},
+pdfvolumenum={\@SeriesVolume},
+pdfpagerange={\@ArticleNo:\thepage-\@ArticleNo:\theTotPages},
+pdfdoi={\@lipicsdoi},
+pdfapart=3,
+pdfaconformance=B
+}
+\else%
+\hypersetup{
+pdftitle={\@title},
+pdfauthor={\ifx\authoranonymous\relax Anonymous author(s) \else \@authorsforpdf \fi},
+pdfkeywords={\@keywords},
+pdfcreator={LaTeX with lipics-v2021.cls},
+pdfsubject={LIPIcs, Vol.\@SeriesVolume, \@EventShortTitle; Copyright (C) \ifx\authoranonymous\relax Anonymous author(s) \else \@copyrightholder; \fi licensed under Creative Commons License CC-BY 4.0}
+}%
+\fi	%
+}
+\ifx\usehyperxmp\relax
+\pdfobjcompresslevel=0
+\pdfinclusioncopyfonts=1
+\IfFileExists{colorprofiles.tex}{
+\RequirePackage{colorprofiles}%
+\IfFileExists{sRGB.icc}{
+\immediate\pdfobj stream attr{/N 3} file{sRGB.icc}
+\pdfcatalog{%
+/OutputIntents [
+<<
+/Type /OutputIntent
+/S /GTS_PDFA1
+/DestOutputProfile \the\pdflastobj\space 0 R
+/OutputConditionIdentifier (sRGB)
+/Info (sRGB)
+>>
+]
+}}{}
+}{\ClassWarning{Package colorprofiles not installed}{Please install package colorprofiles}}
+\fi
 \RequirePackage[labelsep=space,singlelinecheck=false,%
   font={up,small},labelfont={sf,bf},%
   listof=false]{caption}%"listof" instead of "list" for backward compatibility
@@ -646,23 +748,27 @@
 \ArticleNo{}
 \def\DOIPrefix#1{\gdef\@DOIPrefix{#1}}
 \DOIPrefix{10.4230/LIPIcs}
+\def\@lipicsdoi{\@DOIPrefix.\@EventAcronym.\@EventYear.\@ArticleNo}
 \def\and{\newline}
 \let\orig@author\@author
 \let\@authorsfortoc\@empty
 \let\@authorsforpdf\@empty
 \newcount\c@author
 \newcounter{currentauthor}
+\def\authorcolumnsMin{6}
 \def\@authornum{0}
 \def\author#1#2#3#4#5{%
   \ifx\@author\orig@author\let\@author\@empty\fi
   \g@addto@macro\@author{%
+	\noexpandarg\StrBehind{#2}{\and \url}[\homepageTemp]\IfSubStr{#2}{\and \url}{\StrBefore{#2}{\and \url}[\affiliation]}{\def\affiliation{#2}}%
+	\expandarg\exploregroups\StrRemoveBraces{\homepageTemp}[\homepage]%
 	\ifx\authorcolumns\relax
-		\ifnum\c@author>6
+		\ifnum\c@author>\authorcolumnsMin
 			\stepcounter{currentauthor}
 			\ifodd\value{currentauthor}
 				\begin{minipage}[t]{\textwidth}
 				\begin{minipage}[t]{0.49\textwidth}
-			\else	
+			\else
 				\hfill \begin{minipage}[t]{0.49\textwidth}
 			\fi
 		\else
@@ -679,8 +785,10 @@
        \ifx\authoranonymous\relax
 			\textcolor{red}{Anonymous author}
 		\else
-			#1%
-			\if!#4!\else{\space\href{#4}{\includegraphics[height=9\p@]{orcid}}}\fi
+			#1\,%
+			\ifx\compactauthor\relax\if!#3!\else{\,\href{mailto:#3}{\mailsymbol}}\fi%
+			\ifx\homepage\@empty\else{\,\href{\homepage}{\homesymbol}}\fi\fi%
+			\if!#4!\else{\,\href{#4}{\orcidsymbol}}\fi%
 			\if!#5!\else
 				\ifx\@funding\@empty
 					\expandafter\g@addto@macro\expandafter\@funding{\textit{\expandafter{\let\footnote\@gobble #1}}:\space{#5}}
@@ -692,19 +800,19 @@
      \fi
      }
 	{\small
-    \if!#2!\textcolor{red}{Author: Please enter affiliation as second parameter of the author macro}\else{\\* \ifx\authoranonymous\relax\textcolor{red}{Anonymous affiliation}\else#2\fi}\fi
-    \if!#3!\else{\ifx\authoranonymous\relax\else\\*\href{mailto:#3}{#3}\fi}\fi
+    \if!#2!\textcolor{red}{Author: Please enter affiliation as second parameter of the author macro}\else{\\* \ifx\authoranonymous\relax\textcolor{red}{Anonymous affiliation}\else\ifx\compactauthor\relax \affiliation \else#2\fi\fi}\fi
+    \ifx\compactauthor\relax\else\if!#3!\else{\ifx\authoranonymous\relax\else\\*\href{mailto:#3}{#3}\fi}\fi\fi
 	}\par
 	\ifx\authorcolumns\relax
-		\ifnum\c@author>6
+		\ifnum\c@author>\authorcolumnsMin
 			\end{minipage}
-			\ifnum\c@author=\value{currentauthor} 
+			\ifnum\c@author=\value{currentauthor}
 				\end{minipage}
 			\else
 				\ifodd\value{currentauthor}
-				\else	
+				\else
 					\end{minipage}%
-					\medskip 
+					\medskip
 				\fi
 			\fi
 		\fi
@@ -715,7 +823,7 @@
     \gdef\@authorsfortoc{#1}%
     \gdef\@authorsforpdf{#1}
   \else
-    \expandafter\g@addto@macro\expandafter\@authorsforpdf\expandafter{,\space #1}
+    \expandafter\g@addto@macro\expandafter\@authorsforpdf\expandafter{, #1}
     \expandafter\g@addto@macro\expandafter\@authorsfortoc\expandafter{\expandafter\csname\the\c@author authand\endcsname#1}%
     \@namedef{\the\c@author authand}{,\space}%
     \AtBeginDocument{%
@@ -732,18 +840,19 @@
 \newcommand*\Copyright[1]{%
   \def\@copyrightholder{#1}
   \def\@Copyright{%
-    \setbox\@tempboxa\hbox{\includegraphics[height=14\p@,clip]{cc-by}}%
+    \setbox\@tempboxa\hbox{\IfFileExists{cc-by.pdf}{\includegraphics[height=14\p@,clip]{cc-by}}{\includegraphics[height=14\p@, width=40pt]{example-image-plain}}}%
     \@rightskip\@flushglue \rightskip\@rightskip
     \hangindent\dimexpr\wd\@tempboxa+0.5em\relax
-    \href{https://creativecommons.org/licenses/by/3.0/}%
+    \href{https://creativecommons.org/licenses/by/4.0/}%
          {\smash{\lower\baselineskip\hbox{\unhcopy\@tempboxa}}}\enskip
     \textcopyright\ %
     \ifx!#1!\textcolor{red}{Author: Please fill in the \string\Copyright\space macro}\else\ifx\authoranonymous\relax\textcolor{red}{Anonymous author(s)}\else#1\fi\fi
     ;\\%
-    licensed under Creative Commons License CC-BY\ifx!#1!\\\null\fi\par}}
+    licensed under Creative Commons License CC-BY 4.0\ifx!#1!\\\null\fi\par}}
 \Copyright{\textcolor{red}{Author: Please provide a copyright holder}}
 \let\@copyrightholder\@empty
 \def\hideLIPIcs{\let\@hideLIPIcs\relax}
+\usepackage{xstring}
 \def\keywords#1{\def\@keywords{#1}}
 \let\@keywords\@empty
 \def\keywordsHeading{%
@@ -753,7 +862,6 @@
 \excludecomment{CCSXML}
 % inspired by https://tex.stackexchange.com/questions/12810/how-do-i-split-a-string
 \global\newcommand\ccsdesc[2][100]{\@ccsdesc#1~#2~~\relax}
-\usepackage{xstring}
 \let\orig@ccsdesc\@ccsdesc
 \let\@ccsdesc\@empty
 \let\@ccsdescString\@empty
@@ -793,14 +901,84 @@
                        Category\enskip}}
 \def\relatedversion#1{\def\@relatedversion{#1}}
 \let\@relatedversion\@empty
+\define@key{relatedversiondetails}{linktext}{\def\relatedversiondetails@linktext{#1}}
+\define@key{relatedversiondetails}{cite}{\def\relatedversiondetails@cite{#1}}
+\newcommand*\addtorelatedversionmacro[2]{%
+		\ifx\@relatedversion\@empty%
+				\g@addto@macro\@relatedversion{#1}%
+			\else%
+				\g@addto@macro\@relatedversion{\\#1}%
+			\fi%
+}%
+\newcommand{\relatedversiondetails}[3][]{%
+	\begingroup%
+	\let\relatedversiondetails@linktext\@empty
+	\let\relatedversiondetails@cite\@empty
+	\setkeys{relatedversiondetails}{#1}%
+	\ifx\relatedversiondetails@linktext\@empty%
+		\protected@edef\tmp{\textit{#2}:\space{\url{#3}}}%
+	\else%
+		\protected@edef\tmp{\textit{#2}:\space{\href{#3}{\texttt{\relatedversiondetails@linktext}}}}%
+	\fi%
+	\ifx\relatedversiondetails@cite\@empty%
+	\else%
+		\protected@edef\tmp{\tmp\space\cite{\relatedversiondetails@cite}}%
+	\fi%
+	\expandafter\addtorelatedversionmacro\expandafter{\tmp}{#1}%
+	\endgroup%
+}%
 \def\relatedversionHeading{%
   \textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries
                        Related Version\enskip}}
 \def\supplement#1{\def\@supplement{#1}}
-\let\@supplement\@empty
+\let\@supplement\@empty 
+\define@key{supplementdetails}{linktext}{\def\supplementdetails@linktext{#1}}
+\define@key{supplementdetails}{cite}{\def\supplementdetails@cite{#1}}
+\define@key{supplementdetails}{subcategory}{\def\supplementdetails@subcategory{#1}}
+\define@key{supplementdetails}{swhid}{\def\supplementdetails@swhid{#1}}
+\newcommand*\addtosupplementmacro[2]{%
+		\ifx\@supplement\@empty%
+				\g@addto@macro\@supplement{#1}%
+			\else%
+				\g@addto@macro\@supplement{\\#1}%
+			\fi%
+}%
+\newcommand{\supplementdetails}[3][]{%
+	\begingroup%
+	\let\supplementdetails@linktext\@empty
+	\let\supplementdetails@cite\@empty
+	\let\supplementdetails@subcategory\@empty
+	\let\supplementdetails@swhid\@empty
+	\setkeys{supplementdetails}{#1}%
+	\ifx\supplementdetails@subcategory\@empty%
+		\protected@edef\tmp{\textit{#2}}
+	\else
+		\protected@edef\tmp{\textit{#2\,\,(\supplementdetails@subcategory)}}%
+	\fi
+	\ifx\supplementdetails@linktext\@empty%
+		\protected@edef\tmp{\tmp:\space{\url{#3}}}%
+	\else%
+		\protected@edef\tmp{\tmp:\space{\href{#3}{\texttt{\supplementdetails@linktext}}}}%
+	\fi%
+	\ifx\supplementdetails@cite\@empty%
+	\else%
+		\protected@edef\tmp{\tmp\space\cite{\supplementdetails@cite}}%
+	\fi
+	\ifx\supplementdetails@swhid\@empty%
+	\else%
+		\protected@edef\tmp{\tmp \\ \hspace*{1.2em} archived at \href{https://archive.softwareheritage.org/\supplementdetails@swhid}{\texttt{\supplementdetails@swhid}}}%
+	\fi%
+	\expandafter\addtosupplementmacro\expandafter{\tmp}{#1}%
+	\endgroup%
+}%
 \def\supplementHeading{%
   \textcolor{lipicsGray}{\fontsize{9}{12}\sffamily\bfseries
-                       Supplement Material\enskip}}
+                       Supplementary Material\enskip}}
+\newcommand\flag[2][0.9cm]{%
+    \leavevmode\marginpar{%
+        \raisebox{\dimexpr-\totalheight+\ht\strutbox\relax}%
+        [\dimexpr\ht\strutbox+3mm][\dp\strutbox]{\expandafter\includegraphics[width=#1]{#2}}%
+}}
 \def\funding#1{\def\@funding{#1}}
 \let\@funding\@empty
 \def\fundingHeading{%
@@ -836,6 +1014,9 @@
 }{%
   \popQED\endtrivlist%\@endpefalse
 }
+\newcommand{\claimqedhere}{\renewcommand\qedsymbol{\textcolor{lipicsGray}{\ensuremath{\vartriangleleft}}}%
+\qedhere%
+\renewcommand\qedsymbol{\textcolor{lipicsGray}{\ensuremath{\blacktriangleleft}}}}
 \newenvironment{claimproof}[1][\proofname]{
   \pushQED{\qed}%
   \normalfont \topsep6\p@\@plus6\p@\relax
@@ -855,18 +1036,34 @@
 }
 \AtBeginDocument{
 	\@ifpackageloaded{algorithm2e}{
-		\renewcommand{\algorithmcfname}{\sffamily\bfseries{}Algorithm}
-		\SetAlgoCaptionSeparator{~}
-		\SetAlCapHSkip{0pt}
-		\renewcommand{\algocf@captiontext}[2]{%
-		    \kern0.05em{\color{lipicsYellow}\rule{0.73em}{0.73em}}%
-		\hspace*{0.67em}\small #1\algocf@capseparator\nobreakspace#2}
-		\renewcommand{\algocf@makecaption}[2]{%
-		    \parbox[t]{\textwidth}{\algocf@captiontext{#1}{#2}}%
-		}%
-		\renewcommand{\@algocf@capt@boxed}{above}
-		\renewcommand{\@algocf@capt@ruled}{above}
-		\setlength\algotitleheightrule{0pt}
+		\@ifpackagelater{algorithm2e}{2009/11/17}{
+			\renewcommand{\algorithmcfname}{\sffamily\bfseries{}Algorithm}%
+			\renewcommand{\@algocf@procname}{\sffamily\bfseries{}Procedure}%
+			\SetAlgoCaptionSeparator{~}
+			\SetAlCapHSkip{0pt}
+			\renewcommand{\algocf@captiontext}[2]{%
+			    \kern0.05em{\color{lipicsYellow}\rule{0.73em}{0.73em}}%
+			\hspace*{0.67em}\small #1\algocf@capseparator\nobreakspace#2}
+			\renewcommand{\algocf@makecaption}[2]{%
+			    \parbox[t]{\textwidth}{\algocf@captiontext{#1}{#2}}%
+			}%
+			\renewcommand{\algocf@captionproctext}[2]{%
+		{%
+		\kern0.05em{\color{lipicsYellow}\rule{0.73em}{0.73em}}%
+		\hspace*{0.67em}\small%
+\ProcSty{\ProcFnt\algocf@procname\ifthenelse{\boolean{algocf@procnumbered}}{\nobreakspace\thealgocf\algocf@typo\algocf@capseparator}{\relax}}%
+    \nobreakspace\ProcNameSty{\ProcNameFnt\algocf@captname #2@}% Name of the procedure in ProcName Style. 
+    \ifthenelse{\equal{\algocf@captparam #2@}{\arg@e}}{}{% if no argument, write nothing
+      \ProcNameSty{\ProcNameFnt(}\ProcArgSty{\ProcArgFnt\algocf@captparam #2@}\ProcNameSty{\ProcNameFnt)}%else put arguments in ProcArgSty:
+    }% endif
+    \algocf@captother #2@%
+  }%
+}%
+			\renewcommand{\@algocf@capt@boxed}{above}
+			\renewcommand{\@algocf@capt@ruled}{above}
+			\setlength\algotitleheightrule{0pt}
+		}{\ClassWarning{%
+	  Package algorithm2e outdated}{You are using an outdated version of the package algorithm2e. Please update!}}
 	}{}
 	\@ifpackageloaded{algorithm}{
 		\captionsetup[algorithm]{name=Algorithm, labelformat=boxed, position=top}
@@ -875,7 +1072,9 @@
 		\def\@fs@post{\kern2pt\hrule\relax}%
 		\def\@fs@mid{\kern2pt\hrule\kern2pt}%
 		\let\@fs@iftopcapt\iftrue}
-		\renewcommand\fst@algorithm{\fs@ruled@notop}
+		\@ifundefined{fst@algorithm}{}{
+			\renewcommand\fst@algorithm{\fs@ruled@notop}
+		}
 	}{}
 	\ifx\usecleveref\relax\else
 		\@ifpackageloaded{cleveref}{\ClassWarning{Use document option 'cleveref' instead}{Use document option 'cleveref' instead directly loading package 'cleveref'}}{}
@@ -892,6 +1091,8 @@
 	\RequirePackage[capitalise, noabbrev]{cleveref}
 	\crefname{algocf}{Algorithm}{Algorithms}
 	\Crefname{algocf}{Algorithm}{Algorithms}
+	\newcommand{\crefrangeconjunction}{--}
+	\newcommand{\creflastconjunction}{, and\nobreakspace}
 \fi
 \ifx\useautoref\relax
 	\RequirePackage{aliascnt}
@@ -913,7 +1114,7 @@
 		\def\subsectionautorefname{Subsection}%
 		\def\subsubsectionautorefname{Subsubsection}%
 		\def\paragraphautorefname{Paragraph}%
-		\def\subparagraphautorefname{Subparagraph}% 
+		\def\subparagraphautorefname{Subparagraph}%
 	}
 	\addto\extrasUKenglish{%
 		\def\chapterautorefname{Chapter}%
@@ -921,7 +1122,7 @@
 		\def\subsectionautorefname{Subsection}%
 		\def\subsubsectionautorefname{Subsubsection}%
 		\def\paragraphautorefname{Paragraph}%
-		\def\subparagraphautorefname{Subparagraph}% 
+		\def\subparagraphautorefname{Subparagraph}%
 	}
 	\addto\extrasUSenglish{%
 		\def\chapterautorefname{Chapter}%
@@ -929,7 +1130,7 @@
 		\def\subsectionautorefname{Subsection}%
 		\def\subsubsectionautorefname{Subsubsection}%
 		\def\paragraphautorefname{Paragraph}%
-		\def\subparagraphautorefname{Subparagraph}% 
+		\def\subparagraphautorefname{Subparagraph}%
 	}
 	\ifx\usethmrestate\relax
 		\newtheorem{lemma}[theorem]{Lemma}
@@ -937,6 +1138,8 @@
 		\newtheorem{proposition}[theorem]{Proposition}
 		\newtheorem{exercise}[theorem]{Exercise}
 		\newtheorem{definition}[theorem]{Definition}
+		\newtheorem{conjecture}[theorem]{Conjecture}
+		\newtheorem{observation}[theorem]{Observation}
 		\theoremstyle{definition}
 		\newtheorem{example}[theorem]{Example}
 		\theoremstyle{remark}
@@ -968,6 +1171,14 @@
 		\newtheorem{definition}[definition]{Definition}
 		\aliascntresetthe{definition}
 		\newcommand{\definitionautorefname}{Definition}
+		\newaliascnt{conjecture}{theorem}
+		\newtheorem{conjecture}[conjecture]{Conjecture}
+		\aliascntresetthe{conjecture}
+		\newcommand{\conjectureautorefname}{Conjecture}
+		\newaliascnt{observation}{theorem}
+		\newtheorem{observation}[observation]{Observation}
+		\aliascntresetthe{observation}
+		\newcommand{\observationautorefname}{Observation}
 		\theoremstyle{definition}
 		\newaliascnt{example}{theorem}
 		\newtheorem{example}[example]{Example}
@@ -997,6 +1208,8 @@
 	\newtheorem{proposition}[theorem]{Proposition}
 	\newtheorem{exercise}[theorem]{Exercise}
 	\newtheorem{definition}[theorem]{Definition}
+	\newtheorem{conjecture}[theorem]{Conjecture}
+	\newtheorem{observation}[theorem]{Observation}
 	\theoremstyle{definition}
 	\newtheorem{example}[theorem]{Example}
 	\theoremstyle{remark}
@@ -1011,4 +1224,4 @@
 \theoremstyle{plain}
 \endinput
 %%
-%% End of file `lipics-v2019.cls'.
+%% End of file `lipics-v2021.cls'.

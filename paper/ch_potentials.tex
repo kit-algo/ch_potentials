@@ -1,4 +1,4 @@
-\documentclass[a4paper,USenglish,cleveref, autoref, thm-restate]{lipics-v2019}
+\documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate]{lipics-v2021}
 
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -6,20 +6,6 @@
 \usepackage{pifont}
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
-
-
-% \setcounter{secnumdepth}{2} %May be changed to 1 or 2 if section numbers are desired.
-
-
-
-%This is a template for producing LIPIcs articles.
-%See lipics-manual.pdf for further information.
-%for A4 paper format use option "a4paper", for US-letter use option "letterpaper"
-%for british hyphenation rules use option "UKenglish", for american hyphenation rules use option "USenglish"
-%for section-numbered lemmas etc., use "numberwithinsect"
-%for enabling cleveref support, use "cleveref"
-%for enabling cleveref support, use "autoref"
-
 
 \usepackage{todonotes}
 \usepackage{booktabs}
@@ -41,21 +27,24 @@
 
 \keywords{route planning, shortest paths, realistic road networks}
 
+%Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\EventEditors{David Coudert and Emanuele Natale}
+\EventNoEds{2}
+\EventLongTitle{19th International Symposium on Experimental Algorithms (SEA 2021)}
+\EventShortTitle{SEA 2021}
+\EventAcronym{SEA}
+\EventYear{2021}
+\EventDate{June 7--9, 2021}
+\EventLocation{Nice, France}
+\EventLogo{}
+\SeriesVolume{190}
+\ArticleNo{6}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{document}
 
 \maketitle
 
-%%
-%% By default, the full list of authors will be used in the page
-%% headers. Often, this list is too long, and will overlap
-%% other information printed in the page headers. This command allows
-%% the author to define a more concise list
-%% of authors' names for this purpose.
-% \renewcommand{\shortauthors}{Strasser and Zeitz}
-
-%%
-%% The abstract is a short summary of the work to be presented in the
-%% article.
 \begin{abstract}
 We study exact, efficient and practical algorithms for route planning in large road networks.
 Routing applications often require integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
@@ -92,7 +81,6 @@ In a preprocessing step, additional shortcut edges are inserted, which allow ski
 Another popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
 It is also used in practice~\cite{bingblog}.
 MLD also uses shortcut edges.
-% ich haette das at least eigentlich schon gerne drin. CH erreicht wesentlich mehr als 3 groessenordnungen
 Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
 
 \begin{figure}
@@ -779,5 +767,5 @@ Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:
 
 \pagebreak
 
-\bibliography{dblp,references}
+\bibliography{references}
 \end{document}
