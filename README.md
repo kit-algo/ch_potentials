@@ -1,6 +1,13 @@
 # CH-Potentials
 
-This repository contains the source code for the CH-Potentials algorithm implementation, experimental evaluation and paper.
+This repository contains the source code for the CH-Potentials algorithm implementation and experimental evaluation of the SEA2021 paper "A Fast and Tight Heuristic for A* in Road Networks".
+Everything is tied together using `rake`.
+The default `rake` tasks builds the paper.
+This step also uses the output of the experiments to rebuild figures used in the paper.
+The algorithmic code can be found in the `code` directory where several projects are included as submodules.
+The main CH-Potentials code actually lives in https://github.com/kit-algo/rust_road_router .
+For reproducibility, this repository references the exact version used to perform the experiments for the paper.
+However, if you want to read the code you should probably just use the current master branch as the repository has been restructured, cleaned up and documented since then.
 
 ### Requirements
 
