@@ -686,7 +686,8 @@ Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is faster than the fastest heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
 Thus, the reported running times of Oracle-A* do \emph{not} account for any heuristic evaluation.
-Comparing against Oracle-A* allows us to measure the overhead of the heuristic evaluation of CH-Potentials.
+CH-Potentials compute the same distance estimates but the heuristic evaluation has some overhead.
+Comparing against Oracle-A* allows us to measure this overhead.
 Also, no other heuristic, which only has access to the preprocessing weights, can be faster than Oracle-A*.
 
 We observe that the number of queue pushes roughly correlates with running time.
