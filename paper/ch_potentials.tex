@@ -612,16 +612,17 @@ In this section, we present our experimental evaluation.
 Our benchmark machine runs openSUSE Leap 15.1 (kernel 4.12.14), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
 All experiments were performed sequentially.
 Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile with the target-cpu=native option.
+The source code of our implementation and the experimental evaluation can be found on Github\footnote{\url{https://github.com/kit-algo/ch_potentials}}.
 
 \subparagraph{Inputs and Methodology}
-Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{download.geofabrik.de/europe/germany-200101.osm.pbf}}.
-To obtain the routing graph, we use the import from RoutingKit\footnote{\url{www.github.com/RoutingKit/RoutingKit}}.
+Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{https://download.geofabrik.de/europe/germany-200101.osm.pbf}}.
+To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
-For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{www.mapbox.com}}.
+For this instance, we have proprietary traffic data provided by Mapbox\footnote{\url{https://mapbox.com}}.
 The data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
-Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{www.ptvgroup.com}}.
+Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
 The PTV instances are not OSM-based.
 One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
 Table~\ref{tab:graphs} contains an overview over our instances.
@@ -677,11 +678,10 @@ Table~\ref{tab:building_blocks} depicts the performance of A* with different heu
 We compare CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
-Second, we compare against our own implementation\footnote{
+Second, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
 We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
 Our ALT implementation is uni-directional.
 In this work, we do not consider bidirectional search as it creates problems for some settings, such as predicted traffic.
-} of ALT~\cite{gw-cppsp-05}.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is faster than the fastest heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
