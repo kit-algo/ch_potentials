@@ -10,7 +10,9 @@ sed -i 's/bibliography{references}/input{ch_potentials.bbl}/' ch_potentials.tex
 
 zip arxiv.zip \
 ch_potentials.tex \
-lipics-v2019.cls \
-ch_potentials.bbl
+ch_potentials.bbl \
+lipics-v2021.cls \
+fig/* \
+table/*
 
 git checkout ch_potentials.tex
