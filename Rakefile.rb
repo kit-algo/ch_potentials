@@ -145,13 +145,14 @@ end
 
 namespace "exp" do
   desc "Run all experiments"
-  task all: [:preprocessing, :scaled_weights, :building_blocks, :applications]
+  task all: [:preprocessing, :scaled_weights, :building_blocks, :bidir_features, :applications]
 
   task queries: [:scaled_weights, :building_blocks, :applications]
 
   directory "#{exp_dir}/preprocessing"
   directory "#{exp_dir}/scaled_weights"
   directory "#{exp_dir}/building_blocks"
+  directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
 
   task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing"] + graphs.map { |g| g + 'lower_bound' } do
@@ -199,6 +200,17 @@ namespace "exp" do
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      end
+    end
+  end
+
+  task bidir_features: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/bidir_features"] do
+    Dir.chdir "code/rust_road_router/engine" do
+      static_graphs.each do |graph|
+        sh "cargo run --release --bin chpot_bidir -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_bidir --features 'chpot-alt' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_bidir --features 'chpot-oracle' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_bidir --features 'chpot-only-topo' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
       end
     end
   end
