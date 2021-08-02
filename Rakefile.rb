@@ -75,7 +75,7 @@ typical_file = "#{data_dir}/mapbox/typical-tuesday-cleaned.csv"
 
 namespace "prep" do
   file typical_file do
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       sh "cat #{typical_glob} | cargo run --release --bin scrub_td_mapbox -- 576 864 > #{typical_file}"
     end
   end
@@ -105,7 +105,7 @@ namespace "prep" do
     ['first_out', 'head', 'travel_time', 'geo_distance', 'osm_node_ids', 'arc_category', 'forbidden_turn_from_arc', 'forbidden_turn_to_arc', 'latitude', 'longitude', 'tail'].each do |file|
       sh "ln -s #{osm_ger}/#{file} #{osm_ger_td}/#{file}"
     end
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       sh "cargo run --release --bin import_td_mapbox -- #{osm_ger_td} #{typical_file}"
     end
   end
@@ -136,7 +136,7 @@ namespace "prep" do
 
   td_graphs.each do |graph|
     file graph + "lower_bound" => graph do
-      Dir.chdir "code/rust_road_router/engine" do
+      Dir.chdir "code/rust_road_router" do
         sh "cargo run --release --bin td_lower_bound -- #{graph}"
       end
     end
@@ -170,7 +170,7 @@ namespace "exp" do
   end
 
   task scaled_weights: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/scaled_weights"] do
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
         sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_weight_scaling -- #{graph} > #{exp_dir}/scaled_weights/$(date --iso-8601=seconds).json"
       end
@@ -178,7 +178,7 @@ namespace "exp" do
   end
 
   task building_blocks: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/building_blocks"] do
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-oracle' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
@@ -205,7 +205,7 @@ namespace "exp" do
   end
 
   task bidir_features: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/bidir_features"] do
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin chpot_bidir -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_bidir --features 'chpot-alt' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
@@ -216,7 +216,7 @@ namespace "exp" do
   end
 
   task applications: graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/applications"] do
-    Dir.chdir "code/rust_road_router/engine" do
+    Dir.chdir "code/rust_road_router" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
