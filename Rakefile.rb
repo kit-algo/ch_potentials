@@ -208,7 +208,7 @@ namespace "exp" do
   task rphast: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/rphast"] do
     Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
-        sh "cargo run --release --bin lazy_rphast -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin lazy_rphast -- #{graph} > #{exp_dir}/rphast/$(date --iso-8601=seconds).json"
       end
     end
   end
