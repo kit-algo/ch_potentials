@@ -6,6 +6,8 @@ only_public = !ENV['ONLY_PUBLIC'].nil?
 file "paper/ch_potentials.pdf" => [
   "paper/ch_potentials.tex",
   "paper/fig/scaled_weights.pdf",
+  "paper/fig/lazy_rphast_many_to_one.pdf",
+  "paper/fig/lazy_rphast_many_to_many.pdf",
   "paper/table/applications.tex",
   "paper/table/graphs.tex",
   "paper/table/building_blocks.tex"] do
@@ -20,6 +22,14 @@ task default: "paper/ch_potentials.pdf"
 namespace "fig" do
   file "paper/fig/scaled_weights.pdf" => FileList["#{exp_dir}/scaled_weights/*.json"] + ["eval/scaled_weights.py"] do
     sh "eval/scaled_weights.py"
+  end
+
+  file "paper/fig/lazy_rphast_many_to_one.pdf" => FileList["#{exp_dir}/rphast/*.json"] + ["eval/rphast_comparison.py"] do
+    sh "eval/rphast_comparison.py"
+  end
+
+  file "paper/fig/lazy_rphast_many_to_many.pdf" => FileList["#{exp_dir}/rphast/*.json"] + ["eval/rphast_comparison.py"] do
+    sh "eval/rphast_comparison.py"
   end
 end
 
