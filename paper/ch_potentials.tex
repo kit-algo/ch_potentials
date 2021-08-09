@@ -180,46 +180,36 @@ In~\cite{DBLP:conf/ijcai/0002UJAKK18} the weighted graph is embedded into Euclid
 The Euclidean distance is then used as a distance estimate for A*.
 % This results in a good but not a preprocessing-tight heuristic.
 
-\section{Algorithm}\label{sec:main-algo}
+\section{Preliminaries}\label{sec:preliminaries}
 
-In this section, we first discuss the framework in which CH-Potentials can be used.
-Then, we describe the building blocks of CH-Potentials: Contraction Hierarchies and PHAST, a CH extension.
-Finally, we introduce the CH-Potentials heuristic.
+We consider directed graphs $G=(V,E)$ with $n=|V|$ nodes and $m=|E|$ edges with weight functions $w : E \to \mathbb{R}$.
+Given nodes $s$ and $t$ we want to obtain the path $P=(s=v_0,\dots,t=v_k)$ of minimal weight $w(P) := \sum_{i} w(v_{i-1}v_i)$.
+We denote this shortest path weight as the distance $\operatorname{dist}_w(s,t)$ between $s$ and $t$.
 
-\subsection{Formal Setup: Inputs, Outputs, and Phases}
+\subsection{Dijkstra's Algorithm}
 
-In this paper, we consider different applications, with slightly different problem models.
-The goal is always to quickly answer many shortest path queries.
-For the purpose of describing our framework, we establish a shared notation:
-Input to each query are nodes $s$ and $t$, and a graph $G_q$ with query weights $w_q$.
-However, the precise formal inputs of the query and what exactly $w_q$ represents depends on the application.
-In the simplest case, $w_q$ will be scalar edge weights.
-However, this is not a requirement.
-It can be any function that computes a weight for an edge.
-This function can also take additional parameters from the state of the search.
-For example, in the case of live-traffic, $w_q$ represents scalar edge weights.
-However, values of $w_q$ might change between queries.
-In the case of traffic predictions, $w_q$ is a function which maps the edge entry time to the traversal time and the query takes an additional departure time parameter.
+Dijkstra's algorithm can be used to solve this point to point shortest path problem.
+It maintains an array of tentative distances $d$ and a priority queue of nodes ordered by increasing distance from $s$.
+Initially, all distances are set to $\infty$.
+The start node distance $d[s]$ is set to zero and the queue initialized with $s$.
+Then, in each iteration, the closest remaining node $u$ is popped from the queue and \emph{settled}.
+Outgoing edges $uv$ are relaxed, i.e. $d[v] = \min(d[v], d[u] + w(uv))$.
+If the distance at the head node $v$ was improved it will be inserted into the queue or the queue position will be updated if $v$ was already in the queue.
+Once $t$ was settled, $d[t]$ contains the distance between $s$ and $t$.
 
-To enable quick shortest path computations, we consider a two phase setup with an additional off-line preprocessing phase before the on-line query phase.
-The input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$ and a node mapping function $\phi$.
-$w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
-We require that $w_q(u,v)$ is greater or equal to the shortest distance $\operatorname{dist}_\ell(\phi(u), \phi(v))$ from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
-The output of the preprocessing is auxiliary data that enables an efficient heuristic function $h_t(x)$.
-$h_t(x)$ is the exact distance from $\phi(x)$ to $\phi(t)$ in $G_\ell$.
-In the applications considered in this paper, $w_\ell$ is always the freeflow travel time.
+\subsection{A*}
 
-The query phase uses this heuristic in an A* search between nodes $s$ and $t$ on $G_q$ and $w_q$.
-The exact implementation of this A* search depends on the application.
-Our approach only provides the heuristic $h_t$ for the A* search.
-In contrast, the preprocessing phase remains the same for all applications.
+A* is a goal-directed variant of Dijkstra's algorithm.
+% A* uses a \emph{heuristic} to guide the search towards the goal.
+It uses a heuristic function $h_t(v)$ that maps a node $v$ onto an estimate of the distance from $v$ to the target.
+The priority queue is then ordered by $d[v] + h_t(v)$.
+Thus, nodes closer to the target a explored earlier.
+See Figure~\ref{img:search-space} for an example of nodes traversed during an A* search.
+A*'s running time crucially depends on how tight this estimate is.
 
-Our heuristic is always \emph{feasible}~\cite{hnr-afbhd-68}, i.e. $w_q(u,v) - h_t(u) + h_t(v) \geq 0$ holds for all edges.
-By requirement and because of the triangle inequality the following holds:
-\[
-w_q(u,v) - h_t(u) + h_t(v) \geq \operatorname{dist}_\ell(\phi(u), \phi(v)) - \operatorname{dist}_\ell(\phi(u), \phi(t)) + \operatorname{dist}_\ell(\phi(v), \phi(t)) \geq 0
-\]
-Thus, A* will always determine the correct shortest distances.
+A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights} $w_{h_t}$.
+This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
+A heuristic function is \emph{feasible} iff $w_{h_t} \geq 0$.
 
 \subsection{Contraction Hierarchy (CH)}
 
@@ -272,7 +262,7 @@ This is done by repeatedly contracting unimportant nodes and adding shortcuts be
 %See~\cite{gssv-erlrn-12} for the details.
 After the preprocessing, for every pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path in $G^+$ with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for a proof sketch.
-From every shortest path (red) in $G$, an up-down path of equal length in $G+$ (blue) exists.
+From every shortest path (red) in $G$, an up-down path of equal length in $G^+$ (blue) exists.
 Thus, we can restrict our search to up-down paths in $G^+$.
 The search is bidirectional.
 The forward search starts from $s$ and only follows up-edges.
@@ -285,14 +275,18 @@ A CH query is fast, if the number of nodes reachable via only up- or down-nodes 
 On road networks, this is the case~\cite{gssv-erlrn-12,dgpw-crprn-13}.
 On graphs with low treewidth, this is also the case~\cite{dsw-cch-15,hs-gbpo-18}.
 
-Using the CH query algorithm, we can already give a simple heuristic.
-The heuristic evaluation $h_t(x)$ performs a CH-query from $x$ to $t$.
-This yields tight estimates but a high overhead for the heuristic evaluation.
-While a single CH query is fast, answering one for every node explored in the $A^*$ search is slow.
-Fortunately, we can do better.
+% Using the CH query algorithm, we can already give a simple heuristic.
+% The heuristic evaluation $h_t(x)$ performs a CH-query from $x$ to $t$.
+% This yields tight estimates but a high overhead for the heuristic evaluation.
+% While a single CH query is fast, answering one for every node explored in the $A^*$ search is slow.
+% Fortunately, we can do better.
 % For this we need another component called PHAST~\cite{dgnw-phast-13}.
 
-\subsection{PHAST based Heuristic}
+\subsection{Customizable Contraction Hierarchy (CCH)}
+
+% need elimination tree
+
+\subsection{PHAST}
 
 \begin{algorithm2e}
 \KwData{$P[x]$: tentative distance from $x$ to $t$}
@@ -308,8 +302,8 @@ Execute Algorithm~\ref{algo:ch-backward}\;
 \label{algo:phast}
 \end{algorithm2e}
 
-PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node.
-The preprocessing phase remains unchanged.
+PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node (or vice versa, the one-to-all case works analogously).
+The preprocessing phase remains the same as for CH.
 The query phase is split into two steps.
 The first step is analogue to the CH query:
 From $t$, all reachable nodes via reversed down-edges are explored.
@@ -317,22 +311,48 @@ Algorithm~\ref{algo:ch-backward} shows this first step.
 The second step iterates over all CH levels from top to bottom.
 In each iteration, all up-edges starting within the current level are followed in reverse.
 After all levels are processed, the shortest distances from all nodes to $t$ were computed.
-%PHAST is slightly faster than Dijkstra's algorithm on road graphs because it is a better fit for modern processor architectures.
-%PHAST's main advantage is that can easily be parallelized.
-%However, we will not consider parallelization in this paper.
-%We refer to~\cite{dgnw-phast-13} for an in-depth experimental performance analysis.
 Pseudo-code is provided in Algorithm~\ref{algo:phast}.
-Using PHAST, we can also compute a tight A* heuristic.
-In the query phase, we first run PHAST to compute the distances from every node to $t$ with respect to $w_\ell$ and store the result in an array $H$.
-Next, we run $A^*$ and implement the heuristic as a lookup in the array $H$.
+PHAST is faster than Dijkstra's algorithm on road graphs because it is a better fit for modern processor architectures.
+It can also easily be parallelized.
+% However, we will not consider parallelization in this paper.
+We refer to~\cite{dgnw-phast-13} for an in-depth experimental performance analysis.
+% Using PHAST, we can also compute a tight A* heuristic.
+% In the query phase, we first run PHAST to compute the distances from every node to $t$ with respect to $w_\ell$ and store the result in an array $H$.
+% Next, we run $A^*$ and implement the heuristic as a lookup in the array $H$.
 
 % This PHAST-based algorithm works.
-The $H$ lookup and by extension the $A^*$ search is indeed fast.
-However, the PHAST step before the search is comparatively expensive.
-The reason is that the distances towards $t$ are computed for \emph{all} nodes.
-Ideally, we only want to compute the distances from the nodes explored in the $A^*$ search.
+% The $H$ lookup and by extension the $A^*$ search is indeed fast.
+% However, the PHAST step before the search is comparatively expensive.
+% The reason is that the distances towards $t$ are computed for \emph{all} nodes.
+% Ideally, we only want to compute the distances from the nodes explored in the $A^*$ search.
 
-\subsection{CH-Potentials}
+\subsection{RPHAST}
+
+RPHAST, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source nodes to one target node.
+Given a set of source nodes $S$ and a target node $t$, the first step is to copy all up-edges reachable only through up-edges from the source nodes into a new graph.
+This step is called \emph{selection}.
+Then, the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the new restricted subgraph.
+RPHAST is particularly effective when many targets are queried for the same source set $S$.
+If the source set changes often, selection times may become problematic.
+
+\section{The Incremental Many-to-One Problem}\label{sec:lazy-rphast}
+
+% TODO not so great intro directly after PHAST/RPHAST
+Route planning algorithms typically focus on the point-to-point shortest path problem.
+However, certain applications need distances between sets $S$ and $T$ of nodes.
+This is variant is known as the \emph{many-to-many} problem variant.
+In some cases on of the sets is a single node.
+This is then called a \emph{one-to-many} or \emph{many-to-one} problem.
+In this section, we study (discuss) a very specific setting arises naturally from A* heuristics.
+We denote this problem as the \emph{incremental many-to-one} problem.
+The first step is the \emph{target selection} where the target node is provided.
+Then, an arbitrary number of source nodes $s_i$ are given one after another and for each source the distance to the target has to be computed.
+
+We consider the combined running time of the target selection and each incremental query as the running time to answer such an incremental many-to-one query.
+Since the target selection time is included, computing the distances to all nodes with Dijkstra or PHAST is too slow.
+Fortunately, we can do better.
+
+\subsection{Lazy RPHAST}
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
@@ -352,18 +372,19 @@ Ideally, we only want to compute the distances from the nodes explored in the $A
 \label{algo:pot}
 \end{algorithm2e}
 
-Fortunately, the PHAST computation can be done lazily using memoization as depicted in Algorithm~\ref{algo:pot}.
-In a first step, we run the backward CH search from $t$ to obtain an array $B$.
+The core idea of our algorithm is to do the PHAST computation lazily and using memoization as depicted in Algorithm~\ref{algo:pot}.
+In the target selection, we first run the backward CH search from $t$ to obtain an array $B$.
 $B[x]$ is the minimum down $xt$-path distance or $+\infty$, if there is no such path.
 $B$ is computed as shown in Algorithm~\ref{algo:ch-backward}.
 
-To compute the heuristic $h_t(x)$, we recursively compute for all up-edges $(x,y)$ the heuristic $h_t(y)$.
-Next, we compute the minimum distance over all up-down paths that contain at least one up-edge using $d = \min_y\{w_\ell(x,y) + h_t(y)\}$.
-As not all shortest up-down paths contain an up-edge, we set $h_t(x) = \min \{ B[x], d \}$.
-This calculation is correct, as it computes the minimum up-down $xt$-path distance in $G^+_\ell$, which corresponds to the minimum $xt$-path distance in a CH.
-A* with this heuristic is the basic CH-Potentials algorithm.
+To compute the distance from a source $s_i$, we recursively compute for all up-edges $(s_i,x)$ the distance $D[x]$.
+Next, we compute the minimum distance over all up-down paths that contain at least one up-edge using $d = \min_x\{w_\ell(s_i,x) + D[x]\}$.
+As not all shortest up-down paths contain an up-edge, we set $D[s_i] = \min \{ B[s_i], d \}$.
+This calculation is correct, as it computes the minimum up-down $s_it$-path distance in $G^+_\ell$, which corresponds to the minimum $s_it$-path distance in a CH.
+% TODO consistent uv vs u,v
+% A* with this heuristic is the basic CH-Potentials algorithm.
 
-\subsection{CCH-Potentials}
+\subsection{Lazy RPHAST on CCH}
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
@@ -421,9 +442,77 @@ Once the buckets have been computed, we can compute distances to all targets onc
 The only difference is that $D[x]$ is now an array of distances to each $t_i$.
 We evaluate this algorithm in Section~\ref{}.
 
-\section{Low Degree A* Improvements}
+\section{A* with CH-Potentials}\label{sec:main-algo}
 
-\label{sec:low-deg-improvment}
+In this section, we first discuss the framework in which CH-Potentials can be used.
+Then, we describe the building blocks of CH-Potentials: Contraction Hierarchies and PHAST, a CH extension.
+Finally, we introduce the CH-Potentials heuristic.
+
+\subsection{Formal Setup: Inputs, Outputs, and Phases}
+
+In this paper, we consider different applications, with slightly different problem models.
+The goal is always to quickly answer many shortest path queries.
+For the purpose of describing our framework, we establish a shared notation:
+Input to each query are nodes $s$ and $t$, and a graph $G_q$ with query weights $w_q$.
+However, the precise formal inputs of the query and what exactly $w_q$ represents depends on the application.
+In the simplest case, $w_q$ will be scalar edge weights.
+However, this is not a requirement.
+It can be any function that computes a weight for an edge.
+This function can also take additional parameters from the state of the search.
+For example, in the case of live-traffic, $w_q$ represents scalar edge weights.
+However, values of $w_q$ might change between queries.
+In the case of traffic predictions, $w_q$ is a function which maps the edge entry time to the traversal time and the query takes an additional departure time parameter.
+
+To enable quick shortest path computations, we consider a two phase setup with an additional off-line preprocessing phase before the on-line query phase.
+The input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$ and a node mapping function $\phi$.
+$w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
+We require that $w_q(u,v)$ is greater or equal to the shortest distance $\operatorname{dist}_\ell(\phi(u), \phi(v))$ from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
+The output of the preprocessing is auxiliary data that enables an efficient heuristic function $h_t(x)$.
+$h_t(x)$ is the exact distance from $\phi(x)$ to $\phi(t)$ in $G_\ell$.
+In the applications considered in this paper, $w_\ell$ is always the freeflow travel time.
+
+The query phase uses this heuristic in an A* search between nodes $s$ and $t$ on $G_q$ and $w_q$.
+The exact implementation of this A* search depends on the application.
+Our approach only provides the heuristic $h_t$ for the A* search.
+In contrast, the preprocessing phase remains the same for all applications.
+
+Our heuristic is always \emph{feasible}~\cite{hnr-afbhd-68}, i.e. $w_q(u,v) - h_t(u) + h_t(v) \geq 0$ holds for all edges.
+By requirement and because of the triangle inequality the following holds:
+\[
+w_q(u,v) - h_t(u) + h_t(v) \geq \operatorname{dist}_\ell(\phi(u), \phi(v)) - \operatorname{dist}_\ell(\phi(u), \phi(t)) + \operatorname{dist}_\ell(\phi(v), \phi(t)) \geq 0
+\]
+Thus, A* will always determine the correct shortest distances.
+
+\subsection{CH-Potentials Heuristic}
+
+CH-Pot is A* with Lazy RPHAST Pot.
+Given $s$ and $t$ upward search from $t$
+Then compute $h_t(x)$ for with ComputeAndMemoizeDist
+
+\subsection{Bidirectional A*}
+
+Bidir A* not as straightforward which one might expect.
+As pointed out in~\cite{gh-cspas-05}, one can not simply use a forward potential $h_t$ for the forward search and a backward potential $h_s$ for the reverse search.
+Since these searches would operate on different reduced graphs, it is unclear when the searches can terminate.
+To the best of our knowledge, no better stopping criterion exists than running both searches until the minimum queue key $k$ becomes greater than the best known total tentative distance $\mu$.
+That is the same stopping crit as for a unidir search..
+symmetric
+Thus, the symmetric bidirectional algorithm performs double the work than a simple unidir search.
+can be slightly improved through pruning $\overrightarrow{D[x]} + h_t(x) > \mu$.
+Still not competitive
+
+average potential - reduced graph with average of reduced edge weights
+but average pot in each dir worse than orig pot for dir
+also overhead
+
+we propose an improved pruning crit, one which takes the search progress into account (through the min queue keys), which makes the simpler symmetric approach competitive or even faster than the average pot
+If $x$ was not yet settled by reverse search with minimum queue key $\overleftarrow{k}$ then
+$\operatorname{dist}(x,t) \geq \overleftarrow{k} - h_s(x)$.
+Thus, if $\overrightarrow{D[x]} + \overleftarrow{k} - h_s(x) > \mu$ we can discard $x$.
+
+% direction switch strats!
+
+\subsection{Low Degree A* Improvements}\label{sec:low-deg-improvment}
 
 Preliminary experiments showed, that a significant amount of query running time is spent in heuristic evaluations and queue operations.
 We can reduce both by keeping some nodes out of the queue, as the heuristic needs to be evaluated when a node is pushed into the queue.
@@ -438,7 +527,7 @@ Analogous to A*, our algorithm stores for every node $x$ a tentative distance $D
 Additionally, it maintains a minimum priority queue.
 Diverging from A*, not all nodes can be pushed but every node has a tentative distance.
 
-\subsection{Skip Degree Two Nodes}
+\subsubsection{Skip Degree Two Nodes}
 
 Our algorithm differs from A* when removing a node $x$ from the queue.
 A* iterates over the outgoing arcs $(x,y)$ of $x$ and tries to reduce $D[y]$ by relaxing $(x,y)$.
@@ -453,7 +542,7 @@ If $D[z]$ is modified and $d(z)>2$, $z$'s weight in the queue is set to $D[z]+h_
 As the target node $t$ might have degree two, our algorithm cannot rely on stopping, when $t$ is removed from the queue.
 Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight in the queue.
 
-\subsection{Skip Degree Three Nodes}
+\subsubsection{Skip Degree Three Nodes}
 
 We can also skip some degree three nodes.
 Denote by $x,y_1,\ldots, y_k, z$ a degree two chain as described in the previous section.
@@ -464,8 +553,7 @@ If it reaches $\beta$, $\beta$'s weight in the queue is set to $D[\beta]+h_t(\be
 Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+h_t(b)$.
 If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
 
-\subsection{Stay in Largest Biconnected Component}
-\label{sec:largested-biconnected-component}
+\subsubsection{Stay in Largest Biconnected Component}\label{sec:largested-biconnected-component}
 
 A lot of nodes in road networks lead to dead-ends.
 Unless the source or target is in this dead-end, it is unnecessary to explore these nodes.
@@ -485,15 +573,14 @@ Otherwise, we find $a_t$.
 In that case, we continue by searching a path from $a_t$ towards $t$ restricted to $t$'s biconnected component.
 The final result is the concatenation of both paths.
 
-\section{Applications}
-\label{sec:extensions}
+\subsection{Applications}\label{sec:extensions}
 
 % A* is a flexible algorithm.
 % Many extended problems can therefore be solved using the CH-Potentials framework.
 We describe some extended routing problems and how to apply CH-Potentials to them.
 Unless stated otherwise, $G_q$ and $G_\ell$ are the same graph and only $w_q$ changes for the queries.
 
-\subsection{Avoiding Tunnels and/or Highways}
+\subsubsection{Avoiding Tunnels and/or Highways}
 \label{sec:no-tunnel-highway}
 
 Avoiding tunnels and/or highways is a common feature of navigation devices.
@@ -502,7 +589,7 @@ We set $w_\ell$ to the freeflow travel time.
 If an edge is a tunnel and/or a highway, we set $w_q$ to $+\infty$.
 Otherwise, $w_q$ is set to the freeflow travel time.
 
-\subsection{Forbidden Turns and Turn Costs}
+\subsubsection{Forbidden Turns and Turn Costs}
 \label{sec:no-turns}
 
 The classical shortest path problem allows to freely change edges at nodes.
@@ -547,7 +634,7 @@ With this setup, CH-Potentials support turns without requiring turn information 
 % The heuristic is therefore a lower bound.
 % It is consistent because it is derived from exact shortest paths in $G$ with $w_\ell$.
 
-\subsection{Predicted Traffic or Time-Dependent Routing}
+\subsubsection{Predicted Traffic or Time-Dependent Routing}
 \label{sec:predicted-traffic}
 
 The classical shortest path problem assumes that edge weights are scalars.
@@ -586,7 +673,7 @@ For the preprocessing, we set $w_\ell(e) = \min_\tau w_q(e,\tau)$, that is the m
 % With this setup, we extended CH-Potentials to support time-dependent routing.
 By keeping travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-20,dn-crdtd-12} which have to create shortcuts of travel time functions.
 
-\subsection{Live and Predicted Traffic}
+\subsubsection{Live and Predicted Traffic}
 \label{sec:live-predicted-traffic}
 
 Beside predicted traffic, we also consider live traffic.
@@ -628,7 +715,8 @@ We did not make any modification, that would hinder a combination with other ext
 Further adding tunnel and/or highway avoidance or turn-aware routing is simple.
 This straight-forward integration of complex routing problems is the strength of the CH-Potentials.
 
-\subsubsection{Three-Phase Setups}
+\subsubsection{CCH Potentials}
+% TODO CCH-Pot
 
 Supporting live traffic is also possible with a three-phase setup:
 A slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
@@ -641,7 +729,7 @@ Thus, CCH-Potentials could also support a three-phase setup.
 However, evaluating CCH-Potentials is beyond the scope of this paper.
 We focus on evaluating CH-Potentials as a simple building block in the two-phase setup.
 
-\subsection{Temporary Driving Bans}
+\subsubsection{Temporary Driving Bans}
 
 Truck routing differs from car routing due to night driving bans and other restrictions.
 In~\cite{kswz-erptd-p-20}, a preliminary version of CH-Potentials\footnote{
@@ -656,6 +744,10 @@ Our submitted paper is the finished version of the ArXiv preprint.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
 Further, a trade-off between arrival time and route quality is considered.
+
+\subsubsection{Alternative Routes with the Penalty Method}
+
+% TODO
 
 \section{Evaluation}
 
