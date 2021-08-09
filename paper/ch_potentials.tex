@@ -336,19 +336,19 @@ Ideally, we only want to compute the distances from the nodes explored in the $A
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
-\KwData{$P[x]$: memoized potential at $x$, $\bot$ initially}
-\SetKwFunction{Pot}{Pot}
+\KwData{$D[x]$: memoized distance final from $x$ to $t$, $\bot$ initially}
+\SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKwProg{Fn}{Function}{:}{}
-\Fn{\Pot{$x$}}{
-	\If{$P[x] = \bot$}{
-		$P[x]\leftarrow B[x]$\;
+\Fn{\Dist{$x$}}{
+	\If{$D[x] = \bot$}{
+		$D[x]\leftarrow B[x]$\;
 		\For{all up edges $xy$ in $G^+_\ell$}{
-                        $P[x]\leftarrow\min\{P[x],w_\ell(xy)+\Pot(y)\}$\;
+                        $D[x]\leftarrow\min\{D[x],w_\ell(xy)+\Dist(y)\}$\;
 		}
 	}
 	\Return{$P[x]$}\;
 }
-\caption{CH-Potentials Algorithm}
+\caption{Lazy RPHAST Algorithm}
 \label{algo:pot}
 \end{algorithm2e}
 
@@ -362,6 +362,64 @@ Next, we compute the minimum distance over all up-down paths that contain at lea
 As not all shortest up-down paths contain an up-edge, we set $h_t(x) = \min \{ B[x], d \}$.
 This calculation is correct, as it computes the minimum up-down $xt$-path distance in $G^+_\ell$, which corresponds to the minimum $xt$-path distance in a CH.
 A* with this heuristic is the basic CH-Potentials algorithm.
+
+\subsection{CCH-Potentials}
+
+\begin{algorithm2e}
+\KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
+\KwData{$D[x]$: memoized distance final from $x$ to $t$, $\bot$ initially}
+\KwData{$P[x]$: parent node of $x$ in the elimination tree}
+\SetKwFunction{Dist}{ComputeAndMemoizeDist}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\Dist{$x$}}{
+	\If{$D[x] = \bot$}{
+		\If{$D[P[x]] = \bot$}{
+			$\Dist(P[x])$\;
+		}
+		$D[x]\leftarrow B[x]$\;
+		\For{all up edges $xy$ in $G^+_\ell$}{
+                        $D[x]\leftarrow\min\{D[x],w_\ell(xy)+D[y]\}$\;
+		}
+	}
+	\Return{$P[x]$}\;
+}
+\caption{Elimination Tree Lazy RPHAST Algorithm}
+\label{algo:cch_pot}
+\end{algorithm2e}
+
+Algorithm~\ref{algo:pot} can be applied to CCH without any modifications.
+However, similarly to the elimination tree query algorithm, we can also exploit the elimination tree for the Lazy RPHAST algorithm.
+Computing the distance $D[x]$ requires knowing the final distance of all upward neighbors.
+In Algorithm~\ref{algo:pot} we have to compute these distances recursively.
+In~\cite{}, it was proven that the set of the ancestors in the elimination tree of a node $x$ equals the CH search space of $x$. % TODO cite
+Since all upward neighbors of $x$ are by definition included in the search space, they are also ancestors in the elimination tree.
+If the distance of the parent in the elimination tree has already been computed, the distances of all other upward neighbors have also been computed.
+Thus, it is sufficient to recursively (or iteratively) ensure that the distance of the parent in the elimination tree has been computed.
+As soon as a node with final distance is encountered, all ancestors are known to have their final distance.
+This allows for the more efficient implementation depicted in Algorithm~\ref{algo:cch_pot}.
+
+\subsection{Many-to-Many with Lazy RPHAST}
+
+In this section, we discuss how the Lazy RPHAST schema can be applied in a Many-to-Many context.
+To the best of our knowledge, the fastest way to compute a full distance table between a set of sources and a set of targets is RPHAST utilizing SSE instructions to process several sources at once.
+First, the selection phase is performed for the full target set.
+Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
+This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
+
+Since our algorithm is a variation RPHAST, we can also apply it to the Many-to-Many problem.
+% TODO explain
+However, a naive approach would explore the upward search space of all the source over and over again.
+This naive approach would not be competitive.
+Luckily, we can do better by using a different One-to-Many CH variant -- the Bucket-CH algorithm -- to select all targets at once.
+The Bucket CH selection phase works as follows:
+For each node $x$, we maintain a list $B[x]$ of tuples $(t_i, dist(x,t_i))$, also called a \emph{bucket}.
+These buckets can be populated by running a backward CH search from each $t_i$.
+An even faster way to compute the buckets is to initialize a backward CH search with all nodes at once, order the queue by node rank and use the buckets as labels.
+A bucket can be propagated along an edge by increasing each entry by the edge weight, and merged with another tentative bucket with a parallel sweep over both buckets.
+% TODO way too dense
+Once the buckets have been computed, we can compute distances to all targets once with Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}).
+The only difference is that $D[x]$ is now an array of distances to each $t_i$.
+We evaluate this algorithm in Section~\ref{}.
 
 \section{Low Degree A* Improvements}
 
