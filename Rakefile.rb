@@ -68,10 +68,11 @@ osm_eur = "#{data_dir}/osm_europe/"
 dimacs_graph = "#{data_dir}/europe/"
 
 # static_graphs = [osm_ger, osm_eur, dimacs_graph]
-static_graphs = [osm_ger]
+static_graphs = [osm_ger, dimacs_graph]
 td_graphs = []
 unless only_public
   td_graphs += [
+    "#{data_dir}/ptv20/",
     "#{data_dir}/ptv17/",
     "#{data_dir}/ger06/",
     osm_ger_td
