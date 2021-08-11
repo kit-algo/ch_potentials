@@ -226,10 +226,11 @@ namespace "exp" do
   task bidir_features: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/bidir_features"] do
     Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
-        sh "cargo run --release --bin chpot_bidir -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_bidir --features 'chpot-alt' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_bidir --features 'chpot-oracle' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_bidir --features 'chpot-only-topo' -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+        [[], ['chpot-improved-pruning']].each do |pruning_feats|
+          [[], ['chpot-alt'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
+            sh "cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+          end
+        end
       end
     end
   end
@@ -256,6 +257,14 @@ namespace "exp" do
       # sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       # sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
+  end
+end
+
+def features(feats)
+  if feats.empty?
+    ""
+  else
+    "--features '#{feats.join(' ')}'"
   end
 end
 
