@@ -173,7 +173,7 @@ namespace "exp" do
   directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
 
-  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing"] + graphs.map { |g| g + 'lower_bound' } do
+  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
     graphs.each do |graph|
       10.times do
         filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
@@ -183,6 +183,13 @@ namespace "exp" do
           "/dev/null /dev/null /dev/null " +
           "/dev/null /dev/null /dev/null " +
           ">> #{filename}")
+
+        Dir.chdir "code/rust_road_router" do
+          filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
+          sh "./flow_cutter_cch_order.sh #{graph} #{Etc.nprocessors} >> #{filename}"
+          filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.json'
+          sh "cargo run --release --bin cch_preprocessing -- #{graph} >> #{filename}"
+        end
       end
     end
   end
