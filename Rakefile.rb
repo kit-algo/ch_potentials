@@ -137,6 +137,12 @@ namespace "prep" do
           "#{graph}/lower_bound_ch/forward_first_out #{graph}/lower_bound_ch/forward_head #{graph}/lower_bound_ch/forward_weight " +
           "#{graph}/lower_bound_ch/backward_first_out #{graph}/lower_bound_ch/backward_head #{graph}/lower_bound_ch/backward_weight")
     end
+
+    file graph + "cch_perm" => ["code/rust_road_router/lib/InertialFlowCutter/build/console"] do
+      Dir.chdir "code/rust_road_router" do
+        sh "./flow_cutter_cch_order.sh #{graph} #{Etc.nprocessors}"
+      end
+    end
   end
 
   static_graphs.each do |graph|
@@ -189,29 +195,14 @@ namespace "exp" do
     end
   end
 
-  task building_blocks: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/building_blocks"] do
+  task building_blocks: ["#{osm_ger}lower_bound_ch", "#{osm_ger}cch_perm", "#{exp_dir}/building_blocks"] do
     Dir.chdir "code/rust_road_router" do
-      static_graphs.each do |graph|
-        sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-oracle' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_simple_scale_dijkstra --features '' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_simple_scale_dijkstra --features 'chpot-only-topo' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-only-topo' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-oracle' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-bcc chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg2 chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt chpot-no-deg3' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale --features 'chpot-alt' -- #{graph} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+      [[], ['chpot-alt'], ['chpot-cch'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
+        sh "cargo run --release --bin chpot_simple_scale_dijkstra #{features(pot_feats)} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-bcc', 'chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats)} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       end
     end
   end
@@ -224,12 +215,14 @@ namespace "exp" do
     end
   end
 
-  task bidir_features: static_graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/bidir_features"] do
+  task bidir_features: ["#{osm_ger}lower_bound_ch", "#{osm_ger}cch_perm", "#{exp_dir}/bidir_features"] do
     Dir.chdir "code/rust_road_router" do
-      static_graphs.each do |graph|
-        [[], ['chpot-improved-pruning']].each do |pruning_feats|
-          [[], ['chpot-alt'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
-            sh "cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{graph} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+      [[], ['chpot-improved-pruning']].each do |pruning_feats|
+        [[], ['chpot-alt'], ['chpot-cch'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
+          if pot_feats == ['chpot-only-topo']
+            sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{osm_ger} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+          else
+            sh "cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{osm_ger} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
           end
         end
       end
@@ -287,6 +280,17 @@ namespace 'build' do
   file "code/compute_ch/build/compute_ch" => ["code/compute_ch/build", "code/compute_ch/src/bin/compute_contraction_hierarchy_and_order.cpp"] do
     Dir.chdir "code/compute_ch/build/" do
       sh "cmake -DCMAKE_BUILD_TYPE=Release .. && make"
+    end
+  end
+
+
+  task :inertialflowcutter => "code/rust_road_router/lib/InertialFlowCutter/build/console"
+
+  directory "code/rust_road_router/lib/InertialFlowCutter/build"
+  desc "Building Flow Cutter Accelerated"
+  file "code/rust_road_router/lib/InertialFlowCutter/build/console" => "code/rust_road_router/lib/InertialFlowCutter/build" do
+    Dir.chdir "code/rust_road_router/lib/InertialFlowCutter/build" do
+      sh "cmake -DCMAKE_BUILD_TYPE=Release .. && make console"
     end
   end
 end
