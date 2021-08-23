@@ -236,7 +236,7 @@ namespace "exp" do
     end
   end
 
-  task applications: graphs.map { |g| g + 'lower_bound_ch' } + ["#{exp_dir}/applications"] do
+  task applications: graphs.map { |g| g + 'lower_bound_ch' } + graphs.map { |g| g + 'cch_perm' } + ["#{exp_dir}/applications"] do
     Dir.chdir "code/rust_road_router" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
@@ -246,17 +246,16 @@ namespace "exp" do
         sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin cchpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin cchpot_live_turns -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin bidir_chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
 
       sh "cargo run --release --bin chpot_unmodified -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-
-      # sh "cargo run --release --bin chpot_unmodified -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_turns -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_blocked -- #{osm_eur} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "cargo run --release --bin chpot_simulated_live -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin bidir_chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "cargo run --release --bin bidir_chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
   end
 end
