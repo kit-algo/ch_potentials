@@ -257,6 +257,8 @@ namespace "exp" do
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin bidir_chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin bidir_chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_penalty -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+      sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_penalty -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
     end
   end
 end
