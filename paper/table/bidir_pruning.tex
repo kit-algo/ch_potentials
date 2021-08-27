@@ -1,0 +1,50 @@
+% \begin{tabular}{rrrrrrrrrr}
+% \toprule
+% \multicolumn{5}{c}{Running time [ms]} & \multicolumn{5}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){1-5} \cmidrule(lr){6-10}
+% ALT & CH & CCH & Oracle &    Zero &                        ALT & CH & CCH & Oracle &     Zero \\
+% \midrule
+% 130.9 &   56.4 &   56.4 & 33.9 & 1\,555.3 &                     307.3 &  116.3 & 116.3 & 116.3 &  4\,797.1 \\
+% 132.7 &   57.9 &   57.9 & 34.5 & 1\,550.6 &                     305.8 &  116.2 & 116.2 & 116.2 &  4\,794.5 \\
+% 797.7 &  112.5 &  112.5 & 81.5 & 6\,137.1 &                  1\,727.1 &  245.8 & 245.8 & 245.8 & 17\,055.0 \\
+% 270.9 &   53.8 &   53.8 & 33.7 & 1\,545.5 &                     649.9 &  108.8 & 108.8 & 108.8 &  4\,794.5 \\
+%  34.5 &   17.8 &   17.8 &  8.9 &    395.4 &                      60.1 &   21.8 &  21.8 &  21.8 &     975.9 \\
+%  35.2 &   18.0 &   18.0 &  9.1 &    399.6 &                      58.7 &   21.5 &  21.5 &  21.5 &     967.8 \\
+% 244.8 &   38.0 &   38.0 & 24.1 & 1\,641.5 &                     344.3 &   41.7 &  41.7 &  41.7 &  3\,531.9 \\
+%  75.8 &   19.6 &   19.6 & 10.3 &    396.7 &                     129.5 &   19.1 &  19.1 &  19.1 &     967.8 \\
+% \bottomrule
+% \end{tabular}
+
+
+\begin{tabular}{lllr@{\hskip8pt}r@{\hskip8pt}r@{\hskip8pt}r@{\hskip8pt}rr@{\hskip8pt}r@{\hskip8pt}r@{\hskip8pt}r@{\hskip8pt}r}
+\toprule
+\multirow{3}{*}{\rotatebox[origin=c]{90}{Low Deg.}} & \multirow{3}{*}{\rotatebox[origin=c]{90}{Bidir. Pot.}} & \multirow{3}{*}{\rotatebox[origin=r]{90}{Pruning}} \\
+ &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{5}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-13}
+ &  &  &               ALT & CH & CCH & Oracle &    Zero &                        ALT & CH & CCH & Oracle &     Zero \\
+\midrule
+\xmark & \multirow{2}{*}{\rotatebox[origin=c]{90}{Avg.}} & \xmark &            130.9 &   56.4 &  56.4 &  33.9 & 1\,555.3 &                     307.3 &  116.3 & 116.3 & 116.3 &  4\,797.1 \\
+\xmark &                                                 & \cmark &            132.7 &   57.9 &  57.9 &  34.5 & 1\,550.6 &                     305.8 &  116.2 & 116.2 & 116.2 &  4\,794.5 \\
+\xmark & \multirow{2}{*}{\rotatebox[origin=c]{90}{Sym.}} & \xmark &            797.7 &  112.5 & 112.5 &  81.5 & 6\,137.1 &                  1\,727.1 &  245.8 & 245.8 & 245.8 & 17\,055.0 \\
+\xmark &                                                 & \cmark &            270.9 &   53.8 &  53.8 &  33.7 & 1\,545.5 &                     649.9 &  108.8 & 108.8 & 108.8 &  4\,794.5 \\
+\addlinespace
+\cmark & \multirow{2}{*}{\rotatebox[origin=c]{90}{Avg.}} & \xmark &             34.5 &   17.8 &  17.8 &   8.9 &    395.4 &                      60.1 &   21.8 &  21.8 &  21.8 &     975.9 \\
+\cmark &                                                 & \cmark &             35.2 &   18.0 &  18.0 &   9.1 &    399.6 &                      58.7 &   21.5 &  21.5 &  21.5 &     967.8 \\
+\cmark & \multirow{2}{*}{\rotatebox[origin=c]{90}{Sym.}} & \xmark &            244.8 &   38.0 &  38.0 &  24.1 & 1\,641.5 &                     344.3 &   41.7 &  41.7 &  41.7 &  3\,531.9 \\
+\cmark &                                                 & \cmark &             75.8 &   19.6 &  19.6 &  10.3 &    396.7 &                     129.5 &   19.1 &  19.1 &  19.1 &     967.8 \\
+\bottomrule
+\end{tabular}
+
+% \begin{tabular}{lllrrrrrrrr}
+% \toprule
+% Low & Bidir. & Impr. & \multicolumn{4}{c}{Running time [ms]} & \multicolumn{4}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){4-7} \cmidrule(lr){8-11}
+% Opt. & Pot. & Pr. &               ALT & CH-Pot. & Oracle &    Zero &                        ALT & CH-Pot. & Oracle &     Zero \\
+% \midrule
+% \multirow{4}{*}{\xmark}                   & Avg. & \xmark &            130.99 &   56.46 &  33.90 & 1\,555.31 &                     307.35 &  116.33 & 116.33 &  4\,797.13 \\
+%                                           &      & \cmark &            132.76 &   57.97 &  34.57 & 1\,550.62 &                     305.89 &  116.25 & 116.25 &  4\,794.51 \\
+%                                           & Sym. & \xmark &            797.74 &  112.55 &  81.50 & 6\,137.12 &                  1\,727.17 &  245.81 & 245.81 & 17\,055.06 \\
+%                                           &      & \cmark &            270.95 &   53.85 &  33.75 & 1\,545.56 &                     649.91 &  108.87 & 108.87 &  4\,794.51 \\
+% \multirow{4}{*}{\cmark}                   & Avg. & \xmark &             34.53 &   17.85 &   8.97 &    395.43 &                      60.11 &   21.89 &  21.89 &     975.98 \\
+%                                           &      & \cmark &             35.24 &   18.01 &   9.18 &    399.60 &                      58.74 &   21.57 &  21.57 &     967.82 \\
+%                                           & Sym. & \xmark &            244.80 &   38.05 &  24.12 & 1\,641.51 &                     344.33 &   41.78 &  41.78 &  3\,531.97 \\
+%                                           &      & \cmark &             75.87 &   19.65 &  10.37 &    396.72 &                     129.59 &   19.16 &  19.16 &     967.82 \\
+% \bottomrule
+% \end{tabular}
