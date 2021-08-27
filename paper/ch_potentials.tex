@@ -817,18 +817,18 @@ Since we reproduce this exact configuration except for the shortest path algorit
 
 For sake of keeping this section self-contained, we now briefly reiterate the details of our configuration.
 The stretch limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \dist(u,v)$.
-Shortest path edges are penalized multiplicative with a factor of $\psi = 1.25$\footnote{Kobitzsch reports using $\psi = 1.1$ but the code uses $\psi=1.25$ by default. As our qualitative results match Kobitzsch's results when we use $\psi = 1.25$ but not with $\psi = 1.1$, we choose $\psi = 1.25$.}, i.e. when an edges was $k$ times on a shortest path its weight will be $w_q = w_{\ell}\cdot\psi^k$.
+Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was $k$ times on a shortest path its weight will be $w_q = w_{\ell}\cdot\psi^k$.
 We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
 An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
 An edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
 $\psi_r$ is set to 0.01.
 To avoid over-penalization, we count the times a \emph{node} was on a shortest path and do not apply penalties, when this number exceeds $k_{\max} := \lceil\log_{\psi}(1+\epsilon)\rceil + 2$.
 Shortest paths are split into segments not yet contained in the alternative graph.
-A segment is only added if it is long enough (at least $0.1 \cdot \dist_{w_{\ell}}(s,t)$) and does not violate the maximum stretch condition.
+A segment is only added if it is long enough (at least $0.05 \cdot \dist_{w_{\ell}}(s,t)$) and does not violate the maximum stretch condition.
 We terminate the algorithm when any of the following conditions becomes true:
 \begin{itemize}
 	\item All nodes on the current shortest path have been penalized $k_{\max}$ times.
-	\item Segments from 10 different iterations have been added to the alternative graph.
+	\item 10 ore more segments have been added to the alternative graph.
 	\item The shortest path is longer than $(1+\epsilon) \cdot \dist_{w_{\ell}}(s,t)$ with respect to the original metric.
 	\item The shortest path is longer than $(1+\epsilon) \cdot \psi + 2\psi_r \cdot \dist_{w_{\ell}}(s,t)$ with respect to the penalized metric.
 \end{itemize}
