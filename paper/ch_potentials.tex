@@ -816,7 +816,7 @@ While some details remain unclear from the description in~\cite{kobitzsch2015alt
 Since we reproduce this exact configuration except for the shortest path algorithm, qualitative results should carry over and we can focus only on running times in our work.
 
 For sake of keeping this section self-contained, we now briefly reiterate the details of our configuration.
-The stretch limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \dist(u,v)$.
+The stretch limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
 Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was $k$ times on a shortest path its weight will be $w_q = w_{\ell}\cdot\psi^k$.
 We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
 An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
