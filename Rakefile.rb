@@ -7,6 +7,7 @@ file "paper/ch_potentials.pdf" => [
   "paper/ch_potentials.tex",
   "paper/fig/scaled_weights.pdf",
   "paper/fig/lazy_rphast_many_to_one.pdf",
+  "paper/fig/lazy_rphast_cch_many_to_one.pdf",
   "paper/fig/lazy_rphast_many_to_many.pdf",
   "paper/table/applications.tex",
   "paper/table/graphs.tex",
@@ -25,6 +26,10 @@ namespace "fig" do
   end
 
   file "paper/fig/lazy_rphast_many_to_one.pdf" => FileList["#{exp_dir}/rphast/*.json"] + ["eval/rphast_comparison.py"] do
+    sh "eval/rphast_comparison.py"
+  end
+
+  file "paper/fig/lazy_rphast_cch_many_to_one.pdf" => FileList["#{exp_dir}/rphast/*.json"] + ["eval/rphast_comparison.py"] do
     sh "eval/rphast_comparison.py"
   end
 
