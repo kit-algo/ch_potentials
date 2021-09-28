@@ -1,54 +1,56 @@
-\documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate]{lipics-v2021}
+% \documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate]{lipics-v2021}
+\documentclass[manuscript,review]{acmart}
 
-\usepackage{amssymb}
-\usepackage{amsmath}
+% \usepackage{amssymb}
+% \usepackage{amsmath}
 % checkmarks
-\usepackage{pifont}
+\usepackage{pifont} % TODO
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
 \usepackage{todonotes}
-\usepackage{booktabs}
+% \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage[algo2e,vlined]{algorithm2e}
 
 \newcommand*{\dist}{\mathcal{D}}
 
-\nolinenumbers
-\hideLIPIcs
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2018}
+\acmYear{2018}
+\acmDOI{10.1145/1122445.1122456}
+
+\begin{document}
 
 \bibliographystyle{plainurl} % the mandatory bibstyle
 
 \title{A Fast and Tight Heuristic for A* in Road Networks}
-\author{Ben Strasser}{Germany}{academia@ben-strasser.net}{}{}
-\author{Tim Zeitz}{Karlsruhe Institute of Technology, Germany}{tim.zeitz@kit.edu}{https://orcid.org/0000-0003-4746-3582}{}
 
-\authorrunning{B. Strasser and T. Zeitz}
-\Copyright{Ben Strasser and Tim Zeitz}
+\author{Ben Strasser}
+\email{academia@ben-strasser.net}
+\affiliation{}
 
-\ccsdesc[500]{Theory of computation~Shortest paths}
-\ccsdesc[300]{Mathematics of computing~Graph algorithms}
-\ccsdesc[500]{Applied computing~Transportation}
+\author{Tim Zeitz}
+\email{tim.zeitz@kit.edu}
+\orcid{0000-0003-4746-3582}
+\affiliation{%
+  \institution{Institute of Theoretical Informatics, Algorithmics I, Karlsruhe Institute of Technology}
+  \city{Karlsruhe}
+  \country{Germany}
+}
 
-\keywords{route planning, shortest paths, realistic road networks}
+% \author{Ben Strasser}{Germany}{academia@ben-strasser.net}{}{}
+% \author{Tim Zeitz}{Karlsruhe Institute of Technology, Germany}{tim.zeitz@kit.edu}{https://orcid.org/0000-0003-4746-3582}{}
 
-%Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\EventEditors{David Coudert and Emanuele Natale}
-\EventNoEds{2}
-\EventLongTitle{19th International Symposium on Experimental Algorithms (SEA 2021)}
-\EventShortTitle{SEA 2021}
-\EventAcronym{SEA}
-\EventYear{2021}
-\EventDate{June 7--9, 2021}
-\EventLocation{Nice, France}
-\EventLogo{}
-\SeriesVolume{190}
-\ArticleNo{6}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \authorrunning{B. Strasser and T. Zeitz}
+\renewcommand{\shortauthors}{B. Strasser and T. Zeitz}
+% \Copyright{Ben Strasser and Tim Zeitz}
 
-\begin{document}
-
-\maketitle
 
 \begin{abstract}
 We study exact, efficient and practical algorithms for route planning in large road networks.
@@ -66,6 +68,14 @@ We call our heuristic CH-Potentials.
 Our approach allows decoupling the supported extensions from the hierarchical speed-up technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
 \end{abstract}
+
+\ccsdesc[500]{Theory of computation~Shortest paths}
+\ccsdesc[300]{Mathematics of computing~Graph algorithms}
+\ccsdesc[500]{Applied computing~Transportation}
+
+\keywords{route planning, shortest paths, realistic road networks}
+
+\maketitle
 
 \section{Introduction}
 \label{sec:intro}
