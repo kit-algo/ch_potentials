@@ -210,11 +210,11 @@ namespace "exp" do
   task building_blocks: ["#{osm_ger}lower_bound_ch", "#{osm_ger}cch_perm", "#{exp_dir}/building_blocks"] do
     Dir.chdir "code/rust_road_router" do
       [[], ['chpot-alt'], ['chpot-cch'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
-        sh "cargo run --release --bin chpot_simple_scale_dijkstra #{features(pot_feats)} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-bcc', 'chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats + ['chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
-        sh "NUM_DIJKSTRA_QUERIES=0 cargo run --release --bin chpot_simple_scale #{features(pot_feats)} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_features #{features(pot_feats + ['chpot-no-reorder'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_features #{features(pot_feats + ['chpot-no-bcc', 'chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_features #{features(pot_feats + ['chpot-no-deg2', 'chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_features #{features(pot_feats + ['chpot-no-deg3'])} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_features #{features(pot_feats)} -- #{osm_ger} > #{exp_dir}/building_blocks/$(date --iso-8601=seconds).json"
       end
     end
   end
