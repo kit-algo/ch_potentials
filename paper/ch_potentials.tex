@@ -3,10 +3,8 @@
 
 % \usepackage{amssymb}
 % \usepackage{amsmath}
-% checkmarks
-\usepackage{pifont} % TODO
-\newcommand{\cmark}{\ding{51}}
-\newcommand{\xmark}{\ding{55}}
+\newcommand{\cmark}{$\bullet$}
+\newcommand{\xmark}{$\circ$}
 
 \usepackage{todonotes}
 % \usepackage{booktabs}
@@ -877,7 +875,7 @@ All experiments were performed sequentially.
 Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile with the target-cpu=native option.
 The source code of our implementation and the experimental evaluation can be found on Github\footnote{\url{https://github.com/kit-algo/ch_potentials}}.
 
-\subparagraph{Inputs and Methodology}
+\paragraph{Inputs and Methodology}
 Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{https://download.geofabrik.de/europe/germany-200101.osm.pbf}}.
 To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
@@ -893,7 +891,31 @@ In this table, we further include the sequential running time necessary to const
 We report preprocessing running times as averages over 10 runs.
 For queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 
-\subparagraph{Experiments}
+\paragraph{Experiments}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one.pdf}
+\caption{
+Many-to-One CH
+}\label{fig:many_to_one}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/lazy_rphast_cch_many_to_one.pdf}
+\caption{
+Many-to-One CCH
+}\label{fig:many_to_one_cch}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_many.pdf}
+\caption{
+Many-to-Many
+}\label{fig:many_to_many}
+\end{figure}
 
 \begin{figure}
 \centering
@@ -972,8 +994,27 @@ This means that no competing algorithm such as ALT or CPD-Heuristics can be sign
 \centering
 \caption{
 TODO
+OSM Ger, Weight Scaled uniformly by 1.05, alternating dirs
 }\label{tab:bidir_pruning}
 \input{table/bidir_pruning.tex}
+\end{table}
+
+\begin{table}
+\centering
+\caption{
+TODO
+OSM Ger, Weight Scaled 1.5, sym with improved pruning, avg without, with topo opt
+}\label{tab:bidir_switching}
+\input{table/bidir_switching.tex}
+\end{table}
+
+\begin{table}
+\centering
+\caption{
+TODO
+OSM Ger
+}\label{tab:bidir}
+\input{table/bidir.tex}
 \end{table}
 
 \begin{table*}

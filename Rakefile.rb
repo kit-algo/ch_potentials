@@ -10,6 +10,9 @@ file "paper/ch_potentials.pdf" => [
   "paper/fig/lazy_rphast_cch_many_to_one.pdf",
   "paper/fig/lazy_rphast_many_to_many.pdf",
   "paper/table/applications.tex",
+  "paper/table/bidir_pruning.tex",
+  "paper/table/bidir_switching.tex",
+  "paper/table/bidir.tex",
   "paper/table/graphs.tex",
   "paper/table/building_blocks.tex"] do
 
@@ -55,6 +58,18 @@ namespace "table" do
     ] + ["eval/graphs.py", "paper/table"] do
 
     sh "eval/graphs.py"
+  end
+
+  file "paper/table/bidir.tex" => FileList["#{exp_dir}/bidir_features/*.out"] + ["eval/bidir_features.py", "paper/table"] do
+    sh "eval/bidir_features.py"
+  end
+
+  file "paper/table/bidir_pruning.tex" => FileList["#{exp_dir}/bidir_features/*.out"] + ["eval/bidir_features.py", "paper/table"] do
+    sh "eval/bidir_features.py"
+  end
+
+  file "paper/table/bidir_switching.tex" => FileList["#{exp_dir}/bidir_features/*.out"] + ["eval/bidir_features.py", "paper/table"] do
+    sh "eval/bidir_features.py"
   end
 
   file "paper/table/building_blocks.tex" => FileList["#{exp_dir}/building_blocks/*.json"] + ["eval/building_blocks.py", "paper/table"] do
