@@ -195,7 +195,7 @@ namespace "exp" do
   directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
 
-  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing/ch", , "#{exp_dir}/preprocessing/cch", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
+  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing/ch", "#{exp_dir}/preprocessing/cch", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
     graphs.each do |graph|
       10.times do
         filename = "#{exp_dir}/preprocessing/ch/" + `date --iso-8601=seconds`.strip + '.out'
