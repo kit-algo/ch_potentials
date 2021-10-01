@@ -45,7 +45,6 @@ namespace "table" do
   directory "paper/table"
 
   file "paper/table/applications.tex" => FileList[
-    "#{exp_dir}/preprocessing/*.out",
     "#{exp_dir}/applications/*.json",
     ] + ["eval/applications.py", "paper/table"] do
 
@@ -53,8 +52,9 @@ namespace "table" do
   end
 
   file "paper/table/graphs.tex" => FileList[
-    "#{exp_dir}/preprocessing/*.out",
-    "#{exp_dir}/applications/*.json",
+    "#{exp_dir}/preprocessing/ch/*.out",
+    "#{exp_dir}/preprocessing/cch/*.out",
+    "#{exp_dir}/preprocessing/*.json",
     ] + ["eval/graphs.py", "paper/table"] do
 
     sh "eval/graphs.py"
@@ -187,16 +187,18 @@ namespace "exp" do
   task queries: [:scaled_weights, :building_blocks, :applications]
 
   directory "#{exp_dir}/preprocessing"
+  directory "#{exp_dir}/preprocessing/ch"
+  directory "#{exp_dir}/preprocessing/cch"
   directory "#{exp_dir}/scaled_weights"
   directory "#{exp_dir}/building_blocks"
   directory "#{exp_dir}/rphast"
   directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
 
-  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
+  task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing/ch", , "#{exp_dir}/preprocessing/cch", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
     graphs.each do |graph|
       10.times do
-        filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
+        filename = "#{exp_dir}/preprocessing/ch/" + `date --iso-8601=seconds`.strip + '.out'
         sh "echo '#{graph}' >> #{filename}"
         sh("code/compute_ch/build/compute_ch #{graph}/first_out #{graph}/head #{graph}/lower_bound " +
           "/dev/null " +
@@ -205,10 +207,11 @@ namespace "exp" do
           ">> #{filename}")
 
         Dir.chdir "code/rust_road_router" do
-          filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.out'
-          sh "./flow_cutter_cch_order.sh #{graph} #{Etc.nprocessors} >> #{filename}"
+          filename = "#{exp_dir}/preprocessing/cch/" + `date --iso-8601=seconds`.strip + '.out'
+          sh "echo '#{graph}' >> #{filename}"
+          sh "./flow_cutter_cch_order.sh #{graph} 1 >> #{filename}"
           filename = "#{exp_dir}/preprocessing/" + `date --iso-8601=seconds`.strip + '.json'
-          sh "cargo run --release --bin cch_preprocessing -- #{graph} >> #{filename}"
+          sh "cargo run --release --features cch-disable-par --bin cch_preprocessing -- #{graph} >> #{filename}"
         end
       end
     end

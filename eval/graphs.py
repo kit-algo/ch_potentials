@@ -9,54 +9,71 @@ import re
 
 base = "exp/"
 cwd = os.getcwd()
-paths = glob.glob(base + "applications/*.json")
+paths = glob.glob(base + "preprocessing/*.json")
 data = [json.load(open(path)) for path in paths]
 
+def path_to_graph(path):
+    return {
+        'ger06': 'TDGer06',
+        'ptv17': 'TDEur17',
+        'ptv20': 'TDEur20',
+        'osm_europe': 'OSM Europe',
+        'osm_ger': 'OSM Ger',
+        'osm_ger_td': 'TD OSM Ger',
+        'europe': 'DIMACs Europe',
+    }[[x for x in path.split('/') if x != ''][-1]]
 
-queries = pd.DataFrame.from_records([{
-    'graph': run['args'][1],
-    'num_nodes': (run['graph'] if 'graph' in run else run['experiments'][0]['graph'])['num_nodes'],
-    'num_edges': (run['graph'] if 'graph' in run else run['experiments'][0]['graph'])['num_arcs'],
-    } for run in data if 'graph' in run or 'experiments' in run])
+graphs = pd.DataFrame.from_records([{
+    **run
+    'graph': path_to_graph(run['args'][1]),
+    'num_nodes': run['graph'],
+    'num_edges': run['graph'],
+} for run in data if 'graph' in run])
 
 runtime_pattern = re.compile(".*Needed (\\d+)musec\\..*")
 
 def parse_contraction_output(path):
-    stats = { 'preprocessing_running_time_s': 0.0 }
+    stats = { 'ch_contraction_running_time_s': 0.0 }
 
     with open(path, 'r') as f:
         for line in f:
             if not 'graph' in stats:
-                stats['graph'] = line.strip()
+                stats['graph'] = path_to_graph(line.strip())
             else:
                 match = runtime_pattern.match(line)
                 if match:
-                    stats['preprocessing_running_time_s'] += int(match[1]) / 1000000
+                    stats['ch_contraction_running_time_s'] += int(match[1]) / 1000000
 
     return stats
 
-preprocessing = pd.DataFrame.from_records([parse_contraction_output(path) for path in glob.glob(base + "preprocessing/*.out")])
+ch_preprocessing = pd.DataFrame.from_records([parse_contraction_output(path) for path in glob.glob(base + "preprocessing/ch/*.out")])
 
-table = queries.groupby(['graph'])[['num_nodes', 'num_edges']].mean()
+runtime_pattern = re.compile(".*running time : (\\d+)musec.*")
 
-table = table.reindex([
-    cwd + '/data/osm_ger/',
-    cwd + '/data/ptv17',
-    cwd + '/data/ger06'])
+def parse_flowcutter_partition_output(path):
+  stats = { 'cch_ordering_running_time_s': 0.0 }
 
-table = table.join(preprocessing.groupby('graph').mean())
+  with open(path, 'r') as f:
+    for line in f:
+      if not 'graph' in stats:
+        stats['graph'] = path_to_graph(line.strip())
+      else:
+        match = runtime_pattern.match(line)
+        if match:
+          stats['cch_ordering_running_time_s'] += int(match[1]) / 1000000
+
+  return stats
+
+cch_ordering = pd.DataFrame.from_records([parse_contraction_output(path) for path in glob.glob(base + "preprocessing/cch/*.out")])
+
+table = graphs.groupby(['graph'])[['num_nodes', 'num_edges']].mean()
+
+table = table.reindex(['OSM Ger', 'DIMACs Europe', 'TDGer06', 'TDEur17', 'TDEur20'])
+
+table = table.join(ch_preprocessing.groupby('graph').mean()).join(cch_ordering.groupby('graph').mean())
 table['num_nodes'] = table['num_nodes'] / 1000000.0
 table['num_edges'] = table['num_edges'] / 1000000.0
 table = table.round(1)
-
-table = table.rename(index={
-    cwd + '/data/ger06': 'TDGer06',
-    cwd + '/data/ptv17': 'TDEur17',
-    cwd + '/data/osm_europe/': 'OSM Europe',
-    cwd + '/data/osm_ger/': 'OSM Ger',
-    cwd + '/data/osm_ger_td/': 'TD OSM Ger',
-    cwd + '/data/europe/': 'DIMACs Europe',
-})
 
 lines = table.to_latex(escape=False).split("\n")
 
