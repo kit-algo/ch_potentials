@@ -1,10 +1,12 @@
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrr}
 \toprule
- &          Nodes &          Edges & Preprocessing \\ & $[\cdot 10^6]$ & $[\cdot 10^6]$ &           [s] \\
+ &                &                & \multicolumn{3}{c}{Preprocessing [s]} \\ \cmidrule(lr){4-6} & Nodes          & Edges          & \multirow{2}{*}{CH} & \multicolumn{2}{c}{CCH} \\ \cmidrule(lr){5-6} & $[\cdot 10^6]$ & $[\cdot 10^6]$ &                     & Phase 1 & Phase 2 \\
 \midrule
-OSM Ger &       16.2 &       35.4 &                         295.2 \\
-TDEur17 &       25.8 &       55.5 &                         292.6 \\
-TDGer06 &        4.7 &       10.8 &                          58.9 \\
+OSM Ger       &       16.2 &       35.4 &                          312.8 &        1\,466.7 &          10.1 \\
+DIMACs Europe &       18.0 &       42.2 &                          276.2 &        2\,480.9 &          12.4 \\
+TDGer06       &        4.7 &       10.8 &                           59.2 &         331.7 &           2.7 \\
+TDEur17       &       25.8 &       55.5 &                          293.9 &        2\,102.3 &          14.1 \\
+TDEur20       &       28.5 &       60.9 &                          311.9 &        2\,219.5 &          15.2 \\
 \bottomrule
 \end{tabular}
 
