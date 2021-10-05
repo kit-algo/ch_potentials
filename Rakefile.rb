@@ -131,9 +131,15 @@ namespace "prep" do
     end
   end
 
+  file "#{osm_ger}/live_travel_time" => osm_ger do
+    Dir.chdir "code/rust_road_router" do
+      sh "cargo run --release --bin import_mapbox_live -- #{osm_ger} #{live_dir}"
+    end
+  end
+
   directory osm_ger_td
-  file osm_ger_td => [osm_ger, typical_file] do
-    ['first_out', 'head', 'travel_time', 'geo_distance', 'osm_node_ids', 'arc_category', 'forbidden_turn_from_arc', 'forbidden_turn_to_arc', 'latitude', 'longitude', 'tail'].each do |file|
+  file osm_ger_td => [osm_ger, "#{osm_ger}/live_travel_time", typical_file] do
+    ['first_out', 'head', 'travel_time', 'geo_distance', 'osm_node_ids', 'arc_category', 'forbidden_turn_from_arc', 'forbidden_turn_to_arc', 'latitude', 'longitude', 'tail', 'live_travel_time'].each do |file|
       sh "ln -s #{osm_ger}/#{file} #{osm_ger_td}/#{file}"
     end
     Dir.chdir "code/rust_road_router" do
@@ -259,19 +265,19 @@ namespace "exp" do
     end
   end
 
-  task applications: graphs.map { |g| g + 'lower_bound_ch' } + graphs.map { |g| g + 'cch_perm' } + ["#{exp_dir}/applications"] do
+  task applications: graphs.map { |g| g + 'lower_bound_ch' } + graphs.map { |g| g + 'cch_perm' } + (only_public ? [] : ["#{osm_ger}/live_travel_time"]) + ["#{exp_dir}/applications"] do
     Dir.chdir "code/rust_road_router" do
       td_graphs.each do |graph|
         sh "cargo run --release --bin chpot_td -- #{graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
 
       unless only_public
-        sh "cargo run --release --bin chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin cchpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin cchpot_live_turns -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-        sh "cargo run --release --bin bidir_chpot_live -- #{osm_ger} #{live_dir} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_live -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_td_live -- #{osm_ger_td} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_turns_td_live -- #{osm_ger_td} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin cchpot_live -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin cchpot_live_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin bidir_chpot_live -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
 
       sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
