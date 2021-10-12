@@ -118,7 +118,7 @@ bidir = queries.loc[lambda x: x['algo'].str.contains('Topocore')] \
     .groupby(['potential', 'experiment', 'factor', 'probability', 'bidir_pot'])[['running_time_ms', 'num_queue_pushs_k']].mean().unstack(0) \
     .reindex(columns=['Zero', 'ALT', 'CH', 'CCH', 'Oracle'], level=1) \
     .reindex(index=['weight_scale', 'probabilistic_scale_by_speed'], level=0) \
-    .reindex(index=[1.0, 0.0], level=2) \
+    .reindex(index=[1.0], level=2) \
     .reindex(index=['unidir', 'Average', 'Symmetric'], level=3)
 
 bidir[('num_queue_pushs_k', '(C)CH/Oracle')] = bidir[('num_queue_pushs_k', 'CH')]
@@ -129,7 +129,6 @@ bidir = bidir.rename(columns={
     'num_queue_pushs_k': 'Queue pushs [$\\cdot 10^3$]',
 }, index={'unidir': 'Unidirectional'})
 
-bidir.loc[('probabilistic_scale_by_speed', 1.5, 0.0), '$w_q$'] = '> 80kph'
 bidir.loc[('probabilistic_scale_by_speed', 1.5, 1.0), '$w_q$'] = '< 80kph'
 bidir.loc[('weight_scale', 1.0, 1.0), '$w_q$'] = 'unmodified'
 bidir.loc[('weight_scale', 1.05, 1.0), '$w_q$'] = '*1.05'
@@ -141,7 +140,7 @@ lines = lines[0:2] + [
     R' &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10}'
     R'\multirow{2}{*}{$w_q$} & & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} & \multirow{2}{*}{Oracle} & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & (C)CH/ \\',
     R' & & & & & & & & & Oracle \\'
-] + lines[5:9] + ['\\addlinespace'] + lines[9:12] + ['\\addlinespace'] + lines[12:15] + ['\\addlinespace'] + lines[15:]
+] + lines[5:9] + ['\\addlinespace'] + lines[9:12] + ['\\addlinespace'] + lines[12:]
 
 output = "\n".join(lines) + "\n"
 output = output.replace('> 80kph', R'\multirow{3}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v >$ 80kph}}')

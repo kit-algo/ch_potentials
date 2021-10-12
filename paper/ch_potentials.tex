@@ -515,41 +515,6 @@ This approach becomes useful when the query runs on a \emph{different but relate
 We will discuss such applications in Section~\ref{sec:extensions}.
 But before that, we discuss two extensions/optimizations to A* which we will utilize.
 
-\subsection{Bidirectional A*}
-
-Since bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm, a bidirectional variant of A* also seems desirable.
-However, as pointed out in~\cite{gh-cspas-05}, this is not as straightforward as one might expect.
-One would like to use a forward potential $\overrightarrow{h}_t$ in the forward search and a backward potential $\overleftarrow{h}_s$ (computing distances in the reversed graph) in the reverse search.
-The problem is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
-Thus, in the equivalent bidirectional Dijkstra search each direction would use different graph.
-This would break the bidirectional Dijkstra stopping criterion.
-To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until their minimum queue key $k$ becomes greater than the best known total tentative distance $\mu$.
-But this is the same stopping criterion that a unidirectional A* search has.
-Thus, this straightforward bidirectional A* performs about twice the work than a unidirectional A*.
-This can be slightly improved by introducing pruning.
-Nodes, for which $\overrightarrow{D}[x] + h(x) > \mu$ holds, i.e. their distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, can not contribute to a shorter path and need not to be added to the queue.
-This approach is denoted as the \emph{symmetric} bidirectional A*.
-
-To overcome this problem the authors of propose the \emph{average} potential, a combined heuristic, which is good for both directions but also makes both searches run on the same reduced graph and thus enables an efficient stopping criterion.
-The reduced graph of the average potential is the graph with the average weights of the reduced graphs of the forward and backward potentials.
-The potential function which induces this average reduced graph is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$ (and $-h_{\overline{st}}(x)$ for the backward search).
-This potential allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
-Additionally, the pruning from the symmetric approach can be utilized with the original potentials.
-To the best of our knowledge, this method is the fastest known variant of bidirectional A*.
-Still, it has two downsides.
-First, evaluating the average potential requires evaluating the original heuristics for both directions.
-This can cause some overhead depending on the heuristics.
-Second, for each direction on its own, the average potential is a worse heuristic than the original heuristic.
-
-We propose an improved pruning criterion for the symmetric approach.
-It takes the search progress (in form of the growing minimal queue keys) into account to tighten the pruning with increasing search progress and compensates for the worse stopping criterion.
-As our experiments show, this makes the simpler symmetric approach at least competitive and sometimes even faster than the average potential.
-Recall that the queue is ordered by $D[x] + h(x)$.
-We use the minimal queue key $\overleftarrow{k}$ of the backward search to obtain a tighter estimate of $\dist(x,t)$.
-If a node $x$ was not yet settled by backward search then $\dist(x,t) \geq \overleftarrow{k} - \overleftarrow{h}_s(x)$.
-Thus, in the forward search if $\overrightarrow{D}[x] + \overleftarrow{k} - \overleftarrow{h}_s(x) > \mu$, we do not need to push $x$ into the queue.
-The pruning for the backwards search works analogously.
-
 \subsection{Low Degree A* Improvements}\label{sec:low-deg-improvment}
 
 Preliminary experiments showed, that a significant amount of query running time is spent in heuristic evaluations and queue operations.
@@ -610,6 +575,43 @@ If $t$ is part of $G_C$ or in the same component as $s$, this A* search finds it
 Otherwise, we find $a_t$.
 In that case, we continue by searching a path from $a_t$ towards $t$ restricted to $t$'s biconnected component.
 The final result is the concatenation of both paths.
+
+\subsection{Bidirectional A*}
+
+Since bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm, a bidirectional variant of A* also seems desirable.
+However, as pointed out in~\cite{gh-cspas-05}, this is not as straightforward as one might expect.
+One would like to use a forward potential $\overrightarrow{h}_t$ in the forward search and a backward potential $\overleftarrow{h}_s$ (computing distances in the reversed graph) in the reverse search.
+The problem is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
+Thus, in the equivalent bidirectional Dijkstra search each direction would use different graph.
+This would break the bidirectional Dijkstra stopping criterion.
+To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until their minimum queue key $k$ becomes greater than the best known total tentative distance $\mu$.
+But this is the same stopping criterion that a unidirectional A* search has.
+Thus, this straightforward bidirectional A* performs about twice the work than a unidirectional A*.
+This can be slightly improved by introducing pruning.
+Nodes, for which $\overrightarrow{D}[x] + h(x) > \mu$ holds, i.e. their distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, can not contribute to a shorter path and need not to be added to the queue.
+This approach is denoted as the \emph{symmetric} bidirectional A*.
+
+To overcome this problem the authors of propose the \emph{average} potential, a combined heuristic, which is good for both directions but also makes both searches run on the same reduced graph and thus enables an efficient stopping criterion.
+The reduced graph of the average potential is the graph with the average weights of the reduced graphs of the forward and backward potentials.
+The potential function which induces this average reduced graph is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$ (and $-h_{\overline{st}}(x)$ for the backward search).
+This potential allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
+Additionally, the pruning from the symmetric approach can be utilized with the original potentials.
+To the best of our knowledge, this method is the fastest known variant of bidirectional A*.
+Still, it has two downsides.
+First, evaluating the average potential requires evaluating the original heuristics for both directions.
+This can cause some overhead depending on the heuristics.
+Second, for each direction on its own, the average potential is a worse heuristic than the original heuristic.
+
+We propose an improved pruning criterion for the symmetric approach.
+It takes the search progress (in form of the growing minimal queue keys) into account to tighten the pruning with increasing search progress and compensates for the worse stopping criterion.
+As our experiments show, this makes the simpler symmetric approach at least competitive and sometimes even faster than the average potential.
+Recall that the queue is ordered by $D[x] + h(x)$.
+We use the minimal queue key $\overleftarrow{k}$ of the backward search to obtain a tighter estimate of $\dist(x,t)$.
+If a node $x$ was not yet settled by backward search then $\dist(x,t) \geq \overleftarrow{k} - \overleftarrow{h}_s(x)$.
+Thus, in the forward search if $\overrightarrow{D}[x] + \overleftarrow{k} - \overleftarrow{h}_s(x) > \mu$, we do not need to push $x$ into the queue.
+The pruning for the backwards search works analogously.
+
+% TODO alternating directions
 
 \subsection{Applications}\label{sec:extensions}
 
@@ -849,11 +851,6 @@ Truck routing differs from car routing due to night driving bans and other restr
 In~\cite{kswz-erptd-p-20}, a preliminary version of CH-Potentials\footnote{
 In~\cite{kswz-erptd-p-20}, CH-Potentials are used as a blackbox referring to an early ArXiv preprint~\cite{strasser2019perfect} of ours.
 Our submitted paper is the finished version of the ArXiv preprint.
-% der punkt macht fuer mich keinen Sinn.
-% Dass wir keine der Contributions von kswz-erptd-p-20 beschreiben ist ja offensichtlich, sieht ja jeder in dem Abschnitt.
-% Wichtiger finde ich, dass kswz-erptd-p-20 nix von uns beschreibt.
-% Das meinte ich zumindest mit dem Satz den du geloescht hast.
-% Aber der jetzt folgende Satz sagt nur, dass unser paper hier nix von kswz-erptd-p-20 beschreibt.
 \cite{kswz-erptd-p-20} does not describe any of the contributions of this paper.
 } is used for such a scenario.
 The work considers time-dependent blocked edges and waiting at parking locations.
@@ -865,7 +862,7 @@ Further, a trade-off between arrival time and route quality is considered.
 
 \begin{table}
 \centering
-\caption{Instances used in the evaluation.}\label{tab:graphs}
+\caption{Instances used in the evaluation with preprocessing running times to construct a CH or CCH-Potential. With CCH-Potentials $w_{\ell}$ can be updated by rerunning Phase 2 again.}\label{tab:graphs}
 \input{table/graphs.tex}
 \end{table}
 
@@ -875,7 +872,7 @@ All experiments were performed sequentially.
 Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile with the target-cpu=native option.
 The source code of our implementation and the experimental evaluation can be found on Github\footnote{\url{https://github.com/kit-algo/ch_potentials}}.
 
-\paragraph{Inputs and Methodology}
+\subsection{Inputs and Methodology}
 Our main benchmark instance is a graph of the road network of Germany obtained from Open Street Map\footnote{\url{https://download.geofabrik.de/europe/germany-200101.osm.pbf}}.
 To obtain the routing graph, we use the import from RoutingKit\footnote{\url{https://github.com/RoutingKit/RoutingKit}}.
 The graph has 16M nodes and 35M edges.
@@ -883,15 +880,26 @@ For this instance, we have proprietary traffic data provided by Mapbox\footnote{
 The data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
-Additionally, we have two graphs with proprietary traffic predictions provided by PTV\footnote{\url{https://ptvgroup.com}}.
+We also perform experiments on the Europe instance provided by PTV\footnote{\url{https://ptvgroup.com}} for the 9th DIMACs implementation challenge~\cite{DemetrescuGJ09}.
+Additionally, we have three graphs with proprietary traffic predictions also provided by PTV.
 The PTV instances are not OSM-based.
 One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
+% TODO PTV20
 Table~\ref{tab:graphs} contains an overview over our instances.
-In this table, we further include the sequential running time necessary to construct the CH.
+In this table, we further include the sequential preprocessing running time to construct the (C)CH.
 We report preprocessing running times as averages over 10 runs.
 For queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
 
-\paragraph{Experiments}
+\subsection{Lazy RPHAST}
+
+% Methodology
+% time per source
+% selection times
+
+% what do we want to show
+% - for one source target set we are as fast as RPHAST
+%   - dimensions: phase (style), graph (color), CH Var (row)
+% - incremental is cool
 
 \begin{figure}
 \centering
@@ -917,6 +925,18 @@ Many-to-Many
 }\label{fig:many_to_many}
 \end{figure}
 
+\subsubsection{k-Nearest-Neighbor Queries with CCH}
+
+One-to-many queries appear in many extended applications as a subproblem.
+In some of these cases Lazy RPHAST can be used to achieve significant speed-ups with surprisingly little effort.
+One such example are k-Nearest-Neighbor Queries with CCH~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
+There, shortest distances are computed repeatedly from the same source to boundary nodes of a cell of nodes.
+On our suggestion, the authors integrated Lazy RPHAST into their algorithm which took only a couple of lines of code~\footnote{\url{https://github.com/vbuchhold/routing-framework/commit/c739dc8e81}}.
+We reran their improved experiments and include the results in our appendix.
+Briefly summarized, integrating Lazy RPHAST into this algorithm decreased running times by up to 15 times depending on the distribution of the target set for almost no effort.
+
+\subsection{(C)CH-Potentials Heuristic}
+
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{fig/scaled_weights.pdf}
@@ -929,7 +949,7 @@ All other running times are indicated as outliers.
 }\label{fig:scaled_weights}
 \end{figure}
 
-The performance of A* depends on the tightness of the heuristic.
+The performance of A* depends on the tightness of the heuristic and the overhead of evaluating the heuristic.
 CH-Potentials computes optimal distance estimates with respect to $w_\ell$.
 However, for most applications, there will be a gap between $w_q$ and $w_\ell$ (otherwise one could use CH without A*).
 We evaluate the impact of the difference between $w_q$ and $w_\ell$ on the performance of A*.
@@ -959,14 +979,12 @@ As the density varies, the running times vary.
 \input{table/building_blocks.tex}
 \end{table}
 
-Table~\ref{tab:building_blocks} depicts the performance of A* with different heuristics and optimizations.
-We compare CH-Potentials to three other heuristics.
+Table~\ref{tab:building_blocks} depicts the performance of unidirectional A* with different heuristics and optimizations.
+We compare (C)CH-Potentials to three other heuristics.
 First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
 Second, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
 We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
-Our ALT implementation is uni-directional.
-In this work, we do not consider bidirectional search as it creates problems for some settings, such as predicted traffic.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is faster than the fastest heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
@@ -982,40 +1000,63 @@ All optimizations yield a combined speed-up of around 3.
 CH-Potentials outperform ALT by a factor of between six and seven and settle correspondingly fewer nodes.
 This is not surprising, since ALT computes worse distance estimates.
 In contrast, CH-Potentials already compute exact distances with respect to $w_\ell$.
-The number of popped nodes is the same for CH-Potentials and Oracle-A*.
-The only difference between CH-Potentials and Oracle-A* is the overhead of the heuristic evaluation.
+The number of popped nodes is the same for CH-Potentials, CCH-Potentials and Oracle-A*.
+The only difference between (C)CH-Potentials and Oracle-A* is the overhead of the heuristic evaluation.
 This overhead leads to a slowdown of around 1.6.
 Thus, CH-Potentials are already very close to the best possible heuristic in this model.
 % Very interesting is the comparison with Oracle-A*.
 % Our algorithm is only 1.6 times slower than accessing the exact $w_\ell$ distances instantly from a precomputed array.
 This means that no competing algorithm such as ALT or CPD-Heuristics can be significantly faster.
+CCH-Potentials are slightly slower than CH-Potentials because their search space is denser.
+
+\subsection{Bidirectional A*}
 
 \begin{table}
 \centering
-\caption{
-TODO
-OSM Ger, Weight Scaled uniformly by 1.05, alternating dirs
-}\label{tab:bidir_pruning}
+\caption{Performance of different variants of bidirectional A* on OSM Ger with $w_q = 1.05 \cdot w_\ell$.}\label{tab:bidir_pruning}
 \input{table/bidir_pruning.tex}
 \end{table}
 
-\begin{table}
-\centering
-\caption{
-TODO
-OSM Ger, Weight Scaled 1.5, sym with improved pruning, avg without, with topo opt
-}\label{tab:bidir_switching}
-\input{table/bidir_switching.tex}
-\end{table}
+Table~\ref{tab:bidir_pruning} depicts the performance of different variants of bidirectional A*.
+As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
+Symmetric bidirectional A* without our improved pruning has the worst performance.
+Enabling the improved pruning brings the performance symmetric bidirectional A* on par with the average potential for all heuristics except ALT.
+Apparently, the average potential gives ALT a better heuristic than the original one for for each direction individually, contrary to the statements made in~\cite{gh-cspas-05}.
+For all other heuristics, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
+Without the low degree improvements, the improved symmetric variant is marginally faster and with the low degree improvements the average potential remains slightly faster.
+This is due to the reduced impact of the heuristic evaluation overhead with the low degree optimizations.
+Enabling the improved pruning for the average potential marginally reduces the search space size and slightly increases running times.
 
 \begin{table}
 \centering
 \caption{
-TODO
-OSM Ger
+Performance of bidirectional and unidirectional A* on OSM Ger with different query weights.
+The symmetric variant uses the improved pruning, the average variant does not.
+All variants use all low degree optimizations.
 }\label{tab:bidir}
 \input{table/bidir.tex}
 \end{table}
+% TODO remove fourth scenario
+
+In Table~\ref{tab:bidir} we investigate the effectiveness of bidirectional search for A* depending on the query weights.
+Interestingly, only the zero heuristic and ALT consistently achieve speed-ups through bidirectional search on all query weights.
+When the query weights are equal, CH-Potentials will already only traverse the shortest path with unidirectional search.
+In this case it is clear that bidirectional search will only introduce unnecessary overhead.
+When query weights are scaled up uniformly, bidirectional search achieves some search space reduction but it is not enough to significantly reduce running times due to the overhead of running a second search.
+This changes significantly when the query weight increases are applied non-uniformly as in the third scenario.
+Here only weights with a speed less than 80\,kph were scaled up.
+This touches only the beginning and end of most shortest paths between randomly chosen nodes.
+The middle part of the shortest paths will typically use faster edges like highways.
+In this case bidirectional (C)CH-Potentials are a factor of two faster than the unidirectional variant.
+The reason for this is that the search space of a unidirectional search expands greatly while exploring the end of the path to the target where the reduced weights are bad.
+In contrast, the bidirectional searches meet in the middle of the shortest path where the reduced weights are close to zero and thus avoid this expansion.
+This is also the reason why ALT behaves like this for all query weights.
+By construction, the ALT heuristic has better reduced weights for edges which are on many shortest paths like highways.
+This makes bidirectional search so critical for ALTs performance.
+We conclude that having a potential as tight as CH-Potentials usually makes bidirectional search unnecessary.
+Bidirectional search for A* only pays of when the reduced weights exhibit certain very specific patterns.
+
+\subsection{Applications}
 
 \begin{table*}
 \centering
@@ -1078,5 +1119,59 @@ Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:
 
 %% Please use bibtex,
 
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
+
+\appendix
+
+\section{Improved Results for k-Nearest-Neighbor Queries on CCH}
+
+\begin{table}
+\centering
+\caption{
+Performance of different closest-POI algorithms for various POI distributions.
+For each distribution, we report the time to index a set of POIs (selection time), the space consumed by the
+index (selection space), and the time to find the $k = 1, 4, 8$ closest POIs (query time).
+}\label{tab:knn}
+\input{table/knn.tex}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/knn_ball_size.pdf}
+\caption{
+Selection and query times of various closest-POI algorithms with $|P| = 2^14$ POIs picked at random from a ball of varying size $|B|$.
+Queries find the $k = 4$ closest POIs.
+}\label{fig:knn_ball_size}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/knn_num_pois.pdf}
+\caption{
+Selection and query times of various closest-POI algorithms with a varying number $|P|$ of POIs picked at random from a ball of size $|B| = |V|$.
+Queries find the $k = 4$ closest POIs.
+}\label{fig:knn_num_pois}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=.6363\linewidth]{fig/knn_demands.pdf}
+\caption{
+Time to generate a single trip with different demand generators for various values of $\lambda$.
+}\label{fig:knn_demands}
+\end{figure}
+
+\section{Extended Experimental Results on Bidrectional A*}
+
+\begin{table}
+\centering
+\caption{
+Performance of different direction selection criteria of bidirectional A* on OSM Ger with different query weights.
+The symmetric variant uses the improved pruning, the average variant does not.
+All variants use all low degree optimizations.
+}\label{tab:bidir_switching}
+\input{table/bidir_switching.tex}
+\end{table}
+
 \end{document}
