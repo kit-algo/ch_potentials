@@ -37,7 +37,7 @@
 %%   Right brace   \}     Tilde         \~}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2021/08/29 v1.79 Typesetting articles for the Association for Computing Machinery]
+[2021/09/24 v1.80 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -939,7 +939,9 @@
   CIE,%
   CSUR,%
   DGOV,%
+  DLT,%
   DTRAP,%
+  FAC,%
   HEALTH,%
   IMWUT,%
   JACM,%
@@ -1011,10 +1013,18 @@
   \def\@journalName{Digital Government: Research and Practice}%
   \def\@journalNameShort{Digit. Gov. Res. Pract.}%
   \def\@permissionCodeOne{2639-0175}%
+\or % DLT
+  \def\@journalName{Distributed Ledger Technologies: Research and Practice}%
+  \def\@journalNameShort{Distrib. Ledger Technol.}%
+  \def\@permissionCodeOne{2769-6472}%
 \or % DTRAP
   \def\@journalName{Digital Threats: Research and Practice}%
   \def\@journalNameShort{Digit. Threat. Res. Pract.}%
   \def\@permissionCodeOne{2576-5337}%
+\or % FAC
+  \def\@journalName{Formal Aspects of Computing}%
+  \def\@journalNameShort{Form. Asp. Comput.}%
+  \def\@permissionCodeOne{0934-5043}%
 \or % HEALTH
   \def\@journalName{ACM Transactions on Computing for Healthcare}%
   \def\@journalNameShort{ACM Trans. Comput. Healthcare}%
