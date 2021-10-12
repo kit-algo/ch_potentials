@@ -1,0 +1,16 @@
+\begin{tabular}{lrrrrrrrrrr}
+  \toprule
+  & \multicolumn{5}{c}{$|P| = 2^{12}, |B| = 2^{20}$} & \multicolumn{5}{c}{$|P| = 2^{14}, |B| = |V|$} \\
+  \cmidrule(lr){2-6}\cmidrule(l){7-11}
+  & \multicolumn{2}{c}{selection} & \multicolumn{3}{c}{query time [$\mu$s]} & \multicolumn{2}{c}{selection} & \multicolumn{3}{c}{query time [$\mu$s]} \\
+  \cmidrule(lr){2-3}\cmidrule(lr){4-6}\cmidrule(lr){7-8}\cmidrule(l){9-11}
+  & space & time & \multicolumn{3}{c}{POIs to be reported} & space & time & \multicolumn{3}{c}{POIs to be reported} \\
+  algo & [MiB] & [ms] & {$k = 1$} & {$k = 4$} & {$k = 8$} & [MiB] & {[ms]} & $k = 1$ & \hspace{-\tabcolsep}$k = 4$ & \hspace{-\tabcolsep}$k = 8$ \\
+  \midrule
+  Dij                      &   -- &  -- & 884\,598 & 894\,348 & 913\,482 &    -- &   {--} & 113.4 & 439.3 & 883.7 \\
+  BCH                      & 72.4 & 123 &       19 &       20 &       20 &  83.6 &    464 &   4.3 &   7.4 &   9.4 \\
+  BCCH\hspace{-\tabcolsep} & 85.5 & 486 &       40 &       41 &       42 & 134.9 & 1\,901 &   5.7 &   8.1 &  10.2 \\
+  CCH\hspace{-\tabcolsep}  & 68.7 &  12 &   3\,151 &   4\,701 &   6\,230 &  68.7 &     14 & 363.6 & 594.2 & 852.7 \\
+  CCH*\hspace{-\tabcolsep} & 68.7 &  12 &      314 &      341 &      365 &  68.7 &     14 & 227.4 & 275.0 & 318.6 \\
+  \bottomrule
+\end{tabular}
