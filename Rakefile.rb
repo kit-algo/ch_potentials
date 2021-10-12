@@ -188,7 +188,7 @@ end
 
 namespace "exp" do
   desc "Run all experiments"
-  task all: [:preprocessing, :scaled_weights, :building_blocks, :rphast, :bidir_features, :applications]
+  task all: [:preprocessing, :scaled_weights, :building_blocks, :rphast, :rphast_inc, :bidir_features, :applications]
 
   task queries: [:scaled_weights, :building_blocks, :applications]
 
@@ -198,6 +198,7 @@ namespace "exp" do
   directory "#{exp_dir}/scaled_weights"
   directory "#{exp_dir}/building_blocks"
   directory "#{exp_dir}/rphast"
+  directory "#{exp_dir}/rphast_inc"
   directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
 
@@ -247,6 +248,14 @@ namespace "exp" do
     Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin lazy_rphast -- #{graph} > #{exp_dir}/rphast/$(date --iso-8601=seconds).json"
+      end
+    end
+  end
+
+  task rphast_inc: static_graphs.map { |g| g + 'lower_bound_ch' } + static_graphs.map { |g| g + 'cch_perm' } + ["#{exp_dir}/rphast_inc"] do
+    Dir.chdir "code/rust_road_router" do
+      static_graphs.each do |graph|
+        sh "cargo run --release --bin lazy_rphast_incremental -- #{graph} > #{exp_dir}/rphast_inc/$(date --iso-8601=seconds).json"
       end
     end
   end
