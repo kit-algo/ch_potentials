@@ -35,7 +35,7 @@ table = table.unstack(0).stack(0) \
 
 lines = table.to_latex(escape=False).split("\n")
 
-lines = [R'\begin{tabular}{clllrrrrr}'] + [lines[1]] + [
+lines = [R'\begin{tabular}{ccccrrrrr}'] + [lines[1]] + [
     R"       & BCC & Deg2 & Deg3 & Zero & ALT & CH & CCH & Oracle \\"
 ] + lines[4:]
 
