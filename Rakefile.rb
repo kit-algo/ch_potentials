@@ -9,6 +9,7 @@ file "paper/ch_potentials.pdf" => [
   "paper/fig/lazy_rphast_many_to_one.pdf",
   "paper/fig/lazy_rphast_cch_many_to_one.pdf",
   "paper/fig/lazy_rphast_many_to_many.pdf",
+  "paper/fig/lazy_rphast_inc.pdf",
   "paper/table/applications.tex",
   "paper/table/bidir_pruning.tex",
   "paper/table/bidir_switching.tex",
@@ -38,6 +39,10 @@ namespace "fig" do
 
   file "paper/fig/lazy_rphast_many_to_many.pdf" => FileList["#{exp_dir}/rphast/*.json"] + ["eval/rphast_comparison.py"] do
     sh "eval/rphast_comparison.py"
+  end
+
+  file "paper/fig/lazy_rphast_inc.pdf" => FileList["#{exp_dir}/rphast_inc/*.json"] + ["eval/rphast_inc.py"] do
+    sh "eval/rphast_inc.py"
   end
 end
 

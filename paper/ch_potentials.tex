@@ -373,7 +373,7 @@ We refer to~\cite{dgnw-phast-13} for an in-depth experimental performance analys
 
 \subsection{RPHAST}
 
-RPHAST, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source nodes to one target node (again, the reversed case works analogously).
+RPHAST~\cite{delling_et_al:OASIcs:2011:3266}, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source nodes to one target node (again, the reversed case works analogously).
 Given a set of source nodes $S$, the first step is to copy all up-edges reachable only through up-edges from the source nodes into a new graph.
 This step is called \emph{selection}.
 Then, in the query step a target $t$ is given and the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the restricted subgraph.
@@ -888,24 +888,39 @@ One is an old instance of Germany with traffic predictions from 2006 for 7\% of 
 Table~\ref{tab:graphs} contains an overview over our instances.
 In this table, we further include the sequential preprocessing running time to construct the (C)CH.
 We report preprocessing running times as averages over 10 runs.
-For queries, we perform 10\,000 point-to-point queries where both source and target are nodes drawn uniformly at random and report average results.
+To evaluate point-to-point queries, we generate 10\,000 queries where both source and target are nodes drawn uniformly at random and report average results.
+For many-to-one and many-to-many algorithms, we use the methodology from~\cite{delling_et_al:OASIcs:2011:3266}.
+We generate a \emph{ball} $B$ of nodes around 100 uniformly at random chosen nodes by running a Dijkstra search until $|B|$ nodes are settled where $|B|$ is a parameter varied throughout the experiments.
+From each ball we uniformly at random draw a set of sources $S$ and targets $T$ with $|S| = |T| = 2^{14}$.
+For one-to-many experiments, we pick 100 sources of $S$ and for each source compute the distances to all nodes in the respective $T$ for a total of 10\,000 one-to-many queries.
+For many-to-many experiments, we compute the distance table between the 100 $S$, $T$ pairs.
 
 \subsection{Lazy RPHAST}
 
-% Methodology
-% time per source
-% selection times
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{fig/lazy_rphast_inc.pdf}
+\caption{
+Total and per distance running times of incremental Lazy RPHAST with up to $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$ on OSM Germany.
+Note the different y-axis scales and units.
+}\label{fig:lazy_rphast_inc}
+\end{figure}
 
-% what do we want to show
-% - for one source target set we are as fast as RPHAST
-%   - dimensions: phase (style), graph (color), CH Var (row)
-% - incremental is cool
+To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed time after $2^i$ distances were computed.
+Figure~\ref{fig:lazy_rphast_inc} depicts the total elapsed time and the average running time to compute a single distance.
+The first few distances are the most expensive ones since a lot of the CH search space has not been explored yet.
+For later queries, only little work remains to be done and the overhead per distance becomes basically a constant depending on the ball size.
+
+The performance difference between the CH and CCH based variant is interesting.
+The CCH based variant can utilize the elimination tree for a more efficient implementation but the search space denser.
+This makes earlier queries more expensive and later queries cheaper.
+With this trade-off, it depends on the ball size which variant is faster in terms of total running time.
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one.pdf}
 \caption{
-Many-to-One CH
+Running times of CH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
 }\label{fig:many_to_one}
 \end{figure}
 
@@ -913,17 +928,35 @@ Many-to-One CH
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_cch_many_to_one.pdf}
 \caption{
-Many-to-One CCH
+Running times of CCH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
 }\label{fig:many_to_one_cch}
 \end{figure}
+
+Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental one-to-many queries.
+Figures~\ref{fig:many_to_one} and~\ref{fig:many_to_one_cch} depict average running times to compute distances between one node and $2^{14}$ targets for different ball sizes.
+This experiment uses the methodology exactly as described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to relate our results to the performance of competing algorithms (set aside the performance differences caused by using a different test machine).
+When looking at total running times for one source target set pair, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}
+For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACs Europe.
+Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
+The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
+This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster query phases.
+When computing distances from different source towards the same target set, RPHAST will outperform Lazy RPHAST.
+However, whenever the target set may change between queries, Lazy RPHAST is a simpler and faster alternative.
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_many.pdf}
 \caption{
-Many-to-Many
+Average running times of Lazy RPHAST for many-to-many queries with $|S| = |T| = 2^{14}$ sources and targets picked from a ball of varying size $|B|$ with standard deviation indicated as error bars.
+The lower part of the bars indicates the running time of the Bucket CH subphase.
 }\label{fig:many_to_many}
 \end{figure}
+
+Applying Lazy RPHAST to the many-to-many problem results in running times as depicted in Figure~\ref{fig:many_to_many}.
+The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266} which to the best of our knowledge is the fastest known approach.
+The Bucket CH based first query phase takes between half of the time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
+It is worth noting that our approach does not require any explicit utilization of SSE instructions -- contrary to SSE RPHAST.
+Nevertheless, an inspection of the generated assembly reveals that the code for Lazy RPHAST on an array of distances was automatically vectorized by the compiler.
 
 \subsubsection{k-Nearest-Neighbor Queries with CCH}
 
@@ -1140,7 +1173,7 @@ index (selection space), and the time to find the $k = 1, 4, 8$ closest POIs (qu
 \centering
 \includegraphics[width=\linewidth]{fig/knn_ball_size.pdf}
 \caption{
-Selection and query times of various closest-POI algorithms with $|P| = 2^14$ POIs picked at random from a ball of varying size $|B|$.
+Selection and query times of various closest-POI algorithms with $|P| = 2^{14}$ POIs picked at random from a ball of varying size $|B|$.
 Queries find the $k = 4$ closest POIs.
 }\label{fig:knn_ball_size}
 \end{figure}
