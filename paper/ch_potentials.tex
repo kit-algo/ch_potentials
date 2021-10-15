@@ -469,33 +469,30 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 
 \subsection{Many-to-Many with Lazy RPHAST}
 
-In this section, we discuss how the Lazy RPHAST algorithm can be applied in a many-to-many context.
-To the best of our knowledge, the fastest way to compute a full distance table between a set of sources and a set of targets is RPHAST utilizing SSE instructions to process several sources at once.
-First, the selection phase is performed for the full target set.
+Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investing how well Lazy RPHAST performs in this setting appears to be an interesting question.
+SSE RPHAST starts by performing the selection phase is performed for the full target set.
 Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
 This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
-
-Since RPHAST is the fastest known algorithm for many-to-many computations, investing how well Lazy RPHAST performs in this setting appears to be an interesting question.
-The naive approach would be to select one target after another and for each one doing the full lazy exploration from all sources.
+Naively translating this approach to Lazy RPHAST would mean selecting one target after another and for each doing the full lazy exploration from all sources.
 However, this approach would explore the upward search space of all the sources over and over again.
 This would not be competitive.
 
-Luckily, we can do better by using a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
+Luckily, we can do better by integrating a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
 The Bucket CH selection phase works as follows:
 For each node $x$, we maintain an initially empty list $B[x]$ of tuples $(t_i, dist(x,t_i))$, also called a \emph{bucket}.
-These buckets can be populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
-Now we can utilize Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) to compute distances from a given source to \emph{all} targets at once.
+These buckets are populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
+Now Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) can compute distances from a given source to \emph{all} targets at once.
 We only have to change $D[x]$ so that it is an array of distances to each $t_i$ instead of a single scalar value.
 After calling the adjusted \texttt{ComputeAndMemoizeDist} for each source, we know the shortest distances between each pair of source and target node.
-This way, we explore the search space of the sources only once.
+This way, the search space of the sources is explored only once.
 
 The Bucket-CH selection phase still explores the shared parts of the search space of the targets several times.
-This can also be improved with the following modified CH backward search:
+This can be improved with the following modified CH backward search:
 All target nodes are inserted into the queue at once.
 The priority queue is ordered by importance instead of distance.
 Distance labels are buckets instead if scalar values.
 The buckets of each target node are initialized with a single entry for the respective node with distance zero.
-When relaxing an edge, the bucket of the head nodes is merged with the bucket of the tail node with each distance increased by the weight of the edge.
+When relaxing an edge, the entries in the current node's bucket are increased by the edge's weight and merged with the bucket entries of the head node of the edge.
 By keeping the buckets sorted, this merging can be efficiently implemented with a coordinated linear sweep over both buckets.
 We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{sec:exp_lazy_rphast}.
 
@@ -584,17 +581,17 @@ Since bidirectional search provides an easy way to halve the running time of Dij
 However, as pointed out in~\cite{gh-cspas-05}, this is not as straightforward as one might expect.
 One would like to use a forward potential $\overrightarrow{h}_t$ in the forward search and a backward potential $\overleftarrow{h}_s$ (computing distances in the reversed graph) in the reverse search.
 The problem is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
-Thus, in the equivalent bidirectional Dijkstra search each direction would use different graph.
-This would break the bidirectional Dijkstra stopping criterion.
+Thus, in the equivalent bidirectional Dijkstra search each direction would run on a different graph.
+This breaks the bidirectional Dijkstra stopping criterion.
 To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until their minimum queue key $k$ becomes greater than the best known total tentative distance $\mu$.
 But this is the same stopping criterion that a unidirectional A* search has.
-Thus, this straightforward bidirectional A* performs about twice the work than a unidirectional A*.
+Thus, this straightforward bidirectional A* performs twice the work than a unidirectional A*.
 This can be slightly improved by introducing pruning.
-Nodes, for which $\overrightarrow{D}[x] + h(x) > \mu$ holds, i.e. their distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, can not contribute to a shorter path and need not to be added to the queue.
+Nodes for which $\overrightarrow{D}[x] + h(x) > \mu$ holds, i.e. their distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, can not contribute to a shorter path and need not to be added to the queue.
 This approach is denoted as the \emph{symmetric} bidirectional A*.
 
-To overcome this problem the authors of propose the \emph{average} potential, a combined heuristic, which is good for both directions but also makes both searches run on the same reduced graph and thus enables an efficient stopping criterion.
-The reduced graph of the average potential is the graph with the average weights of the reduced graphs of the forward and backward potentials.
+To overcome this problem the authors of~\cite{gh-cspas-05} propose the \emph{average} potential, a combined heuristic, which is good for both directions but also makes both searches run on the same reduced graph and thus enables an efficient stopping criterion.
+The reduced graph of the average potential is the graph with the average weights of the both reduced graphs.
 The potential function which induces this average reduced graph is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$ (and $-h_{\overline{st}}(x)$ for the backward search).
 This potential allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
 Additionally, the pruning from the symmetric approach can be utilized with the original potentials.
@@ -606,12 +603,13 @@ Second, for each direction on its own, the average potential is a worse heuristi
 
 We propose an improved pruning criterion for the symmetric approach.
 It takes the search progress (in form of the growing minimal queue keys) into account to tighten the pruning with increasing search progress and compensates for the worse stopping criterion.
-As our experiments show, this makes the simpler symmetric approach at least competitive and sometimes even faster than the average potential.
+As our experiments show, this makes the simpler symmetric approach competitive to the average potential.
 Recall that the queue is ordered by $D[x] + h(x)$.
 We use the minimal queue key $\overleftarrow{k}$ of the backward search to obtain a tighter estimate of $\dist(x,t)$.
 If a node $x$ was not yet settled by backward search then $\dist(x,t) \geq \overleftarrow{k} - \overleftarrow{h}_s(x)$.
 Thus, in the forward search if $\overrightarrow{D}[x] + \overleftarrow{k} - \overleftarrow{h}_s(x) > \mu$, we do not need to push $x$ into the queue.
 The pruning for the backwards search works analogously.
+Since this pruning is only used when $\mu > \infty$, for the greatest part of the search each direction only has to evaluate its own heuristic.
 
 For both average and symmetric bidirectional A*, we always alternate between settling a node form the forward and the backward search.
 In our experiments, we also evaluate choosing the direction by the smaller minimal queue key.
@@ -806,9 +804,6 @@ In terms of our framework this would mean having a second preprocessing phase wh
 Thus, with CCH-Potentials, we could also support a three-phase setup.
 This could, for example, be used to combine live traffic with turn costs and restrictions.
 One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
-% For applications which allow for a three-phase setup, CCH-Potentials are likely a better choice for supporting live traffic.
-% However, evaluating CCH-Potentials is beyond the scope of this paper.
-% We focus on evaluating CH-Potentials as a simple building block in the two-phase setup.
 
 \subsubsection{Alternative Routes with the Penalty Method}
 
@@ -830,8 +825,8 @@ While some details remain unclear from the description in~\cite{kobitzsch2015alt
 Since we reproduce this exact configuration except for the shortest path algorithm, qualitative results should carry over and we can focus only on running times in our work.
 
 For sake of keeping this section self-contained, we now briefly reiterate the details of our configuration.
-The stretch limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
-Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was $k$ times on a shortest path its weight will be $w_q = w_{\ell}\cdot\psi^k$.
+The stretch is limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
+Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was on the shortest path in $k$ iterations its weight will be $w_q = w_{\ell}\cdot\psi^k$.
 We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
 An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
 An edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
@@ -848,6 +843,12 @@ We terminate the algorithm when any of the following conditions becomes true:
 \end{itemize}
 The last two stopping criteria can both be utilized for additional pruning in the A*.
 As a final optimization, we run the forward and backward search in parallel in two threads.
+
+In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph:
+Just return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
+However, the approach in~\cite{adgw-arrn-13} uses a simpler penalization schema.
+We also implement this approach with CH-Potentials but with the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative}.
+This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
 
 \subsubsection{Temporary Driving Bans}
 
@@ -871,9 +872,9 @@ Further, a trade-off between arrival time and route quality is considered.
 \end{table}
 
 In this section, we present our experimental evaluation.
-Our benchmark machine runs openSUSE Leap 15.1 (kernel 4.12.14), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
+Our benchmark machine runs openSUSE Leap 15.3 (kernel 5.3.18), and has 128\,GiB of DDR4-2133 RAM and an Intel Xeon E5-1630 v3 CPUs which has four cores clocked at 3.7\,Ghz and 4~$\times$~32\,KiB of L1, 8~$\times$~256\,KiB of L2, and 10\,MiB of shared L3 cache.
 All experiments were performed sequentially.
-Our code is written in Rust and compiled with rustc 1.47.0-nightly in the release profile with the target-cpu=native option.
+Our code is written in Rust and compiled with rustc 1.57.0-nightly in the release profile with the target-cpu=native option.
 The source code of our implementation and the experimental evaluation can be found on Github\footnote{\url{https://github.com/kit-algo/ch_potentials}}.
 
 \subsection{Inputs and Methodology}
@@ -887,9 +888,9 @@ We exclude speed values which are faster than the freeflow speed computed by Rou
 We also perform experiments on the Europe instance provided by PTV\footnote{\url{https://ptvgroup.com}} for the 9th DIMACs implementation challenge~\cite{DemetrescuGJ09}.
 Additionally, we have three graphs with proprietary traffic predictions also provided by PTV.
 The PTV instances are not OSM-based.
-One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges and the other one a newer instance of Europe with predictions for 27\% of the edges.
-% TODO PTV20
-Table~\ref{tab:graphs} contains an overview over our instances.
+One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges which was used for evaluation of many competing time-dependent algorithms.
+The other two are newer instances of Europe with predictions for 27\% (TDEur17) and 76\% (TDEur20) of the edges.
+Table~\ref{tab:graphs} contains an overview over the instances.
 In this table, we further include the sequential preprocessing running time to construct the (C)CH.
 We report preprocessing running times as averages over 10 runs.
 To evaluate point-to-point queries, we generate 10\,000 queries where both source and target are nodes drawn uniformly at random and report average results.
@@ -913,7 +914,8 @@ Note the different y-axis scales and units.
 To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed time after $2^i$ distances were computed.
 Figure~\ref{fig:lazy_rphast_inc} depicts the total elapsed time and the average running time to compute a single distance.
 The first few distances are the most expensive ones since a lot of the CH search space has not been explored yet.
-For later queries, only little work remains to be done and the overhead per distance becomes basically a constant depending on the ball size.
+With around 100\,$\mu$s, the running times are comparable to standard CH queries.
+For later queries, only little work remains to be done and the overhead per distance becomes almost constant depending on the ball size.
 
 The performance difference between the CH and CCH based variant is interesting.
 The CCH based variant can utilize the elimination tree for a more efficient implementation but the search space denser.
@@ -938,14 +940,14 @@ Running times of CCH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a
 
 Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental one-to-many queries.
 Figures~\ref{fig:many_to_one} and~\ref{fig:many_to_one_cch} depict average running times to compute distances between one node and $2^{14}$ targets for different ball sizes.
-This experiment uses the methodology exactly as described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to relate our results to the performance of competing algorithms (set aside the performance differences caused by using a different test machine).
+This experiment uses the exact methodology described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to roughly relate our results to the performance of competing algorithms.
 When looking at total running times for one source target set pair, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}
 For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACs Europe.
 Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
 The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
 This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster query phases.
 When computing distances from different source towards the same target set, RPHAST will outperform Lazy RPHAST.
-However, whenever the target set may change between queries, Lazy RPHAST is a simpler and faster alternative.
+However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
 
 \begin{figure}
 \centering
@@ -957,10 +959,11 @@ The lower part of the bars indicates the running time of the Bucket CH subphase.
 \end{figure}
 
 Applying Lazy RPHAST to the many-to-many problem results in running times as depicted in Figure~\ref{fig:many_to_many}.
-The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266} which to the best of our knowledge is the fastest known approach.
+The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266}.
 The Bucket CH based first query phase takes between half of the time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
-It is worth noting that our approach does not require any explicit utilization of SSE instructions -- contrary to SSE RPHAST.
-Nevertheless, an inspection of the generated assembly reveals that the code for Lazy RPHAST on an array of distances was automatically vectorized by the compiler.
+It is worth noting that contrary to SSE RPHAST, we did not explicitly utilize SSE instructions.
+However, the code for Lazy RPHAST on an arrays of distances can be trivially vectorized by the compiler.
+We confirmed that the code was indeed vectorized by inspecting the generated assembly.
 
 \subsubsection{k-Nearest-Neighbor Queries with CCH}
 
@@ -1048,13 +1051,15 @@ CCH-Potentials are slightly slower than CH-Potentials because their search space
 
 \subsection{Bidirectional A*}
 
+
 \begin{table}
 \centering
 \caption{Performance of different variants of bidirectional A* on OSM Ger with $w_q = 1.05 \cdot w_\ell$.}\label{tab:bidir_pruning}
 \input{table/bidir_pruning.tex}
 \end{table}
 
-Table~\ref{tab:bidir_pruning} depicts the performance of different variants of bidirectional A*.
+In this section, we closely investigate the performance of bidirectional A*.
+Table~\ref{tab:bidir_pruning} depicts the performance of different variants of bidirectional A* with and without our improved pruning.
 As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
 Symmetric bidirectional A* without our improved pruning has the worst performance.
 Enabling the improved pruning brings the performance symmetric bidirectional A* on par with the average potential for all heuristics except ALT.
@@ -1062,7 +1067,7 @@ Apparently, the average potential gives ALT a better heuristic than the original
 For all other heuristics, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
 Without the low degree improvements, the improved symmetric variant is marginally faster and with the low degree improvements the average potential remains slightly faster.
 This is due to the reduced impact of the heuristic evaluation overhead with the low degree optimizations.
-Enabling the improved pruning for the average potential marginally reduces the search space size and slightly increases running times.
+Enabling the improved pruning for the average potential, marginally reduces the search space size and slightly increases running times.
 
 \begin{table}
 \centering
@@ -1091,21 +1096,22 @@ All variants use all low degree optimizations.
 
 In Table~\ref{tab:bidir} we investigate the effectiveness of bidirectional search compared to unidirectional search depending on the query weights.
 Interestingly, only the zero heuristic and ALT consistently achieve speed-ups through bidirectional search on all query weights.
-When the query weights are equal, CH-Potentials will already only traverse the shortest path with unidirectional search.
-In this case it is clear that bidirectional search will only introduce unnecessary overhead.
+With $w_q = w_{\ell}$, unidirectional CH-Potentials are already optimal and only traverse the shortest path.
+Here, bidirectional search will only introduce unnecessary overhead.
 When query weights are scaled up uniformly, bidirectional search achieves some search space reduction but it is not enough to significantly reduce running times due to the overhead of running a second search.
-This changes significantly when the query weight increases are applied non-uniformly as in the third scenario.
+This changes drastically when the query weight increases are applied non-uniformly in the third scenario.
 Here only weights with a speed less than 80\,kph were scaled up.
 This touches only the beginning and end of most shortest paths between randomly chosen nodes.
 The middle part of the shortest paths will typically use faster edges like highways.
-In this case bidirectional (C)CH-Potentials are a factor of two faster than the unidirectional variant.
+In this case, bidirectional (C)CH-Potentials are a factor of two faster than the unidirectional variant.
 The reason for this is that the search space of a unidirectional search expands greatly while exploring the end of the path to the target where the reduced weights are bad.
 In contrast, the bidirectional searches meet in the middle of the shortest path where the reduced weights are close to zero and thus avoid this expansion.
 This is also the reason why ALT behaves like this for all query weights.
 By construction, the ALT heuristic has better reduced weights for edges which are on many shortest paths like highways.
+Conversely, unimportant edges have bad reduced weights.
 This makes bidirectional search so critical for ALTs performance.
-We conclude that having a potential as tight as CH-Potentials usually makes bidirectional search unnecessary.
-Bidirectional search for A* only pays of when the reduced weights exhibit certain very specific patterns.
+In contrast, having a potential as tight as CH-Potentials makes bidirectional search in many scenarios unnecessary.
+Bidirectional search for CH-Potentials only pays of when the reduced weights exhibit certain very specific patterns.
 
 \subsection{Applications}
 
@@ -1150,19 +1156,22 @@ This results in smaller running times of our algorithm.
 \section{Conclusion}
 \label{sec:conclusion}
 
-In this paper, we introduced CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and CH for finding shortest paths in road networks.
+In this article, we introduced Lazy RPHAST, an efficient algorithm for the incremental many-to-one problem.
+We also showed that it delivers competitive performance for one-to-many and many-to-many problems.
+Based on Lazy RPHAST, we developed (C)CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and (C)CH for finding shortest paths in road networks.
 The approach can handle a multitude of complex, integrated routing scenarios with very little implementation complexity.
 CH-Potentials provides \emph{exact} distances with respect to lower bound weights known at preprocessing time as an A* heuristic.
 Thus, the query performance of CH-Potentials crucially depends on the availability of good lower bounds in the preprocessing phase.
 Our experiments show, that this availability highly depends on the application.
 We also show that the overhead of our heuristic is within a factor 1.6 of a hypothetical A*-heuristic that can instantly access lower bound distances.
 Achieving significantly faster running times could still be possible in variations of the problem setting.
-% This leads to multiple avenues for future research.
+This leads to multiple avenues for future research.
 
 Dropping the provable exactness requirement using a setup similar to anytime A*~\cite{DBLP:conf/aaai/ZhouH02,DBLP:conf/nips/LikhachevGT03} would be interesting.
 Another promising research avenue would be to investigate graphs other than road networks.
 A lot of research into grid maps exists including a series of competitions called GPPC~\cite{DBLP:conf/socs/SturtevantTTUKS15}.
 Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:conf/aaai/UrasK14}.
+It might also be worthwhile to apply CH-Potentials to even more routing applications, for example to the shortest $\epsilon$-smooth path problem~\cite{dss-tarrn-18}.
 
 %%
 %% Bibliography
