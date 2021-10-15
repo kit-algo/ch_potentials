@@ -73,8 +73,9 @@ bidir_switch_strat = queries.loc[lambda x: x['bidir_pot'] != 'unidir'] \
     .loc[lambda x: x['algo'].str.contains('Topocore')] \
     .loc[lambda x: ~(((x['bidir_pot'] == 'Average') & (x['improved_pruning'] == True)) | ((x['bidir_pot'] == 'Symmetric') & (x['improved_pruning'] == False)))] \
     .groupby(['potential', 'experiment', 'factor', 'probability', 'bidir_pot', 'choose_direction_strategy'])[['running_time_ms', 'num_queue_pushs_k']].mean().unstack(0) \
-    .loc[('probabilistic_scale_by_speed', 1.50)] \
-    .reindex(columns=['Zero', 'ALT', 'CH', 'CCH', 'Oracle'], level=1)
+    .reindex(columns=['Zero', 'ALT', 'CH', 'CCH', 'Oracle'], level=1) \
+    .reindex(index=['weight_scale', 'probabilistic_scale_by_speed'], level=0) \
+    .reindex(index=[1.0], level=2)
 
 bidir_switch_strat[('num_queue_pushs_k', '(C)CH/Oracle')] = bidir_switch_strat[('num_queue_pushs_k', 'CH')]
 bidir_switch_strat = bidir_switch_strat.drop([('num_queue_pushs_k', 'CH'), ('num_queue_pushs_k', 'CCH'), ('num_queue_pushs_k', 'Oracle')], axis = 'columns')
@@ -84,15 +85,19 @@ bidir_switch_strat = bidir_switch_strat.rename(columns={
         'num_queue_pushs_k': 'Queue pushs [$\\cdot 10^3$]',
     }) \
     .rename(index={
-        0.00: '> 80kph',
-        1.00: '< 80kph',
         'alternating': 'Alternating',
         'min_key': 'Min. Key',
     })
 
+bidir_switch_strat.loc[('probabilistic_scale_by_speed', 1.5, 1.0), '$w_q$'] = '< 80kph'
+bidir_switch_strat.loc[('weight_scale', 1.0, 1.0), '$w_q$'] = 'unmodified'
+bidir_switch_strat.loc[('weight_scale', 1.05, 1.0), '$w_q$'] = '*1.05'
+bidir_switch_strat = bidir_switch_strat.reset_index(level=[0,1,2], drop=True).reset_index().set_index(['$w_q$', 'bidir_pot', 'choose_direction_strategy'])
 table = bidir_switch_strat.reset_index()
-table.loc[1:3, 'probability'] = ''
-table.loc[5:9, 'probability'] = ''
+
+table.loc[1:3, '$w_q$'] = ''
+table.loc[5:7, '$w_q$'] = ''
+table.loc[9:11, '$w_q$'] = ''
 
 lines = table.to_latex(escape=False, index=False, multicolumn_format='c', column_format='cccrrrrrrrr').split("\n")
 
@@ -100,11 +105,13 @@ lines = lines[0:2] + [
     R' &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-11}'
     R'\multirow{2}{*}{$w_q$} & Bidirectional & Choose    & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} & \multirow{2}{*}{Oracle} & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & (C)CH/ \\',
     R' & Potential     & Direction & & & & & & & & Oracle \\'
-] + lines[4:9] + ['\\addlinespace'] + lines[9:]
+] + lines[4:9] + ['\\addlinespace'] + lines[9:13] + ['\\addlinespace'] + lines[13:]
 
 output = "\n".join(lines) + "\n"
-output = output.replace('> 80kph', R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v >$ 80kph}}}')
-output = output.replace('< 80kph', R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v <$ 80kph}}}')
+output = output.replace('> 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v >$ 80kph}}')
+output = output.replace('< 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v <$ 80kph}}')
+output = output.replace('unmodified', R'\multirow{4}{*}{$w_{\ell}$}')
+output = output.replace('*1.05', R'\multirow{4}{*}{$w_{\ell} \cdot 1.05$}')
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
 
 with open("paper/table/bidir_switching.tex", 'w') as f:

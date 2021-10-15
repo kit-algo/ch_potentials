@@ -389,7 +389,7 @@ In some cases one of the sets is a single node.
 This is then called a \emph{one-to-many} or \emph{many-to-one} problem.
 RPHAST, as discussed in the previous paragraph, can be applied to these problems.
 
-In this section, we discuss a very specific setting arises naturally from A* heuristics.
+In this section, we discuss a very specific setting which naturally arises from A* heuristics.
 Here, the target node is known in the selection step but the source nodes are only queried one after another.
 We denote this problem as the \emph{incremental many-to-one} problem.
 The first step is the \emph{target selection} where the target node is provided.
@@ -495,7 +495,7 @@ Distance labels are buckets instead if scalar values.
 The buckets of each target node are initialized with a single entry for the respective node with distance zero.
 When relaxing an edge, the bucket of the head nodes is merged with the bucket of the tail node with each distance increased by the weight of the edge.
 By keeping the buckets sorted, this merging can be efficiently implemented with a coordinated linear sweep over both buckets.
-We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{todo}.
+We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{sec:exp_lazy_rphast}.
 
 \section{A* with CH-Potentials}\label{sec:main-algo}
 
@@ -611,12 +611,14 @@ If a node $x$ was not yet settled by backward search then $\dist(x,t) \geq \over
 Thus, in the forward search if $\overrightarrow{D}[x] + \overleftarrow{k} - \overleftarrow{h}_s(x) > \mu$, we do not need to push $x$ into the queue.
 The pruning for the backwards search works analogously.
 
-% TODO alternating directions
+For both average and symmetric bidirectional A*, we always alternate between settling a node form the forward and the backward search.
+In our experiments, we also evaluate choosing the direction by the smaller minimal queue key.
+Even though this appears to better fit together with the stopping criterion for the symmetric approach, our experiments show that it is never beneficial in terms of running time (see Table~\ref{tab:bidir_switching}).
 
 \subsection{Applications}\label{sec:extensions}
 
 % A* is a flexible algorithm.
-% Many extended problems can therefore be solved using the CH-Potentials framework.
+Many extended problems can be solved using CH-Potentials.
 We start by establishing a common formal framework for the use of CH-Potentials.
 Then, we exemplary describe some extended routing problems and how to apply CH-Potentials to them.
 
@@ -895,7 +897,7 @@ From each ball we uniformly at random draw a set of sources $S$ and targets $T$ 
 For one-to-many experiments, we pick 100 sources of $S$ and for each source compute the distances to all nodes in the respective $T$ for a total of 10\,000 one-to-many queries.
 For many-to-many experiments, we compute the distance table between the 100 $S$, $T$ pairs.
 
-\subsection{Lazy RPHAST}
+\subsection{Lazy RPHAST}\label{sec:exp_lazy_rphast}
 
 \begin{figure}
 \centering
@@ -1063,15 +1065,29 @@ Enabling the improved pruning for the average potential marginally reduces the s
 \begin{table}
 \centering
 \caption{
+Performance of different direction selection criteria of bidirectional A* on OSM Ger with different query weights.
+The symmetric variant uses the improved pruning, the average variant does not.
+All variants use all low degree optimizations.
+}\label{tab:bidir_switching}
+\input{table/bidir_switching.tex}
+\end{table}
+
+Table~\ref{tab:bidir_switching} shows the performance of bidirectional A* with different strategies to decide whether to advance the forward or the backward search next.
+The results clearly show that alternating the directions is always superior.
+Selecting the direction by minimal queue key may lead to huge imbalances in the progress of the searches.
+This causes the searches to meet later and the total search space to grow significantly.
+
+\begin{table}
+\centering
+\caption{
 Performance of bidirectional and unidirectional A* on OSM Ger with different query weights.
 The symmetric variant uses the improved pruning, the average variant does not.
 All variants use all low degree optimizations.
 }\label{tab:bidir}
 \input{table/bidir.tex}
 \end{table}
-% TODO remove fourth scenario
 
-In Table~\ref{tab:bidir} we investigate the effectiveness of bidirectional search for A* depending on the query weights.
+In Table~\ref{tab:bidir} we investigate the effectiveness of bidirectional search compared to unidirectional search depending on the query weights.
 Interestingly, only the zero heuristic and ALT consistently achieve speed-ups through bidirectional search on all query weights.
 When the query weights are equal, CH-Potentials will already only traverse the shortest path with unidirectional search.
 In this case it is clear that bidirectional search will only introduce unnecessary overhead.
@@ -1194,17 +1210,5 @@ Queries find the $k = 4$ closest POIs.
 Time to generate a single trip with different demand generators for various values of $\lambda$.
 }\label{fig:knn_demands}
 \end{figure}
-
-\section{Extended Experimental Results on Bidrectional A*}
-
-\begin{table}
-\centering
-\caption{
-Performance of different direction selection criteria of bidirectional A* on OSM Ger with different query weights.
-The symmetric variant uses the improved pruning, the average variant does not.
-All variants use all low degree optimizations.
-}\label{tab:bidir_switching}
-\input{table/bidir_switching.tex}
-\end{table}
 
 \end{document}
