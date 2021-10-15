@@ -1175,6 +1175,20 @@ Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:
 
 \section{Improved Results for k-Nearest-Neighbor Queries on CCH}
 
+In this section, we report the results of the k-Nearest-Neighbor Queries on CCH with Lazy RPHAST.
+The authors of~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} provide the code for their algorithm and their experiments on Github\footnote{\url{https://github.com/vbuchhold/routing-framework}}.
+This includes the code for both the old version and the new one improved with Lazy RPHAST.
+We reran the experiments performed for~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} in both the old and the new configuration on our machine.
+In the results, we denote the old version as \emph{CCH/CRAD} and the new one as \emph{CCH*/CRAD*}.
+Our results exhibit the same characteristics as observed in the original publication.
+Absolute running times of course vary slightly.
+
+Lazy RPHAST yields the greatest improvements of more than an order of magnitude when the points of interest (\emph{POIs}) are concentrated in a smaller region (see Table~\ref{tab:knn} and Figure~\ref{fig:knn_ball_size}).
+When the POIs are distributed over the whole graph, the speed-up is only around factor of three.
+Lazy RPHAST also achieves greater speed-ups for larger numbers of POIs (see Figure~\ref{fig:knn_num_pois}).
+For the demand generation application, this translates to a speed-up factor of around 2.5 (see Figure~\ref{fig:knn_demands}).
+For a more detailed discussion of these results and a comparison to competing algorithms, we refer to~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
+
 \begin{table}
 \centering
 \caption{
