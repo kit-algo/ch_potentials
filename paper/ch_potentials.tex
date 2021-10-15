@@ -27,7 +27,7 @@
 
 \bibliographystyle{plainurl} % the mandatory bibstyle
 
-\title{A Fast and Tight Heuristic for A* in Road Networks}
+\title{Using Incremental Many-to-One Queries to Build a Fast and Tight Heuristic for A* in Road Networks}
 
 \author{Ben Strasser}
 \email{academia@ben-strasser.net}
@@ -51,7 +51,7 @@
 
 
 \begin{abstract}
-We study exact, efficient and practical algorithms for route planning in large road networks.
+We study exact, efficient and practical algorithms for route planning applications in large road networks.
 Routing applications often require integrating the current traffic situation, planning ahead with traffic predictions for the future, respecting forbidden turns, and many other features depending on the exact application.
 While Dijkstra's algorithm can be used to solve these problems, it is too slow for many applications.
 A* is a classical approach to accelerate Dijkstra's algorithm.
@@ -61,10 +61,11 @@ Computing tight distance estimates is a challenge on its own.
 On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
 They achieve speed and exactness but sacrifice A*'s flexibility.
 Extending them to certain practical applications can be hard.
-In this paper, we present an algorithm to efficiently extract distance estimates for A* from Contraction Hierarchies (CH), a hierarchical technique.
-We call our heuristic CH-Potentials.
+In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many distance estimates towards a single target and use it as a A* heuristic.
+Since it utilizes Contraction Hierarchies (CH), a hierarchical technique, we call our heuristic CH-Potentials.
 Our approach allows decoupling the supported extensions from the hierarchical speed-up technique.
-Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks.
+Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present an improved pruning criterion for symmetrical bidirectional A*.
+An extensive experimental study confirms the practicality of our approach for many practical problems.
 \end{abstract}
 
 \ccsdesc[500]{Theory of computation~Shortest paths}
@@ -108,7 +109,7 @@ Some applications may have additional application-specific requirements.
 Extending Dijkstra's algorithm to support these features is usually easy.
 Extending hierarchical speed-up techniques is also possible.
 However, the algorithm development is vastly more complex.
-For every feature, dedicated research paper(s) exist that extend CH.
+For every feature, dedicated research papers exist that extend CH and other approaches.
 Supporting the combination of several features is even harder.
 For example, we are not aware of any work combining all features mentioned above.
 In this paper, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
@@ -139,6 +140,7 @@ CH-Potentials, our new distance estimation function is introduced in Section~\re
 Section~\ref{sec:low-deg-improvment} discusses our improvements for the handling of low-degree nodes.
 In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply the approach to different practical applications.
 Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
+% TODO contribution vs conference
 
 \section{Related Work}\label{sec:related_work}
 
@@ -239,7 +241,7 @@ A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
 A heuristic function is called \emph{feasible} if $w_{h_t} \geq 0$ for all edges.
 
-\subsection{Contraction Hierarchy (CH)}
+\subsection{Contraction Hierarchies (CH)}
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to target $t$}
@@ -311,13 +313,14 @@ On graphs with low treewidth, this is also the case~\cite{dsw-cch-15,hs-gbpo-18}
 % Fortunately, we can do better.
 % For this we need another component called PHAST~\cite{dgnw-phast-13}.
 
-\subsection{Customizable Contraction Hierarchy (CCH)}
+\subsection{Customizable Contraction Hierarchies (CCH)}
 
 Customizable Contraction Hierarchies~\cite{dsw-cch-15} are a special variant of Contraction Hierarchies.
 They use a node importance order independent of the weight function.
+% TODO so far, we only have levels but not ranks
 This allows splitting the preprocessing in two subphases.
 The first one is slow but independent of the weight function.
-The second one, called \emph{customization}, is fast (less than a second) and applies a weight function to the preprocessed data.
+The second one, called \emph{customization}, is fast (a couple of seconds or less) and applies a weight function to the preprocessed data.
 This allows regular updates to the weight function, for example to incorporate live traffic.
 
 As for CH, the result of the preprocessing is an augmented graph $G^+$ fulfilling the same properties as for CH.
@@ -325,10 +328,11 @@ Thus, the CH query algorithms can be applied without modifications.
 However, the CCH preprocessing grants some additional useful properties.
 During preprocessing, an \emph{elimination tree} can be constructed.
 The root of the elimination tree is the most important node.
+% TODO so far, we only have levels but not ranks
 For every other node its parent is its least important upward neighbor.
 In~\cite{bcrw-s-16}, it was proven that set of ancestors of a node in the elimination tree is equal to the nodes reachable in a forward/backward CH search.
 This makes it possible to explore the CCH search space with a more efficient shortest path algorithm for DAGs:
-Traverse elimination tree from source and target to root node and for each node relax all up-edges (reversed down-edges for the backward search).
+Traverse elimination tree from source and target to the root node and for each node relax all up-edges (reversed down-edges for the backward search).
 Because this algorithm does not require a queue, it is faster than a Dijkstra based CH query.
 
 \subsection{PHAST}
@@ -347,7 +351,8 @@ Execute Algorithm~\ref{algo:ch-backward}\;
 \label{algo:phast}
 \end{algorithm2e}
 
-PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node (or vice versa, the one-to-all case works analogously).
+PHAST~\cite{dgnw-phast-13} is a CH extension that computes distances from all nodes to one target node (or vice versa, the reverse case works analogously).
+This is sometimes denoted as a \emph{all-to-one} (or \emph{one-to-all}) problem.
 The preprocessing phase remains the same as for CH.
 The query phase is split into two steps.
 The first step is analogue to the CH query:
@@ -373,27 +378,23 @@ We refer to~\cite{dgnw-phast-13} for an in-depth experimental performance analys
 
 \subsection{RPHAST}
 
-RPHAST~\cite{delling_et_al:OASIcs:2011:3266}, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source nodes to one target node (again, the reversed case works analogously).
+RPHAST~\cite{delling_et_al:OASIcs:2011:3266}, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source nodes to one target node (again, the reversed case works analogously), solving the \emph{many-to-one} problem.
 Given a set of source nodes $S$, the first step is to copy all up-edges reachable only through up-edges from the source nodes into a new graph.
 This step is called \emph{selection}.
-Then, in the query step a target $t$ is given and the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the restricted subgraph.
+Then, in the query step, a target $t$ is given and the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the restricted subgraph.
 RPHAST is particularly effective when many targets are queried for the same source set $S$.
 If the source set changes often, selection times may become problematic.
+RPHAST can also be applied to the \emph{many-to-many} problem, computing a distance matrix between sets $S$ and $T$ of nodes.
+Combined with SSE extension it is, to the best of our knowledge, the fastest currently known algorithm for this problem setting.
 
 \section{The Incremental Many-to-One Problem}\label{sec:lazy-rphast}
 
-Most route planning algorithms focus on the point-to-point shortest path problem.
-However, certain applications need distances between sets $S$ and $T$ of nodes.
-This is variant is known as the \emph{many-to-many} problem variant.
-In some cases one of the sets is a single node.
-This is then called a \emph{one-to-many} or \emph{many-to-one} problem.
-RPHAST, as discussed in the previous paragraph, can be applied to these problems.
-
-In this section, we discuss a very specific setting which naturally arises from A* heuristics.
+In this section, we discuss another very specific problem setting which naturally arises from A* heuristics.
 Here, the target node is known in the selection step but the source nodes are only queried one after another.
 We denote this problem as the \emph{incremental many-to-one} problem.
 The first step is the \emph{target selection} where the target node is provided.
-Then, an arbitrary number of source nodes $s_i$ are given one after another and for each source the distance to the target has to be computed.
+Then, an arbitrary number of source nodes $s_i$ are given one after another.
+For each source the distance to the target has to be computed before the next source will be provided.
 
 We consider the combined running time of the target selection and each incremental query as the total running time to answer an incremental many-to-one query.
 Since the target selection time is included, computing the distances to all nodes with Dijkstra or PHAST is too slow.
@@ -435,10 +436,11 @@ This calculation is correct, as it computes the minimum up-down $s_it$-path dist
 
 Algorithm~\ref{algo:pot} can be applied to CCH without any modifications.
 However, we can also exploit the elimination tree for the Lazy RPHAST algorithm.
-Computing the distance $D[x]$ requires knowing the final distance of all upward neighbors.
-In Algorithm~\ref{algo:pot} we have to compute these distances recursively.
+To compute the distance $D[x]$ of a node $x$ the distances of all upward neighbors must be final.
+In Algorithm~\ref{algo:pot} we have to compute all these distances recursively.
+However, on CCH it is sufficient to ensure that the distance of the elimination tree parent of $x$ is final.
 All upward neighbors of $x$ are by definition included in the search space, thus they are also ancestors in the elimination tree.
-If the distance of the parent in the elimination tree has already been computed, the distances of all other upward neighbors also has to have been computed.
+Thus, if the distance of the parent in the elimination tree is final, the distances of all other upward neighbors must already be final, too.
 Thus, it is sufficient to recursively (or iteratively) ensure that the distance of the parent in the elimination tree has been computed.
 As soon as a node with final distance is encountered, all ancestors are known to have their final distance.
 This allows for the more efficient implementation depicted in Algorithm~\ref{algo:cch_pot}.
@@ -504,7 +506,7 @@ We also discuss CH-Potentials for the bidirectional A* algorithm and propose an 
 Further, we present several low degree node optimization which exploit road network characteristics to reduce the overhead of queue operations and heuristic evaluations.
 Finally, we introduce an algorithmic framework to apply A* with CH-Potentials to a variety of practical route planning problems.
 
-The CH-Potentials heuristic is a straightforward application of the Lazy RPHAST algorithm.
+The \emph{CH-Potentials} heuristic is a straightforward application of the Lazy RPHAST algorithm.
 In the beginning of each query, we perform the target selection, a backward CH search, from the target $t$.
 The heuristic function $h_t(x)$ is implemented by a call to the \texttt{ComputeAndMemoizeDist} for node $x$.
 
