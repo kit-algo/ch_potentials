@@ -17,8 +17,8 @@ def path_to_graph(path):
         'ptv17': 'TDEur17',
         'ptv20': 'TDEur20',
         'osm_europe': 'OSM Europe',
-        'osm_ger': 'OSM Ger',
-        'osm_ger_td': 'TD OSM Ger',
+        'osm_ger': 'OSM Germany',
+        'osm_ger_td': 'OSM Germany',
         'europe': 'DIMACs Europe',
     }[[x for x in path.split('/') if x != ''][-1]]
 

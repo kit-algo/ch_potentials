@@ -65,7 +65,7 @@ In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many 
 Since it utilizes Contraction Hierarchies (CH), a hierarchical technique, we call our heuristic CH-Potentials.
 Our approach allows decoupling the supported extensions from the hierarchical speed-up technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present an improved pruning criterion for symmetrical bidirectional A*.
-An extensive experimental study confirms the practicality of our approach for many practical problems.
+An extensive experimental study confirms the practicality of our approach for many applications.
 \end{abstract}
 
 \ccsdesc[500]{Theory of computation~Shortest paths}
@@ -112,7 +112,7 @@ However, the algorithm development is vastly more complex.
 For every feature, dedicated research papers exist that extend CH and other approaches.
 Supporting the combination of several features is even harder.
 For example, we are not aware of any work combining all features mentioned above.
-In this paper, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
+In this article, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
 
 Our approach decouples extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
 A* is a goal-directed variant of Dijkstra's algorithm.
@@ -124,23 +124,30 @@ Further, evaluating the heuristic must be fast.
 % The free flow travel time to the goal is a valid heuristic for most features.
 % In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
 % However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
-In this paper, we describe CH-Potentials, a fast heuristic with tight estimates.
+In this article, we introduce Lazy RPHAST and build on it CH-Potentials, a fast heuristic with tight estimates.
 Internally, the heuristic uses a CH.
 Fortunately, this is an implementation detail from the perspective of the A*.
 To support a new feature, we only need to modify the A* algorithm.
 The heuristic core containing the CH remains untouched.
 Extending A* is vastly easier than extending a CH.
 This enables us to design algorithms for a multitude of features.
-In addition, we describe query optimizations for handling of low-degree nodes, common in road networks.
-These low degree optimizations are applicable to Dijkstra's algorithm and A*.
 
-The rest of the paper is organized as follows.
+This article is the extended version of our conference paper ``A Fast and Tight Heuristic for A* in Road Networks''~\cite{strasser_et_al:LIPIcs.SEA.2021.6}.
+The paper introduced the basic CH-Potentials heuristic, some query optimizations for handling of low-degree nodes, common in road networks, and some applications of CH-Potentials.
+In this article we discuss and evaluate Lazy RPHAST, the central ingredient of CH-Potentials, in much greater detail and introduce an improved variant for Customizable Contraction Hierarchies.
+Furthermore, we evaluate Lazy RPHAST in the context of one-to-many and many-to-many problems.
+The original paper only discussed unidirectional CH-Potentials.
+Here, we also discuss a bidirectional variant and also introduce an improved pruning criterion for symmetrical bidirectional A* which can also be utilized for other heuristic.
+Finally, we include additional applications of CH-Potentials, for example alternative routes, and provide a significantly expanded evaluation.
+
+The rest of the article is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
+After establishing preliminaries in~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and our algorithm to solve it efficiently in Section~\ref{sec:lazy-rphast}.
 CH-Potentials, our new distance estimation function is introduced in Section~\ref{sec:main-algo}.
-Section~\ref{sec:low-deg-improvment} discusses our improvements for the handling of low-degree nodes.
+There we also discuss our improvements to the handling of low-degree nodes (Section~\ref{sec:low-deg-improvment}) and for symmetrical bidirectional A* (Section~\ref{sec:bidir_astar}).
+Section~\ref{sec:extensions} presents a multitude of applications of CH-Potentials.
 In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply the approach to different practical applications.
 Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
-% TODO contribution vs conference
 
 \section{Related Work}\label{sec:related_work}
 
@@ -575,7 +582,7 @@ Otherwise, we find $a_t$.
 In that case, we continue by searching a path from $a_t$ towards $t$ restricted to $t$'s biconnected component.
 The final result is the concatenation of both paths.
 
-\subsection{Bidirectional A*}
+\subsection{Bidirectional A*}\label{sec:bidir_astar}
 
 Since bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm, a bidirectional variant of A* also seems desirable.
 However, as pointed out in~\cite{gh-cspas-05}, this is not as straightforward as one might expect.
@@ -846,8 +853,8 @@ As a final optimization, we run the forward and backward search in parallel in t
 
 In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph:
 Just return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
-However, the approach in~\cite{adgw-arrn-13} uses a simpler penalization schema.
-We also implement this approach with CH-Potentials but with the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative}.
+However, their approach uses a simpler penalization schema.
+We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative}.
 This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
 
 \subsubsection{Temporary Driving Bans}
@@ -1119,6 +1126,7 @@ Bidirectional search for CH-Potentials only pays of when the reduced weights exh
 \centering
 \caption{
 CH-Potentials performance for different route planning applications.
+Depending on the problem we apply unidirectional or bidirectional CH-Potentials (CH U or CH B) or CCH-Potentials (CCH U/B).
 We report average running times and number of queue pushes.
 We also report the average length increase, that is how much longer the final shortest distance is compared to the lower bound.
 Finally, we report the average running time of Dijkstra's algorithm as a baseline and the speedup over this baseline.
@@ -1126,14 +1134,15 @@ Finally, we report the average running time of Dijkstra's algorithm as a baselin
 \input{table/applications.tex}
 \end{table*}
 
-Table~\ref{tab:applications} depicts the running times of CH-Potentials in various applications, such as those described in Section~\ref{sec:extensions}.
+Table~\ref{tab:applications} depicts the running times of (C)CH-Potentials in various applications, such as those described in Section~\ref{sec:extensions}.
 We report speedups compared to extensions of Dijkstra's algorithm for each application respectively.
 We start with the base case where $w_q = w_\ell$.
 This is the problem variant solved by the basic CH algorithm.
 CH achieves average query running times of 0.16\,ms on OSM Ger.
-CH-Potentials are roughly four times slower but still achieve a huge speedup of 3243 over Dijkstra.
+CH-Potentials are roughly four times slower but still achieve a huge speedup of 3795 over Dijkstra.
 Such large speedups are typical for CH.
 This shows that CH-Potentials gracefully converges toward a CH in the $w_q = w_\ell$ special case.
+On DIMACs Europe, the average degree is somewhat higher which makes the low-degree optimizations less effective which leads to more queue operations and a slightly slower running time.
 
 In the other scenarios, the performance of CH-Potentials strongly depends on the quality of the heuristic.
 We measure this quality using the length increase of $w_q$ compared to $w_\ell$.
@@ -1141,17 +1150,22 @@ Forbidding highways results in the largest length increase and in the smallest s
 The other extreme are turn restrictions.
 They have only a small impact on the length increase.
 The achieved speedups are therefore comparable to CH speedups.
-%
-Mapbox live traffic has a length increase of around 15\%, which yields running times of 127\,ms.
-The length increase of Mapbox traffic predictions are about 18\%, and results in a running time of 200\,ms.
+Since turn costs an restrictions appear mostly in the beginning and end of shortest-paths and not in the middle on highways, utilizing bidirectional search results in even better speed-ups.
+Mapbox live traffic has a length increase of around 15\%, which yields running times of 130\,ms.
+Applying bidirectional CH-Potentials in this case is actually detrimental to the performance because the bad reduced edge weights appear in the middle of shortest paths.
+The same is the case for forbidden tunnels or highways.
+Applying CCH-Potentials customized to the current traffic (or the metric with forbidden edges) to these problems yields running times similar to the unmodified case and speed-ups of more than three orders of magnitude.
+With bidirectional CCH-Potentials, one can easily additionally support turn costs and still have running times of a few milliseconds without any adjustments to the customization.
+
+The length increase of Mapbox traffic predictions are about 12.3\%, and results in a running time of 120\,ms.
 The speedup in the predicted scenario is larger than in the live setting, as the travel time function evaluations slow down Dijkstra's algorithm.
-Combining predicted and live traffic results in a running time only slightly higher than for the predicted scenario.
-Further adding turn restrictions, increases the running times.
+Combining predicted and live traffic results in a running time of around 200\,ms.
+Further adding turn restrictions, significantly increases the running times.
 This increase is mostly due to the BCC optimization of Section~\ref{sec:largested-biconnected-component} becoming ineffective when considering turns.
 It is not due to the length increase of using turns.
-With everything activated, our algorithm still has a speedup of 12.2 over the baseline.
+With everything activated, our algorithm still has a speedup of 13.5 over the baseline.
 Interestingly, the PTV traffic predictions have a much smaller length increase than the Mapbox predictions.
-This results in smaller running times of our algorithm.
+This results in somewhat smaller running times of our algorithm.
 
 \section{Conclusion}
 \label{sec:conclusion}

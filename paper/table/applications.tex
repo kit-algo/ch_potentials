@@ -1,18 +1,34 @@
-\begin{tabular}{llrrrrr}
+\begin{tabular}{lllrrrrr}
 \toprule
- & &   Running &                Queue &     Length & Dijkstra & Speedup \\ & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\
+ & & &   Running &                Queue &     Length & Dijkstra & Speedup \\ & & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\
 \midrule
-\multirow{8}{*}{OSM Ger} & Unmodified ($w_q=w_\ell$) &              0.6 &              0.5 &       0.0 &                    1\,952.8 &   3\,243.1 \\
-        & Turns &              2.8 &              6.0 &       1.1 &                    4\,244.4 &   1\,540.8 \\
-        & No Tunnels &             25.9 &             40.7 &       5.3 &                    1\,990.1 &     76.9 \\
-        & No Highways &            342.9 &            518.5 &      42.4 &                    1\,843.9 &      5.4 \\
-        & Live &            127.3 &            192.1 &      14.8 &                    1\,884.1 &     14.8 \\
-        & TD &            195.5 &            163.1 &      17.6 &                    3\,186.2 &     16.3 \\
-        & TD + Live &            209.7 &            179.1 &      21.4 &                    3\,152.2 &     15.0 \\
-        & TD + Live + Turns &            508.5 &            765.5 &      22.7 &                    6\,179.5 &     12.2 \\
+DIMACs Eur & Unmodified $w_q = w_{\ell}$ & CH U &              0.9 &              1.1 &       0.0 &                    2106.0 &   2405.8 \\
 \addlinespace
-TDEur17 & TD &             89.7 &             81.5 &       3.9 &                    3\,479.9 &     38.8 \\
-TDGer06 & TD &              4.5 &              6.4 &       3.1 &                     602.4 &    135.4 \\
+OSM Ger & Unmodified $w_q = w_{\ell}$ & CH U &              0.6 &              0.5 &       0.0 &                    2182.6 &   3795.4 \\
+\addlinespace
+        & No Tunnels & CH U &             29.2 &             46.8 &       5.2 &                    2198.0 &     75.2 \\
+        &    & CH B &             33.4 &             35.7 &       5.2 &                    2198.0 &     65.8 \\
+\addlinespace
+        & No Highways & CH U &            378.7 &            583.8 &      42.5 &                    1992.5 &      5.3 \\
+        &    & CH B &            433.1 &            481.6 &      42.5 &                    1992.5 &      4.6 \\
+\addlinespace
+        & Live & CH U &            129.4 &            193.9 &      15.0 &                    2119.3 &     16.4 \\
+        &    & CH B &            193.6 &            188.8 &      15.0 &                    2119.3 &     10.9 \\
+        &    & CCH U &              1.1 &              0.8 &       0.0 &                    2119.3 &   1920.4 \\
+\addlinespace
+        & Turns & CH U &              3.0 &              5.7 &       1.1 &                    4708.2 &   1556.0 \\
+        &    & CH B &              1.1 &              0.8 &       1.1 &                    4708.2 &   4223.8 \\
+\addlinespace
+        & Live + Turns & CCH U &              4.8 &              8.8 &       1.0 &                    4621.8 &    959.7 \\
+        &    & CCH B &              2.1 &              1.6 &       1.1 &                    4621.8 &   2168.1 \\
+\addlinespace
+        & TD & CH U &            120.8 &            104.4 &      12.3 &                    3133.7 &     25.9 \\
+        & TD + Live & CH U &            198.3 &            170.3 &      20.7 &                    3436.5 &     17.3 \\
+        & TD + Live + Turns & CH U &            474.2 &            657.8 &      21.7 &                    6420.5 &     13.5 \\
+\addlinespace
+TDEur17 & TD & CH U &             80.4 &             79.8 &       3.9 &                    3454.3 &     43.0 \\
+TDEur20 & TD & CH U &             97.7 &             72.8 &       4.2 &                    5060.2 &     51.8 \\
+TDGer06 & TD & CH U &              4.2 &              6.4 &       3.1 &                     603.5 &    144.2 \\
 \bottomrule
 \end{tabular}
 

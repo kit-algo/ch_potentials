@@ -12,6 +12,17 @@ cwd = os.getcwd()
 paths = glob.glob(base + "applications/*.json")
 data = [json.load(open(path)) for path in paths]
 
+def path_to_graph(path):
+    return {
+        'ger06': 'TDGer06',
+        'ptv17': 'TDEur17',
+        'ptv20': 'TDEur20',
+        'osm_europe': 'OSM Europe',
+        'osm_ger': 'OSM Ger',
+        'osm_ger_td': 'OSM Ger',
+        'europe': 'DIMACs Eur',
+    }[[x for x in path.split('/') if x != ''][-1]]
+
 only_public = 'ONLY_PUBLIC' in os.environ
 
 queries = pd.DataFrame.from_records([{
