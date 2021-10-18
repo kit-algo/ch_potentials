@@ -195,7 +195,7 @@ namespace "exp" do
   desc "Run all experiments"
   task all: [:preprocessing, :scaled_weights, :building_blocks, :rphast, :rphast_inc, :bidir_features, :applications]
 
-  task queries: [:scaled_weights, :building_blocks, :applications]
+  task queries: [:scaled_weights, :building_blocks, :applications, :alternatives]
 
   directory "#{exp_dir}/preprocessing"
   directory "#{exp_dir}/preprocessing/ch"
@@ -206,6 +206,7 @@ namespace "exp" do
   directory "#{exp_dir}/rphast_inc"
   directory "#{exp_dir}/bidir_features"
   directory "#{exp_dir}/applications"
+  directory "#{exp_dir}/alternatives"
 
   task preprocessing: ["code/compute_ch/build/compute_ch", "#{exp_dir}/preprocessing/ch", "#{exp_dir}/preprocessing/cch", "code/rust_road_router/lib/InertialFlowCutter/build/console"] + graphs.map { |g| g + 'lower_bound' } do
     graphs.each do |graph|
@@ -300,8 +301,15 @@ namespace "exp" do
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin bidir_chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin bidir_chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_penalty -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
-      # sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_penalty -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+    end
+  end
+
+  task alternatives: static_graphs.map { |g| g + 'lower_bound_ch' } + static_graphs.map { |g| g + 'cch_perm' } + ["#{exp_dir}/alternatives"] do
+    Dir.chdir "code/rust_road_router" do
+      static_graphs.each do |graph|
+        sh "cargo run --release --bin chpot_penalty -- #{graph} > #{exp_dir}/alternatives/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_penalty_iterative -- #{graph} > #{exp_dir}/alternatives/$(date --iso-8601=seconds).json"
+      end
     end
   end
 end
