@@ -282,11 +282,9 @@ A CH is a two phase technique to efficiently compute exact, shortest paths.
 For details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
-A CH places nodes into levels.
-No edge must connect two nodes within one level.
-Levels are ordered by ``importance''.
+In a CH, each node gets a unique rank representing its ``importance''.
 The intuition is that dead-ends are unimportant and at the bottom while highway bridges are very important and at the top.
-An edge goes \emph{up} when it goes from a node in a lower level to higher level.
+An edge goes \emph{up} when its tail node has lower rank than its head node.
 \emph{Down} edges are defined analogously.
 An \emph{up-down path} is a path where only one node $m$ is more important than both its neighbors.
 $m$ is called the \emph{mid} node.
@@ -296,7 +294,7 @@ Similarly, the first node is the mid node of a \emph{down path}.
 %
 In the preprocessing phase, first, a node ordering is computed heuristically.
 Then, \emph{shortcut} edges are added to the input graph $G$ to obtain $G^+$.
-This is done by repeatedly contracting unimportant nodes and adding shortcuts between its neighbors.
+This is done by repeatedly contracting the least important node and adding shortcuts between its neighbors.
 %See~\cite{gssv-erlrn-12} for the details.
 After the preprocessing, for every pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path in $G^+$ with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for a proof sketch.
@@ -337,7 +335,7 @@ During preprocessing, an \emph{elimination tree} can be constructed.
 The root of the elimination tree is the most important node.
 % TODO so far, we only have levels but not ranks
 For every other node its parent is its least important upward neighbor.
-In~\cite{bcrw-s-16}, it was proven that set of ancestors of a node in the elimination tree is equal to the nodes reachable in a forward/backward CH search.
+In~\cite{bcrw-s-16}, it was proven that set of ancestors of a node in the elimination tree is equal to the nodes reachable in a CH search.
 This makes it possible to explore the CCH search space with a more efficient shortest path algorithm for DAGs:
 Traverse elimination tree from source and target to the root node and for each node relax all up-edges (reversed down-edges for the backward search).
 Because this algorithm does not require a queue, it is faster than a Dijkstra based CH query.
@@ -365,7 +363,10 @@ The query phase is split into two steps.
 The first step is analogue to the CH query:
 From $t$, all reachable nodes via reversed down-edges are explored.
 Algorithm~\ref{algo:ch-backward} shows this first step.
-The second step iterates over all CH levels from top to bottom.
+For the second step, PHAST organizes nodes into \emph{levels}.
+These levels correspond to the importance ordering but allow multiple nodes in the same level.
+No edge must connect two nodes within the same level.
+PHAST then iterates over all CH levels from top to bottom.
 In each iteration, all up-edges starting within the current level are followed in reverse.
 After all levels are processed, the shortest distances from all nodes to $t$ were computed.
 Pseudo-code is provided in Algorithm~\ref{algo:phast}.
