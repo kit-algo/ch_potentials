@@ -855,7 +855,7 @@ As a final optimization, we run the forward and backward search in parallel in t
 In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph:
 Just return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
 However, their approach uses a simpler penalization schema.
-We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative}.
+We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative} and denote this approach as \emph{penalty routes}.
 This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
 
 \subsubsection{Temporary Driving Bans}
@@ -1059,7 +1059,6 @@ CCH-Potentials are slightly slower than CH-Potentials because their search space
 
 \subsection{Bidirectional A*}
 
-
 \begin{table}
 \centering
 \caption{Performance of different variants of bidirectional A* on OSM Ger with $w_q = 1.05 \cdot w_\ell$.}\label{tab:bidir_pruning}
@@ -1167,6 +1166,17 @@ It is not due to the length increase of using turns.
 With everything activated, our algorithm still has a speedup of 13.5 over the baseline.
 Interestingly, the PTV traffic predictions have a much smaller length increase than the Mapbox predictions.
 This results in somewhat smaller running times of our algorithm.
+
+\subsubsection{Alternative Routes}
+
+Our implementation of the penalty method reproduces the qualitative results reported in~\cite{kobitzsch2015alternative} (for random queries on DIMACs Europe we on average achieve a total distance of 2.93, an average distance of 1.04, 5.57 decision edges and a success rate of 98.7\% with 6.7 iterations).
+The average running times to compute an alternative graph are 1.37\,s on DIMACs Europe and 0.85\,s on OSM Germany.
+These running times are roughly one order of magnitude slower than the results achieved by Kobitzsch.
+The simpler penalty routes approach is much faster and takes only 156\,ms on DIMACs Europe and 66\,ms on OSM Germany.
+This is two orders of magnitude faster than the running times reported in~\cite{adgw-arrn-13} which is not surprising since their implementation uses an unaccelerated Dijkstra.
+Due to the advanced penalization schema, our average qualitative results differ from~\cite{adgw-arrn-13}: the success rate is with 96.8\% slightly higher, the UBS with around 9\% slightly worse, the sharing is with 42\% somewhat higher but the local optimality, which was the weakest point in the original approach, with 21\% significantly better.
+Finding these alternatives takes only 1.44 iterations on average.
+This makes CH-Potential-based penalty routes a simple and feasible practical approach to compute alternative routes.
 
 \section{Conclusion}
 \label{sec:conclusion}
