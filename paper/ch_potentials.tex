@@ -63,7 +63,7 @@ They achieve speed and exactness but sacrifice A*'s flexibility.
 Extending them to certain practical applications can be hard.
 In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many distance estimates towards a single target and use it as a A* heuristic.
 Since it utilizes Contraction Hierarchies (CH), a hierarchical technique, we call our heuristic CH-Potentials.
-Our approach allows decoupling the supported extensions from the hierarchical speed-up technique.
+Our approach allows decoupling the supported applications from the hierarchical speed-up technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present an improved pruning criterion for symmetrical bidirectional A*.
 An extensive experimental study confirms the practicality of our approach for many applications.
 \end{abstract}
@@ -107,18 +107,18 @@ For realistic routing, many additional features need to be considered.
 This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions. %, temporary driving bans for certain types of vehicles.
 Some applications may have additional application-specific requirements.
 Extending Dijkstra's algorithm to support these features is usually easy.
-Extending hierarchical speed-up techniques is also possible.
+Extending hierarchical speed-up techniques is often possible, too.
 However, the algorithm development is vastly more complex.
 For every feature, dedicated research papers exist that extend CH and other approaches.
 Supporting the combination of several features is even harder.
 For example, we are not aware of any work combining all features mentioned above.
 In this article, we describe an algorithmic building block, that allows handling the combination of all above mentioned features -- and probably more.
 
-Our approach decouples extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
+Our approach decouples the development of extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
 A* is a goal-directed variant of Dijkstra's algorithm.
 See Figure~\ref{img:search-space} for an example of nodes traversed during an A* search.
 A* uses a \emph{heuristic} to guide the search towards the goal.
-A heuristic is function that maps a node to an estimate of the remaining distance to the goal.
+A heuristic is a function that maps a node to an estimate of the remaining distance to the goal.
 A*'s running time crucially depends on how tight this estimate is.
 Further, evaluating the heuristic must be fast.
 % The free flow travel time to the goal is a valid heuristic for most features.
@@ -137,12 +137,12 @@ The paper introduced the basic CH-Potentials heuristic, some query optimizations
 In this article we discuss and evaluate Lazy RPHAST, the central ingredient of CH-Potentials, in much greater detail and introduce an improved variant for Customizable Contraction Hierarchies.
 Furthermore, we evaluate Lazy RPHAST in the context of one-to-many and many-to-many problems.
 The original paper only discussed unidirectional CH-Potentials.
-Here, we also discuss a bidirectional variant and also introduce an improved pruning criterion for symmetrical bidirectional A* which can also be utilized for other heuristic.
-Finally, we include additional applications of CH-Potentials, for example alternative routes, and provide a significantly expanded evaluation.
+In this journal version, we also discuss a bidirectional variant and also introduce an improved pruning criterion for symmetrical bidirectional A* which can also be utilized for other heuristic.
+Finally, we describe additional applications of CH-Potentials, for example alternative routes, and provide a significantly expanded evaluation.
 
 The rest of the article is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
-After establishing preliminaries in~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and our algorithm to solve it efficiently in Section~\ref{sec:lazy-rphast}.
+After establishing preliminaries in Section~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and our algorithm to solve it efficiently in Section~\ref{sec:lazy-rphast}.
 CH-Potentials, our new distance estimation function is introduced in Section~\ref{sec:main-algo}.
 There we also discuss our improvements to the handling of low-degree nodes (Section~\ref{sec:low-deg-improvment}) and for symmetrical bidirectional A* (Section~\ref{sec:bidir_astar}).
 Section~\ref{sec:extensions} presents a multitude of applications of CH-Potentials.
@@ -213,17 +213,18 @@ The Euclidean distance is then used as a distance estimate for A*.
 \section{Preliminaries}\label{sec:preliminaries}
 
 We consider directed graphs $G=(V,E)$ with $n=|V|$ nodes and $m=|E|$ edges with weight functions $w : E \to \mathbb{R}$.
-Given nodes $s$ and $t$ we want to obtain the path $P=(s=v_0,\dots,t=v_k)$ of minimal weight $w(P) := \sum_{i} w(v_{i-1}v_i)$.
+Given nodes $s$ and $t$ we want to obtain a path $P=(s=v_0,\dots,t=v_k)$ of minimal weight $w(P) := \sum_{i} w(v_{i-1}v_i)$.
 We denote this shortest path weight as the distance $\dist_w(s,t)$ between $s$ and $t$.
 
 \subsection{Dijkstra's Algorithm}
 
-Dijkstra's algorithm~\cite{d-ntpcg-59} can be used to solve this point to point shortest path problem.
-It maintains an array of tentative distances $d$ and a priority queue of nodes ordered by increasing distance from $s$.
+Dijkstra's algorithm~\cite{d-ntpcg-59} can be used to solve this shortest path problem.
+In this section, we recall the classical algorithm and establish some notation that we will employ in the remainder of this paper.
+Dijkstra's algorithm maintains an array of tentative distances $d$ and a priority queue of nodes ordered by increasing distance from $s$.
 Initially, all distances are set to $\infty$.
 The start node distance $d[s]$ is set to zero and the queue initialized with $s$.
 Then, in each iteration, the closest remaining node $u$ is popped from the queue and \emph{settled}.
-Outgoing edges $uv$ are relaxed, i.e. $d[v] = \min(d[v], d[u] + w(uv))$.
+Outgoing edges $uv$ are relaxed, i.e. $d[v]$ is set to $\min(d[v], d[u] + w(uv))$.
 If the distance at the head node $v$ was improved it will be inserted into the queue or the queue position will be updated if $v$ was already in the queue.
 Once $t$ was settled, $d[t]$ contains the distance between $s$ and $t$.
 
@@ -236,7 +237,7 @@ Theoretically any direction interleaving strategy is possible.
 The searches can also be run in parallel in two threads.
 When the sum of the minimum keys in both queues $\overrightarrow{k} + \overleftarrow{k}$ is greater than the so far best known tentative total distance $\mu$ the algorithm can terminate.
 
-\subsection{A*}\label{sec:a_star}
+\subsection{A* Algorithm}\label{sec:a_star}
 
 A* is a goal-directed variant of Dijkstra's algorithm.
 % A* uses a \emph{heuristic} to guide the search towards the goal.
@@ -247,6 +248,8 @@ Thus, nodes closer to the target a explored earlier.
 A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights}~\cite{hnr-afbhd-68}.
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
 A heuristic function is called \emph{feasible} if $w_{h_t} \geq 0$ for all edges.
+A* is guaranteed to compute an optimal path, if the heuristic is feasible.
+In this article, we therefore limit our discussion to feasible heuristics.
 
 \subsection{Contraction Hierarchies (CH)}
 
@@ -272,6 +275,7 @@ Make $Q$ only contain $t$ with weight $0$\;
 \begin{figure}
 \centering
 \includegraphics{fig/ch}
+% TODO nicer fig
 \caption{
 Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-path in $G$. Blue is equaly long up-down $st$-path in $G^+$. $m$ is the mid node.
 }
@@ -283,7 +287,8 @@ For details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
 In a CH, each node gets a unique rank representing its ``importance''.
-The intuition is that dead-ends are unimportant and at the bottom while highway bridges are very important and at the top.
+By convention, important nodes are usually depicted at the ``top'' while unimportant nodes are positioned at the ``bottom''.
+The intuition is that dead-ends are unimportant while highways or bridges are important.
 An edge goes \emph{up} when its tail node has lower rank than its head node.
 \emph{Down} edges are defined analogously.
 An \emph{up-down path} is a path where only one node $m$ is more important than both its neighbors.
@@ -298,7 +303,7 @@ This is done by repeatedly contracting the least important node and adding short
 %See~\cite{gssv-erlrn-12} for the details.
 After the preprocessing, for every pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path in $G^+$ with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for a proof sketch.
-From every shortest path (red) in $G$, an up-down path of equal length in $G^+$ (blue) exists.
+From every shortest path (red) in $G$, an up-down path of equal length in $G^+$ (blue) can be constructed.
 Thus, we can restrict our search to up-down paths in $G^+$.
 The search is bidirectional.
 The forward search starts from $s$ and only follows up-edges.
@@ -336,9 +341,11 @@ The root of the elimination tree is the most important node.
 % TODO so far, we only have levels but not ranks
 For every other node its parent is its least important upward neighbor.
 In~\cite{bcrw-s-16}, it was proven that set of ancestors of a node in the elimination tree is equal to the nodes reachable in a CH search.
-This makes it possible to explore the CCH search space with a more efficient shortest path algorithm for DAGs:
-Traverse elimination tree from source and target to the root node and for each node relax all up-edges (reversed down-edges for the backward search).
-Because this algorithm does not require a queue, it is faster than a Dijkstra based CH query.
+This makes it possible to explore the CCH search space with a more efficient shortest path algorithm:
+For the forward search, start at the source and follow the elimination tree upward until the root is reached.
+All outgoing edges of encountered nodes are relaxed.
+The backward search works analogously but starts at the target.
+Because this algorithm does not require a queue, it is faster than a Dijkstra-based CH query.
 
 \subsection{PHAST}
 
