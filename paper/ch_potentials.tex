@@ -599,43 +599,72 @@ The final result is the concatenation of both paths.
 
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
-Since bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm, a bidirectional variant of A* also seems desirable.
-However, as pointed out in~\cite{gh-cspas-05}, this is not as straightforward as one might expect.
-One would like to use a forward potential $\overrightarrow{h}_t$ in the forward search and a backward potential $\overleftarrow{h}_s$ (computing distances in the reversed graph) in the reverse search.
-The problem is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
-Thus, in the equivalent bidirectional Dijkstra search each direction would run on a different graph.
-This breaks the bidirectional Dijkstra stopping criterion.
-To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until their minimum queue key $k$ becomes greater than the best known total tentative distance $\mu$.
-But this is the same stopping criterion that a unidirectional A* search has.
-Thus, this straightforward bidirectional A* performs twice the work than a unidirectional A*.
-This can be slightly improved by introducing pruning.
-Nodes for which $\overrightarrow{D}[x] + h(x) > \mu$ holds, i.e. their distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, can not contribute to a shorter path and need not to be added to the queue.
-This approach is denoted as the \emph{symmetric} bidirectional A*.
+\todo{potential und heuristic geht hier bunt durcheinander.}
 
-To overcome this problem the authors of~\cite{gh-cspas-05} propose the \emph{average} potential, a combined heuristic, which is good for both directions but also makes both searches run on the same reduced graph and thus enables an efficient stopping criterion.
+On road graphs, bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm.
+A bidirectional variant of A* is therefore also desirable.
+However, as shown in~\cite{gh-cspas-05}, this is not straightforward.
+
+The straightforward idea is to use two potentials.
+$\overrightarrow{h}_t(x)$ is a lower bound of the distance from $x$ to $t$ and is used in the forward search.
+Similarly, $\overleftarrow{h}_s(x)$ is a lower bound of the distance from $s$ to $x$.
+It is used in the backward search.
+We denote by $\overrightarrow{D}[x]$ the tentative distance of the forward search at $x$.
+Similarly, $\overleftarrow{D}[x]$ is the tentative distance of the backward search at $x$.
+Further, we denote by $\overrightarrow{k}$ and $\overleftarrow{k}$ the key of the minimum elements in the forward respectively backward queue.
+Finally, we denote by $\mu$ the length of the shortest known path from $s$ to $t$.
+
+The problem is that these two potentials induce different reduced graphs\footnote{See Section~\ref{sec:a_star} for a discussion of reduced graphs.}.
+Thus, in the equivalent bidirectional search each direction would run on a different graph.
+This breaks the usual bidirectional stopping criterion.
+We know of no way better way than to run both searches until one of the two unidirectional stopping criteria is met.
+With such a weak stopping criterion, bidirectional search seems pointless.
+Luckily, having two potentials allows us to perform additional pruning.
+With this additional pruning the algorithm can overall be faster.
+
+The idea is to use information of the backward search during the pruning in the forward search and vice versa.
+Once $x$ is removed from the forward queue $\overrightarrow{D}[x]$ is the shortest path length from $s$ to $x$.
+Further, by construction $\overrightarrow{h}_t(x)$ is a lower bound on the shortest path length from $x$ to $t$.
+We therefore know that after $x$ is removed from the forward queue, that $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$ is a lower bound on the shortest path length from $s$ to $t$ via $x$.
+If this is above the shortest known path length from $s$ to $t$, we can prune $x$.
+As the forward queue orders elements by $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$, this pruning rule is not useful in the forward search.
+However, it can be used in the backward search.
+The backward search can be pruned at $x$, if $x$ was removed from the forward queue, and $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)\ge \mu$.
+Similarly, the forward search can be pruned, if $\overleftarrow{h}_s(x) + \overleftarrow{D}[x]\ge \mu$ and $x$ was removed from the backward queue.
+Using two searches and these two pruning rules is called the \emph{symmetric bidirectional A*}.
+
+To obtain a better stopping criterion, the authors of~\cite{gh-cspas-05} propose the \emph{average potential}.
+This is a combined heuristic, which is good for both directions.
+Both searches run on the same reduced graph which enables an efficient stopping criterion.
 The reduced graph of the average potential is the graph with the average weights of the both reduced graphs.
-The potential function which induces this average reduced graph is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$ (and $-h_{\overline{st}}(x)$ for the backward search).
+The potential function used in the forward search is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$.
+The backward search uses $-h_{\overline{st}}(x)$.
 This potential allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
 Additionally, the pruning from the symmetric approach can be utilized with the original potentials.
 To the best of our knowledge, this method is the fastest known variant of bidirectional A*.
-Still, it has two downsides.
-First, evaluating the average potential requires evaluating the original heuristics for both directions.
-This can cause some overhead depending on the heuristics.
-Second, for each direction on its own, the average potential is a worse heuristic than the original heuristic.
+Unfortunately, it has two downsides.
+The first downside is that the better stopping criterion comes at the cost of worse potentials.
+The average potential is a worse estimate than $\overrightarrow{h}_t$ in the forward search.
+It is also worse than $\overleftarrow{h}_s$ in the backward search.
+The second downside is that evaluating the average potential requires evaluating $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$.
+This means that the running time to evaluate both potentials is necessary
 
-We propose an improved pruning criterion for the symmetric approach.
-It takes the search progress (in form of the growing minimal queue keys) into account to tighten the pruning with increasing search progress and compensates for the worse stopping criterion.
-As our experiments show, this makes the simpler symmetric approach competitive to the average potential.
-Recall that the queue is ordered by $D[x] + h(x)$.
+To avoid the downsides of the average potential, we revisit symmetric bidirectional A* and improve upon it.
+We do away with the average potential.
+Our insight consists of improving the pruning rules.
+In the backward search, we use $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$ to lower bound the minimum length of a path via $x$.
+If this is above $\mu$, we can prune the search at $x$.
+We improve this estimate and obtain a tighter pruning rule.
+\todo{Hier wurde ich abgehängt. Ich verstehe die neue Lower Bound nicht.}
 We use the minimal queue key $\overleftarrow{k}$ of the backward search to obtain a tighter estimate of $\dist(x,t)$.
 If a node $x$ was not yet settled by backward search then $\dist(x,t) \geq \overleftarrow{k} - \overleftarrow{h}_s(x)$.
 Thus, in the forward search if $\overrightarrow{D}[x] + \overleftarrow{k} - \overleftarrow{h}_s(x) > \mu$, we do not need to push $x$ into the queue.
 The pruning for the backwards search works analogously.
 Since this pruning is only used when $\mu > \infty$, for the greatest part of the search each direction only has to evaluate its own heuristic.
 
-For both average and symmetric bidirectional A*, we always alternate between settling a node form the forward and the backward search.
-In our experiments, we also evaluate choosing the direction by the smaller minimal queue key.
-Even though this appears to better fit together with the stopping criterion for the symmetric approach, our experiments show that it is never beneficial in terms of running time (see Table~\ref{tab:bidir_switching}).
+Unless stated differently, for all bidirectional A* variants, we always alternate between removing a node from the forward and the backward queues.
+In our experiments, we also evaluate expanding the search with the smaller queue element.
+This sounds sensible but our experiments show in Table~\ref{tab:bidir_switching} that it is never beneficial in terms of running time.
 
 \subsection{Applications}\label{sec:extensions}
 
