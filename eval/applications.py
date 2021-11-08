@@ -20,7 +20,7 @@ def path_to_graph(path):
         'osm_europe': 'OSM Europe',
         'osm_ger': 'OSM Ger',
         'osm_ger_td': 'OSM Ger',
-        'europe': 'DIMACs Eur',
+        'europe': 'DIMACS Eur',
     }[[x for x in path.split('/') if x != ''][-1]]
 
 only_public = 'ONLY_PUBLIC' in os.environ
@@ -101,7 +101,7 @@ table = table.rename(index={
     cwd + '/data/osm_europe/': 'OSM Europe',
     cwd + '/data/osm_ger/': ger_name,
     cwd + '/data/osm_ger_td/': ger_name,
-    cwd + '/data/europe/': 'DIMACs Europe',
+    cwd + '/data/europe/': 'DIMACS Europe',
     'perfect': 'Unmodified ($w_q=w_\\ell$)',
     'no_highways': 'No Highways',
     'no_tunnels': 'No Tunnels',

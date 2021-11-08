@@ -21,7 +21,7 @@ queries = pd.DataFrame.from_records([{
     'experiment': exp['experiment'],
     'target_set_size_exp': exp['target_set_size_exp'],
     'ball_size_exp': exp['ball_size_exp'],
-    'graph': { 'europe': 'DIMACs Europe', 'osm_ger': 'OSM Germany', 'osm_europe': 'OSM Europe' }[[x for x in run['args'][1].split('/') if x != ''][-1]],
+    'graph': { 'europe': 'DIMACS Europe', 'osm_ger': 'OSM Germany', 'osm_europe': 'OSM Europe' }[[x for x in run['args'][1].split('/') if x != ''][-1]],
     }
     for run in data for exp in run['experiments'] for algo in exp['algo_runs']])
 

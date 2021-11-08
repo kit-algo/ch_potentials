@@ -14,7 +14,7 @@ data = [json.load(open(path)) for path in paths]
 
 queries = pd.DataFrame.from_records([{
     **algo,
-    'graph': { 'europe': 'DIMACs Europe', 'osm_ger': 'OSM Germany', 'osm_europe': 'OSM Europe' }[[x for x in run['args'][1].split('/') if x != ''][-1]],
+    'graph': { 'europe': 'DIMACS Europe', 'osm_ger': 'OSM Germany', 'osm_europe': 'OSM Europe' }[[x for x in run['args'][1].split('/') if x != ''][-1]],
     'experiment': exp['experiment'],
     'factor': exp['factor'],
     'probability': exp.get('probability', 1),

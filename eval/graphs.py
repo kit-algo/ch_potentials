@@ -19,7 +19,7 @@ def path_to_graph(path):
         'osm_europe': 'OSM Europe',
         'osm_ger': 'OSM Germany',
         'osm_ger_td': 'OSM Germany',
-        'europe': 'DIMACs Europe',
+        'europe': 'DIMACS Europe',
     }[[x for x in path.split('/') if x != ''][-1]]
 
 graphs = pd.DataFrame.from_records([{
@@ -68,7 +68,7 @@ cch_ordering = pd.DataFrame.from_records([parse_flowcutter_partition_output(path
 table = graphs.groupby(['graph'])[['basic_customization_running_time_ms', 'contraction_running_time_ms', 'graph_build_running_time_ms',
     'perfect_customization_running_time_ms', 'respecting_running_time_ms', 'num_nodes', 'num_edges']].mean()
 
-table = table.reindex(['OSM Ger', 'DIMACs Europe', 'TDGer06', 'TDEur17', 'TDEur20'])
+table = table.reindex(['OSM Ger', 'DIMACS Europe', 'TDGer06', 'TDEur17', 'TDEur20'])
 
 table = table.join(ch_preprocessing.groupby('graph').mean()).join(cch_ordering.groupby('graph').mean())
 table['num_nodes'] = table['num_nodes'] / 1000000.0

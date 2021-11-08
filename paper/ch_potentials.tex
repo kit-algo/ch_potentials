@@ -400,7 +400,7 @@ Then, in the query step, a target $t$ is given and the PHAST algorithm is applie
 RPHAST is particularly effective when many targets are queried for the same source set $S$.
 If the source set changes often, selection times may become problematic.
 RPHAST can also be applied to the \emph{many-to-many} problem, computing a distance matrix between sets $S$ and $T$ of nodes.
-Combined with SSE extension it is, to the best of our knowledge, the fastest currently known algorithm for this problem setting.
+Implemented with SIMD instructions it is, to the best of our knowledge, the fastest currently known algorithm for this problem setting.
 
 \section{The Incremental Many-to-One Problem}\label{sec:lazy-rphast}
 
@@ -420,7 +420,7 @@ Fortunately, we can do better.
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
-\KwData{$D[x]$: memoized distance final from $x$ to $t$, $\bot$ initially}
+\KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKwProg{Fn}{Function}{:}{}
 \Fn{\Dist{$x$}}{
@@ -450,7 +450,7 @@ This calculation is correct, as it computes the minimum up-down $s_it$-path dist
 \subsection{Lazy RPHAST on CCH}
 
 Algorithm~\ref{algo:pot} can be applied to CCH without any modifications.
-However, we can also exploit the elimination tree for the Lazy RPHAST algorithm.
+However, we can also exploit the elimination tree in the Lazy RPHAST algorithm.
 To compute the distance $D[x]$ of a node $x$ the distances of all upward neighbors must be final.
 In Algorithm~\ref{algo:pot} we have to compute all these distances recursively.
 However, on CCH it is sufficient to ensure that the distance of the elimination tree parent of $x$ is final.
@@ -462,7 +462,7 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
-\KwData{$D[x]$: memoized distance final from $x$ to $t$, $\bot$ initially}
+\KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
 \KwData{$P[x]$: parent node of $x$ in the elimination tree}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKwProg{Fn}{Function}{:}{}
@@ -481,11 +481,13 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \caption{Elimination tree based Lazy RPHAST algorithm}
 \label{algo:cch_pot}
 \end{algorithm2e}
+% TODO iterative
 
 \subsection{Many-to-Many with Lazy RPHAST}
 
-Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investing how well Lazy RPHAST performs in this setting appears to be an interesting question.
-SSE RPHAST starts by performing the selection phase is performed for the full target set.
+Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investigating the Lazy RPHAST performance in this setting seems worthwhile.
+SSE RPHAST starts by performing the selection phase on the full target set.
+% TODO flip directions?
 Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
 This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
 Naively translating this approach to Lazy RPHAST would mean selecting one target after another and for each doing the full lazy exploration from all sources.
@@ -494,6 +496,9 @@ This would not be competitive.
 
 Luckily, we can do better by integrating a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
 The Bucket CH selection phase works as follows:
+% TODO better structure or local outline
+% TODO those are not shortest distances
+% TODO besser herleiten, wieso kein 2d array
 For each node $x$, we maintain an initially empty list $B[x]$ of tuples $(t_i, dist(x,t_i))$, also called a \emph{bucket}.
 These buckets are populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
 Now Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) can compute distances from a given source to \emph{all} targets at once.
@@ -505,11 +510,12 @@ The Bucket-CH selection phase still explores the shared parts of the search spac
 This can be improved with the following modified CH backward search:
 All target nodes are inserted into the queue at once.
 The priority queue is ordered by importance instead of distance.
-Distance labels are buckets instead if scalar values.
+Distance labels are buckets instead of scalar values.
 The buckets of each target node are initialized with a single entry for the respective node with distance zero.
 When relaxing an edge, the entries in the current node's bucket are increased by the edge's weight and merged with the bucket entries of the head node of the edge.
 By keeping the buckets sorted, this merging can be efficiently implemented with a coordinated linear sweep over both buckets.
 We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{sec:exp_lazy_rphast}.
+% TODO describe improved^2 Bucket CH
 
 \section{A* with CH-Potentials}\label{sec:main-algo}
 
@@ -900,7 +906,7 @@ For this instance, we have proprietary traffic data provided by Mapbox\footnote{
 The data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the nodes.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
 We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
-We also perform experiments on the Europe instance provided by PTV\footnote{\url{https://ptvgroup.com}} for the 9th DIMACs implementation challenge~\cite{DemetrescuGJ09}.
+We also perform experiments on the Europe instance provided by PTV\footnote{\url{https://ptvgroup.com}} for the 9th DIMACS implementation challenge~\cite{DemetrescuGJ09}.
 Additionally, we have three graphs with proprietary traffic predictions also provided by PTV.
 The PTV instances are not OSM-based.
 One is an old instance of Germany with traffic predictions from 2006 for 7\% of the edges which was used for evaluation of many competing time-dependent algorithms.
@@ -917,6 +923,8 @@ For many-to-many experiments, we compute the distance table between the 100 $S$,
 
 \subsection{Lazy RPHAST}\label{sec:exp_lazy_rphast}
 
+% better wrap story branch
+
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_inc.pdf}
@@ -926,7 +934,8 @@ Note the different y-axis scales and units.
 }\label{fig:lazy_rphast_inc}
 \end{figure}
 
-To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed time after $2^i$ distances were computed.
+To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed running time after $2^i$ result distances were computed. % TODO word smithing "result distances"
+% TODO selection not included
 Figure~\ref{fig:lazy_rphast_inc} depicts the total elapsed time and the average running time to compute a single distance.
 The first few distances are the most expensive ones since a lot of the CH search space has not been explored yet.
 With around 100\,$\mu$s, the running times are comparable to standard CH queries.
@@ -941,7 +950,7 @@ With this trade-off, it depends on the ball size which variant is faster in term
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one.pdf}
 \caption{
-Running times of CH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
+Running times of CH based Lazy RPHAST for many-to-one queries with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
 }\label{fig:many_to_one}
 \end{figure}
 
@@ -949,19 +958,19 @@ Running times of CH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a 
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_cch_many_to_one.pdf}
 \caption{
-Running times of CCH based Lazy RPHAST with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
+Running times of CCH based Lazy RPHAST for many-to-one queries with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
 }\label{fig:many_to_one_cch}
 \end{figure}
 
 Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental one-to-many queries.
 Figures~\ref{fig:many_to_one} and~\ref{fig:many_to_one_cch} depict average running times to compute distances between one node and $2^{14}$ targets for different ball sizes.
 This experiment uses the exact methodology described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to roughly relate our results to the performance of competing algorithms.
-When looking at total running times for one source target set pair, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}
-For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACs Europe.
+When looking at total running times for a single many-to-one query, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}.
+For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACS Europe.
 Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
 The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
-This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster query phases.
-When computing distances from different source towards the same target set, RPHAST will outperform Lazy RPHAST.
+This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster queries.
+When computing distances from different sources towards the same target set, RPHAST will outperform Lazy RPHAST.
 However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
 
 \begin{figure}
@@ -975,8 +984,9 @@ The lower part of the bars indicates the running time of the Bucket CH subphase.
 
 Applying Lazy RPHAST to the many-to-many problem results in running times as depicted in Figure~\ref{fig:many_to_many}.
 The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266}.
-The Bucket CH based first query phase takes between half of the time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
-It is worth noting that contrary to SSE RPHAST, we did not explicitly utilize SSE instructions.
+% TODO konkrete zahlen?
+The Bucket CH based first query phase of our implementation takes between half of the total query time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
+It is worth noting that contrary to SSE RPHAST, we did not explicitly utilize SIMD instructions.
 However, the code for Lazy RPHAST on an arrays of distances can be trivially vectorized by the compiler.
 We confirmed that the code was indeed vectorized by inspecting the generated assembly.
 
@@ -986,9 +996,10 @@ One-to-many queries appear in many extended applications as a subproblem.
 In some of these cases Lazy RPHAST can be used to achieve significant speed-ups with surprisingly little effort.
 One such example are k-Nearest-Neighbor Queries with CCH~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
 There, shortest distances are computed repeatedly from the same source to boundary nodes of a cell of nodes.
-On our suggestion, the authors integrated Lazy RPHAST into their algorithm which took only a couple of lines of code~\footnote{\url{https://github.com/vbuchhold/routing-framework/commit/c739dc8e81}}.
+On our suggestion, the authors integrated Lazy RPHAST into their algorithm which took only a couple of lines of code\footnote{\url{https://github.com/vbuchhold/routing-framework/commit/c739dc8e81}}.
 We reran their improved experiments and include the results in our appendix.
 Briefly summarized, integrating Lazy RPHAST into this algorithm decreased running times by up to 15 times depending on the distribution of the target set for almost no effort.
+This demonstrates that Lazy RPHAST is not only useful as an A* potential but also applicable in other contexts.
 
 \subsection{(C)CH-Potentials Heuristic}
 
@@ -1149,7 +1160,7 @@ CH achieves average query running times of 0.16\,ms on OSM Ger.
 CH-Potentials are roughly four times slower but still achieve a huge speedup of 3795 over Dijkstra.
 Such large speedups are typical for CH.
 This shows that CH-Potentials gracefully converges toward a CH in the $w_q = w_\ell$ special case.
-On DIMACs Europe, the average degree is somewhat higher which makes the low-degree optimizations less effective which leads to more queue operations and a slightly slower running time.
+On DIMACS Europe, the average degree is somewhat higher which makes the low-degree optimizations less effective which leads to more queue operations and a slightly slower running time.
 
 In the other scenarios, the performance of CH-Potentials strongly depends on the quality of the heuristic.
 We measure this quality using the length increase of $w_q$ compared to $w_\ell$.
@@ -1176,10 +1187,10 @@ This results in somewhat smaller running times of our algorithm.
 
 \subsubsection{Alternative Routes}
 
-Our implementation of the penalty method reproduces the qualitative results reported in~\cite{kobitzsch2015alternative} (for random queries on DIMACs Europe we on average achieve a total distance of 2.93, an average distance of 1.04, 5.57 decision edges and a success rate of 98.7\% with 6.7 iterations).
-The average running times to compute an alternative graph are 1.37\,s on DIMACs Europe and 0.85\,s on OSM Germany.
+Our implementation of the penalty method reproduces the qualitative results reported in~\cite{kobitzsch2015alternative} (for random queries on DIMACS Europe we on average achieve a total distance of 2.93, an average distance of 1.04, 5.57 decision edges and a success rate of 98.7\% with 6.7 iterations).
+The average running times to compute an alternative graph are 1.37\,s on DIMACS Europe and 0.85\,s on OSM Germany.
 These running times are roughly one order of magnitude slower than the results achieved by Kobitzsch.
-The simpler penalty routes approach is much faster and takes only 156\,ms on DIMACs Europe and 66\,ms on OSM Germany.
+The simpler penalty routes approach is much faster and takes only 156\,ms on DIMACS Europe and 66\,ms on OSM Germany.
 This is two orders of magnitude faster than the running times reported in~\cite{adgw-arrn-13} which is not surprising since their implementation uses an unaccelerated Dijkstra.
 Due to the advanced penalization schema, our average qualitative results differ from~\cite{adgw-arrn-13}: the success rate is with 96.8\% slightly higher, the UBS with around 9\% slightly worse, the sharing is with 42\% somewhat higher but the local optimality, which was the weakest point in the original approach, with 21\% significantly better.
 Finding these alternatives takes only 1.44 iterations on average.
