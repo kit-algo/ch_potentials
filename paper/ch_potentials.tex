@@ -10,6 +10,7 @@
 % \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage[algo2e,vlined]{algorithm2e}
+\usepackage{todonotes}
 
 \newcommand*{\dist}{\mathcal{D}}
 
@@ -491,15 +492,15 @@ SSE RPHAST starts by performing the selection phase on the full target set.
 Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
 This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
 Naively translating this approach to Lazy RPHAST would mean selecting one target after another and for each doing the full lazy exploration from all sources.
-However, this approach would explore the upward search space of all the sources over and over again.
-This would not be competitive.
+However, this approach would explore the upward search space of all the sources multiple times.
+This work seems redundant.
 
 Luckily, we can do better by integrating a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
 The Bucket CH selection phase works as follows:
 % TODO better structure or local outline
-% TODO those are not shortest distances
 % TODO besser herleiten, wieso kein 2d array
-For each node $x$, we maintain an initially empty list $B[x]$ of tuples $(t_i, dist(x,t_i))$, also called a \emph{bucket}.
+For each node $x$, we maintain an initially empty list $B[x]$ of pair $(t_i, \textrm{dist}_{\textrm{up}}(x,t_i))$. 
+These pairs are called \emph{buckets}.
 These buckets are populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
 Now Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) can compute distances from a given source to \emph{all} targets at once.
 We only have to change $D[x]$ so that it is an array of distances to each $t_i$ instead of a single scalar value.
@@ -838,19 +839,28 @@ Finally, all edge weights of the path and possibly adjoined edges are penalized.
 This is repeated until the current path is more than $1 + \epsilon$ times longer than the original distance or until certain other stopping criteria are fulfilled.
 
 The running time of the penalty method is usually dominated by shortest path computations.
-Since this boils down to computing shortest paths on $G_{\ell}$ with a few increased edge weights this seems like a natural fit for A* with CH-Potentials.
-While the schema outlined above is conceptually simple, it leaves open quite a few details which may have a severe impact on performance.
-In this work, we do not develop our own variant of the penalty method but aim to reproduce the configuration reported by Kobitzsch in his dissertation~\cite{kobitzsch2015alternative}.
-To the best of our knowledge, this is the latest, most thoroughly engineered and evaluated iteration of the penalty method which also achieves the qualitatively best results.
-While some details remain unclear from the description in~\cite{kobitzsch2015alternative}, luckily we could obtain the original implementation from the authors to fill in the remaining details.
-Since we reproduce this exact configuration except for the shortest path algorithm, qualitative results should carry over and we can focus only on running times in our work.
+The computations are performed on $G_{\ell}$ with a few increased edge weights.
+This setting seems like a natural fit for A* with CH-Potentials.
+While the alternative route schema outlined above is conceptually simple, it leaves open quite a few details which may have a strong impact on performance.
+In this work, we do not develop our own variant of the penalty method.
+Instead we aim to reproduce the configuration used by Kobitzsch in his dissertation~\cite{kobitzsch2015alternative}.
+To the best of our knowledge, this is the latest, most thoroughly engineered and evaluated iteration of the penalty method.
+It also achieves the qualitatively best results.
+Some details remain unclear from the description in~\cite{kobitzsch2015alternative}.
+Luckily, we could obtain the original implementation from the authors to resolve all open questions.
+As we use the same configuration, qualitative results are directly comparable.
+We can focus on comparing running times.
 
-For sake of keeping this section self-contained, we now briefly reiterate the details of our configuration.
+To ease our exposition, we briefly reiterate the details of Kobitzsch's configuration.
 The stretch is limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
+\todo{Das bedeutet, dass der Alternativgraph z.B. Zyklenfrei sein muss. Sobald es einen Zyklus gibt kann ich $w(P)$ beliebig groß machen.}
 Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was on the shortest path in $k$ iterations its weight will be $w_q = w_{\ell}\cdot\psi^k$.
 We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
+\todo{incident = nur incomming edges oder auch outgoing? rejoin klingt nur nach incomming, incident klingt nach beiden.}
 An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
-An edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
+Analogously, an edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
+\todo{Was ist $w_q$ in diesem Kontext?}
+\todo{Ich habe nicht verstanden was diese $\psi_r$ Formeln tun.}
 $\psi_r$ is set to 0.01.
 To avoid over-penalization, we count the times a \emph{node} was on a shortest path and do not apply penalties, when this number exceeds $k_{\max} := \lceil\log_{\psi}(1+\epsilon)\rceil + 2$.
 Shortest paths are split into segments not yet contained in the alternative graph.
@@ -865,8 +875,8 @@ We terminate the algorithm when any of the following conditions becomes true:
 The last two stopping criteria can both be utilized for additional pruning in the A*.
 As a final optimization, we run the forward and backward search in parallel in two threads.
 
-In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph:
-Just return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
+In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph.
+They return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
 However, their approach uses a simpler penalization schema.
 We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative} and denote this approach as \emph{penalty routes}.
 This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
