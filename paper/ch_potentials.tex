@@ -258,7 +258,7 @@ In this article, we therefore limit our discussion to feasible heuristics.
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to target $t$}
-\KwData{Min. priority queue $Q$, also called open list}
+\KwData{Minimum priority queue $Q$, also called open list, ordered by tentative distances}
 $B[x] \leftarrow +\infty$ for all $x\neq t$;
 $B[t] \leftarrow 0$\;
 Make $Q$ only contain $t$ with weight $0$\;
