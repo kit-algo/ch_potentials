@@ -264,7 +264,7 @@ $B[t] \leftarrow 0$\;
 Make $Q$ only contain $t$ with weight $0$\;
 \While{not $Q$ empty}{
 	$y\leftarrow$ pop minimum element from $Q$\;
-	\For{$xy$ is down-edge in $G^+_\ell$}{
+	\For{all down-edges $xy$ in $G^+_\ell$}{
 		\If{$B[x] > w_\ell(xy) + B[y]$}{
 			$B[x]\leftarrow w_\ell(xy) + B[y]$\;
                         Add $x$ or decrease $x$'s key in $Q$ to $B[x]$\;
@@ -356,7 +356,7 @@ Because this algorithm does not require a queue, it is faster than a Dijkstra-ba
 \KwData{$P[x]$: tentative distance from $x$ to $t$}
 Execute Algorithm~\ref{algo:ch-backward}\;
 \For{all CH levels $L$ from most to least important}{
-	\For{all up edges $xy$ in $G^+_\ell$ with $x$ in $L$}{
+	\For{all up-edges $xy$ in $G^+_\ell$ with $x$ in $L$}{
 		\If{$P[x] < P[y] + w_\ell(xy)$}{
 			$P[x] \leftarrow P[y] + w_\ell(xy)$\;
 		}
@@ -429,7 +429,7 @@ Fortunately, we can do better.
 \Fn{\Dist{$x$}}{
 	\If{$D[x] = \bot$}{
 		$D[x]\leftarrow B[x]$\;
-		\For{all up edges $xy$ in $G^+_\ell$}{
+		\For{all up-edges $xy$ in $G^+_\ell$}{
                         $D[x]\leftarrow\min\{D[x],w_\ell(xy)+\Dist(y)\}$\;
 		}
 	}
@@ -475,7 +475,7 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 			$\Dist(P[x])$\;
 		}
 		$D[x]\leftarrow B[x]$\;
-		\For{all up edges $xy$ in $G^+_\ell$}{
+		\For{all up-edges $xy$ in $G^+_\ell$}{
                         $D[x]\leftarrow\min\{D[x],w_\ell(xy)+D[y]\}$\;
 		}
 	}
