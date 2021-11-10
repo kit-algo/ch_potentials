@@ -488,6 +488,92 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 
 \subsection{Many-to-Many with Lazy RPHAST}
 
+RPHAST was originally developed to answer many-to-many queries.
+It was not designed to be used in conjunction with A*.
+Investigating how Lazy RPHAST performs in the many-to-many setting is therefore interesting.
+In this setting, a set of source and target nodes are given.
+The objective is to compute the distances between all pairs of source and target nodes.
+In this section, we described how Lazy RPHAST can be used to solve this many-to-many problem.
+Our experiments will show, that the achieved performance is comparable to the original RPHAST algorithm.
+
+To solve the many-to-many problem, RPHAST uses SIMD vector instructions.
+Let $k$ denote the number of elements in one vector.
+RPHAST computes the distances from all source nodes to $k$ target nodes in one run.
+If the target set contains more than $k$ nodes, then the target set is split into smaller sets of $k$ elements\footnote{If the number of targets is not divisible by $k$, the set is increased by adding additional target nodes.}.
+The algorithm is then run for each of these smaller sets.
+Each RPHAST run performs vectorized variants of the selection and query phases.\todo{Is query phase definiert?}
+
+We translate this setup to the Lazy RPHAST setting as follows.
+First, a set of $k$ target nodes need to be fixed.
+A vectorized selection phase is then performed for this fixed target set.
+After the selection, the source nodes are iteratively revealed.
+Once a source node is revealed, the algorithm must compute the distances to all $k$ targets.
+Only after the distances are computed, the next source node is revealed.
+
+The core of Lazy RPHAST are the Algorithms~\ref{algo:ch-backward} and~\ref{algo:pot}.
+We describe vectorized variants of these algorithms.
+We replace the $B$ and $D$ arrays of scalars by arrays of $k$-dimensional vectors of scalars.
+To clarify which entities are SIMD vectors, we denote the vectorized arrays by $\hat{B}$ and $\hat{D}$.
+$\hat{D}[s]$ is an SIMD vector $\hat{v}$ of length $k$.
+The $i$-th element $\hat{v}[i]$ of $\hat{v}$ will contain the distance from $s$ to $i$-th selected target.
+We can also denote this distance using $\hat{D}[s][i]$.
+All operations on SIMD vectors are component-wise.
+Adding a scalar to an SIMD vector consists of adding the scalar to every element of the SIMD vector.
+
+\todo{Rechtschreibung: down edge vs down-edge und up edge vs up-edge. Geht beides aber bitte konsistent.}
+
+\begin{algorithm2e}
+\KwIn{$\hat{T}$: SIMD vector of $k$ target nodes}
+\KwData{$\hat{B}[x][i]$: tentative distance from $x$ to target $\hat{T}[i]$}
+\KwData{Minimum priority queue $Q$, also called open list, ordered by node rank}
+Make $Q$ an empty queue\;
+$\hat{B}[x][i] \leftarrow +\infty$ for all $x$ and $i$\;
+\For{all $i\in \{0\ldots k-1\}$}{
+  $\hat{B}[\hat{T}[i]][i] \leftarrow 0$\;
+  Add $\hat{T}[i]$ to $Q$\;
+}
+\While{not $Q$ empty}{
+  $y\leftarrow$ pop minimum element from $Q$\;
+  \For{all down-edges $xy$  in $G^+_\ell$}{
+    $\hat{B}[x] \leftarrow \min\{\hat{B}[x], \hat{B}[y] + w_\ell(xy)\}$\;
+    Add $x$ to $Q$ if not in $Q$\;
+  }
+}
+\caption{Vectorized Lazy RPHAST selection}
+\label{algo:simd-ch-backward}
+\end{algorithm2e}
+
+Vectorizing Algorithm~\ref{algo:ch-backward} needs some adjustments.
+In the original algorithm, the nodes are ordered by distance.
+In the vectorized variant, distances are SIMD vectors and can therefore not be ordered.
+To resolve this problem, we ordered the nodes in the queue not by distance but by CH rank.
+The CH rank is the position of a node in the contraction order. \todo{wurde rank schon eingeführt? Falls ja, dann kann der Satz weg.}
+All other modifications are straight-forward.
+The vectorized version is presented in Algorithm~\ref{algo:simd-ch-backward}.
+Algorithm~\ref{algo:pot} can be vectorized by just replacing the arrays by their SIMD variants.
+The result is illustrated in Algorithm~\ref{algo:simd-pot}.
+
+
+\begin{algorithm2e}
+\KwData{$\hat{B}[x][i]$: tentative distance from $x$ to $\hat{T}[i]$ as computed by Algorithm~\ref{algo:simd-ch-backward}}
+\KwData{$\hat{D}[x][i]$: memoized distance from $x$ to $\hat{T}[i]$, $\bot$ initially}
+\SetKwFunction{VecDist}{SIMDComputeAndMemoizeDist}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\VecDist{$x$}}{
+  \If{$\hat{D}[x] = \bot$}{
+    $\hat{D}[x]\leftarrow \hat{B}[x]$\;
+    \For{all up-edges $xy$ in $G^+_\ell$}{
+      $\hat{D}[x]\leftarrow\min\{\hat{D}[x],w_\ell(xy)+\VecDist(y)\}$\;
+    }
+  }
+  \Return{$\hat{D}[x]$}\;
+}
+\caption{Vectorized Lazy RPHAST algorithm}
+\label{algo:simd-pot}
+\end{algorithm2e}
+
+
+\todo{Hier beginnt der ältere Text}
 Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investigating the Lazy RPHAST performance in this setting seems worthwhile.
 SSE RPHAST starts by performing the selection phase on the full target set.
 % TODO flip directions?
