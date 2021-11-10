@@ -690,12 +690,14 @@ The final result is the concatenation of both paths.
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
 On road graphs, bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm.
-A bidirectional variant of A* therefore appears also desirable.
-However, as shown in~\cite{gh-cspas-05}, this is not as simple as it seems.
+A bidirectional variant of A* therefore is therefore also desirable.
+However, as shown in~\cite{gh-cspas-05}, the necessary modifications are not straight forward.
+We revisit bidirectional A* and propose an alternative approach.
+Our experiments show that it is competitive with the solution described by~\cite{gh-cspas-05}.
 
-The straightforward idea would be to use two heuristics.
-The forward search has its queue ordered by $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$ where $\overrightarrow{h}_t(x)$ estimates the distance from $x$ to $t$.
-Similarly, the backward search has its queue ordered by $\overleftarrow{D}[x] + \overleftarrow{h}_s(x)$ where $\overleftarrow{h}_s(x)$ is an estimate of the distance from $s$ to $x$.
+The straightforward idea is to use two heuristics $\overrightarrow{h}_t(x)$ and $\overleftarrow{h}_s(x)$.
+The forward search has its queue ordered by $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$, where $\overrightarrow{h}_t(x)$ estimates the distance $\dist(x,t)$ from $x$ to $t$.
+Similarly, the backward search has its queue ordered by $\overleftarrow{D}[x] + \overleftarrow{h}_s(x)$, where $\overleftarrow{h}_s(x)$ is an estimate of the distance $\dist(s,x)$ from $s$ to $x$.
 % We denote by $\overrightarrow{D}[x]$ the tentative distance of the forward search at $x$ and similarly, by $\overleftarrow{D}[x]$ the tentative distance in the backward search.
 We denote by $\overrightarrow{k}$ and $\overleftarrow{k}$ the minimum queue keys and by $\mu$ the length of the shortest $st$-path found so far.
 
@@ -704,27 +706,54 @@ Thus, in the equivalent bidirectional Dijkstra search each direction would run o
 This breaks the usual bidirectional Dijkstra stopping criterion.
 To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until the unidirectional stopping criterion is met for one direction.
 Thus, this straightforward bidirectional A* performs roughly twice the work of a unidirectional A*.
-The authors of~\cite{gh-cspas-05} refer to this approach as \emph{symmetric} bidirectional A*.
+This is not a useful algorithm.
+However, it can serve as basis for further algorithmic refinements.
+The authors of~\cite{gh-cspas-05} therefore refer to this approach as \emph{symmetric} bidirectional A*.
 
-To obtain a better stopping criterion, the \emph{average potential} is proposed~\cite{gh-cspas-05}.
-It combines a forward and a backward heuristic $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$ into a combined heuristic $h_{\overline{st}}$, which is good for both directions.
-Both searches run on the same reduced graph which enables an efficient stopping criterion.
-The reduced graph of the average potential is the graph with the average weights of the reduced graphs of $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$.
-The heuristic function which induces this average reduced graph is $h_{\overline{st}}(x) := \frac{\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x)}{2}$.
+To obtain a bidirectional stopping criterion, the \emph{average potential} is proposed~\cite{gh-cspas-05}.
+It combines a forward and a backward heuristic $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$ into a combined \emph{average heuristic} $h_{\overline{st}}$.
+Formally, $h_{\overline{st}}(x)$ is defined as $(\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x))/2$.
+The forward search uses $h_{\overline{st}}(x)$ as heuristic.
 The backward search uses $-h_{\overline{st}}(x)$.
+This results in both searches running on the same reduced graph.
+The weights of the combined reduced graph corresponds to the averaged weights of the individual reduced graphs.\todo{Ist diese Aussage korrekt?}
 This allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
-To the best of our knowledge, this method is the fastest known variant of bidirectional A*.
+To the best of our knowledge, using this stopping criterion yields the fastest known bidirectional A* variant.
 Unfortunately, it has two downsides.
 First, evaluating the average potential requires evaluating both $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$.
-This makes it more expensive in terms of running time.
-% Second, for each direction on its own, the average potential is a worse heuristic than the original heuristic.
-Second, the better stopping criterion comes at the cost of worse estimates for each direction on its own.
-The average potential estimates $\dist(x,t)$ less accurately than $\overrightarrow{h}_t(x)$ and $\dist(s,x)$ less accurately than $\overleftarrow{h}_s(x)$.
-The second downside can be partially mitigated through pruning with the original heuristics.
-When the forward search scans an edge $xy$ where $\overrightarrow{D}[x] + w(xy) + \overrightarrow{h}_s(y) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, $y$ needs not to be inserted into the queue.
-The pruning for the backward search works analogously.
+Evaluating the average heuristic is therefore slower than evaluating just one the composing heuristics.
+Second, the bidirectional stopping criterion comes at the cost of worse estimates for each direction on its own.
+$h_{\overline{st}}(x)$ is a worse estimate for $\dist(x,t)$ than $\overrightarrow{h}_t$.
+Similarly, $-h_{\overline{st}}(x)$ is a worse estimate for $\dist(s,x)$ than $\overleftarrow{h}_s$.
+The second downside can be partially mitigated through pruning with the composing heuristics.
+When the forward search scans an edge $xy$ where $\overrightarrow{D}[x] + w(x,y) + \overrightarrow{h}_s(y) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, $y$ needs not to be inserted into the queue.\todo{does not have to be inserted? needs not klingt komisch... aber English ist nicht meine Stärke. :) }
+The pruning rule for the backward search is analogous.
 
+\todo{$w(xy)$ vs $w(x,y)$}
 To avoid the downsides of the average potential, we revisit symmetric bidirectional A* and propose a new pruning criterion.
+We do not use the average heuristic and use the unidirectional stopping criteria.
+We describe the idea for the forward search.
+The pruning rule for the backward search is analogous.
+The central idea consists of using information from the backward search to prune edges in the forward search.
+Let $xy$ be an edge that we relax in the forward search.
+Before pushing $y$ into the queue, we apply the pruning rule.
+If we can prove that every path using $xy$ is at least as long as the shortest known path length $\mu$, then we do not have to push $y$.
+We therefore want to obtain a lower bound for $\dist(s,x)+w(x,y)+\dist(y,t)$.
+As $x$ was settled, $\overrightarrow{D}[x]$ contains the shortest path length $\dist(s,x)$, i.e., $\dist(s,x)=\overrightarrow{D}[x]$.
+$w(x,y)$ is also exactly known as it's just an edge weight.
+It remains to lower bound $\dist(y,t)$.
+Nodes are removed from the backward queue ordered by $\overrightarrow{h}(y) + \dist(y,t)$.
+\todo{$\ge$ vs $\geq$ und $\le$ vs $\leq$, macht das einen Unterschied?}
+If $y$ was not yet removed from the backward queue, we know that $\overrightarrow{h}(y) + \dist(y,t) \geq \overleftarrow{k}$.
+This gives us the required lower bound $\dist(y,t) \geq \overleftarrow{k}-\overrightarrow{h}(y)$.
+$y$ does not have to be pushed, if it was not settled by the backward search and $\overrightarrow{D}[x]+w(x,y)+\overleftarrow{k}-\overrightarrow{h}(y)\ge \mu$.
+This does not mean that $y$ will never be pushed into the forward queue.
+It is possible that another edge $zy$ exists for which the pruning rule cannot be applied.
+
+\todo{Latex mag overrightarrow nicht in todos... Ich packe die Frage deswegen inline in den Text.}
+Kann man sinnvoll prunen wenn $y$ von der Rückwärtssuche gesettled wurde? Z.b. Kante $xy$ prunen wenn $x$ forward gestelled ist und $y$ backward gesettled ist und $\overrightarrow{D}[x]+w(x,y)+\overleftarrow{D}[y]\ge \mu$ erfüllt ist.
+
+\todo{Der folgende Paragraph ist die Vorgängerversion vom Paragraph davor. Wenn der neue Paragraph besser ist, dann kann dieser weg.}
 We use the minimum queue key $\overleftarrow{k}$ of the backward search to obtain a tighter estimate of $\dist(x,t)$ for pruning in the forward search.
 Recall that queues are ordered by $D[x] + h(x)$.
 If a node $x$ was not yet settled by backward search then $\dist(x,t) + \overleftarrow{h}_s(x) \geq \overleftarrow{k}$, and equivalently $\dist(x,t) \geq \overleftarrow{k} - \overleftarrow{h}_s(x)$.
