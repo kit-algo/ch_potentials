@@ -221,17 +221,15 @@ We denote this shortest path weight as the distance $\dist_w(s,t)$ between $s$ a
 
 \subsection{Dijkstra's Algorithm}
 
-% TODO Capital letters for arrays?
-
 Dijkstra's algorithm~\cite{d-ntpcg-59} can be used to solve this shortest path problem.
 In this section, we recall the classical algorithm and establish some notation that we will employ in the remainder of this paper.
-Dijkstra's algorithm maintains an array of tentative distances $d$ and a priority queue of nodes ordered by increasing distance from $s$.
+Dijkstra's algorithm maintains an array of tentative distances $D$ and a priority queue of nodes ordered by increasing distance from $s$.
 Initially, all distances are set to $\infty$.
-The start node distance $d[s]$ is set to zero and the queue initialized with $s$.
+The start node distance $D[s]$ is set to zero and the queue initialized with $s$.
 Then, in each iteration, the closest remaining node $u$ is popped from the queue and \emph{settled}.
-Outgoing edges $uv$ are relaxed, i.e. $d[v]$ is set to $\min(d[v], d[u] + w(uv))$.
+Outgoing edges $uv$ are relaxed, i.e. $D[v]$ is set to $\min(D[v], D[u] + w(uv))$.
 If the distance at the head node $v$ was improved it will be inserted into the queue or the queue position will be updated if $v$ was already in the queue.
-Once $t$ was settled, $d[t]$ contains the distance between $s$ and $t$.
+Once $t$ was settled, $D[t]$ contains the distance between $s$ and $t$.
 
 Dijkstra's algorithm can also be run from the target $t$ on the reversed graph.
 We call this a \emph{backward search}.
@@ -469,16 +467,26 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
 \KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
 \KwData{$P[x]$: parent node of $x$ in the elimination tree}
+\KwData{$S$: stack with nodes to compute distances}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
+\SetKwFunction{Push}{push}
+\SetKwFunction{Pop}{pop}
+\SetKw{Break}{break}
 \SetKwProg{Fn}{Function}{:}{}
 \Fn{\Dist{$x$}}{
-	\If{$D[x] = \bot$}{
-		\If{$P[x] \neq \bot$ and $D[P[x]] = \bot$}{
-			$\Dist(P[x])$\;
+  $y \gets x$\;
+	\While{$D[y] = \bot$}{
+    $S$.\Push{$y$}\;
+		\If{$P[y] = \bot$}{
+      \Break\;
 		}
-		$D[x]\leftarrow B[x]$\;
-		\For{all up-edges $xy$ in $G^+_\ell$}{
-                        $D[x]\leftarrow\min\{D[x],w_\ell(xy)+D[y]\}$\;
+    $y \gets P[y]$
+  }
+  \While{$S$ not empty}{
+    $y \gets S$.\Pop{}\;
+		$D[y]\gets B[y]$\;
+		\For{all up-edges $yz$ in $G^+_\ell$}{
+                        $D[y]\gets\min\{D[y],w_\ell(yz)+D[z]\}$\;
 		}
 	}
 	\Return{$D[x]$}\;
@@ -486,7 +494,6 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \caption{Elimination tree based Lazy RPHAST algorithm}
 \label{algo:cch_pot}
 \end{algorithm2e}
-% TODO iterative
 
 \subsection{Many-to-Many with Lazy RPHAST}
 
@@ -705,7 +712,7 @@ Thus, in the equivalent bidirectional Dijkstra search each direction would run o
 This breaks the usual bidirectional Dijkstra stopping criterion.
 To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until the unidirectional stopping criterion is met for one direction.
 The forward search can skip nodes already settled by the backward search and vice versa.
-However, this straightforward bidirectional A* still performs more work than a unidirectional A*.
+However, this straightforward bidirectional A* still performs more work than a unidirectional A*~\cite{gh-cspas-05}.
 Thus, on its own it is not a useful algorithm.
 However, it can serve as basis for further algorithmic refinements.
 The authors of~\cite{gh-cspas-05} refer to this approach as \emph{symmetric} bidirectional A*.
