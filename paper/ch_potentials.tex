@@ -736,7 +736,8 @@ The central idea consists of using information from the backward search to prune
 We do not use the average heuristic.
 Instead of a strong stopping criteria, we use a pruning rule that gets stronger the longer the search runs.
 Such a pruning rule will eventually prune all remaining branches and stop the search.
-Formally, we use the undirectional stopping criteria.
+We implemented the undirectional stopping criterion.
+However, often the search stops early because the queues are empty.
 
 Let $xy$ be an edge that we relax in the forward search.
 Before pushing $y$ into the queue, we apply the pruning rule.
