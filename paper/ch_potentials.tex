@@ -736,7 +736,7 @@ We do not use the average heuristic.
 Instead of a strong stopping criteria, we use a pruning rule that gets stronger the longer the search runs.
 Such a pruning rule will eventually prune all remaining branches and stop the search.
 The stopping criteria for each direction remain the same (unidirectional) as before.
-However, often the search stops early because the queues are empty.
+However, usually the search stops early because the queues are empty.
 
 Let $xy$ be an edge that we relax in the forward search.
 Before pushing $y$ into the queue, we apply the new pruning rule.
