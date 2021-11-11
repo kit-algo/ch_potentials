@@ -690,7 +690,7 @@ The final result is the concatenation of both paths.
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
 On road graphs, bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm.
-A bidirectional variant of A* therefore is therefore also desirable.
+A bidirectional variant of A* therefore also seems desirable.
 However, as shown in~\cite{gh-cspas-05}, the necessary modifications are not straight forward.
 We revisit bidirectional A* and propose an alternative approach.
 Our experiments show that it is competitive with the solution described by~\cite{gh-cspas-05}.
@@ -712,14 +712,13 @@ The authors of~\cite{gh-cspas-05} therefore refer to this approach as \emph{symm
 
 To obtain a bidirectional stopping criterion, the \emph{average potential} is proposed~\cite{gh-cspas-05}.
 It combines a forward and a backward heuristic $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$ into a combined \emph{average heuristic} $h_{\overline{st}}$.
+The idea is to use a common reduced graph, whose weights are the average weights of the individual reduced graphs.
+In this case, both searches run on the same graph.
+This allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
 Formally, $h_{\overline{st}}(x)$ is defined as $(\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x))/2$.
 The forward search uses $h_{\overline{st}}(x)$ as heuristic.
 The backward search uses $-h_{\overline{st}}(x)$.
-This results in both searches running on the same reduced graph.
-The weights of the combined reduced graph corresponds to the averaged weights of the individual reduced graphs.\todo{Ist diese Aussage korrekt?}
-This allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
-To the best of our knowledge, using this stopping criterion yields the fastest known bidirectional A* variant.
-Unfortunately, it has two downsides.
+Unfortunately, average potentials have two downsides.
 First, evaluating the average potential requires evaluating both $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$.
 Evaluating the average heuristic is therefore slower than evaluating just one the composing heuristics.
 Second, the bidirectional stopping criterion comes at the cost of worse estimates for each direction on its own.
@@ -731,10 +730,14 @@ The pruning rule for the backward search is analogous.
 
 \todo{$w(xy)$ vs $w(x,y)$}
 To avoid the downsides of the average potential, we revisit symmetric bidirectional A* and propose a new pruning criterion.
-We do not use the average heuristic and use the unidirectional stopping criteria.
 We describe the idea for the forward search.
 The pruning rule for the backward search is analogous.
 The central idea consists of using information from the backward search to prune edges in the forward search.
+We do not use the average heuristic.
+Instead of a strong stopping criteria, we use a pruning rule that gets stronger the longer the search runs.
+Such a pruning rule will eventually prune all remaining branches and stop the search.
+Formally, we use the undirectional stopping criteria.
+
 Let $xy$ be an edge that we relax in the forward search.
 Before pushing $y$ into the queue, we apply the pruning rule.
 If we can prove that every path using $xy$ is at least as long as the shortest known path length $\mu$, then we do not have to push $y$.
