@@ -67,7 +67,7 @@ Extending them to certain practical applications can be hard.
 In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many distance estimates towards a single target and use it as a A* heuristic.
 Since it utilizes Contraction Hierarchies (CH), a hierarchical technique, we call our heuristic CH-Potentials.
 Our approach allows decoupling the supported applications from the hierarchical speed-up technique.
-Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present an improved pruning criterion for symmetrical bidirectional A*.
+Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present a new pruning criterion for symmetrical bidirectional A*.
 An extensive experimental study confirms the practicality of our approach for many applications.
 \end{abstract}
 
@@ -138,17 +138,17 @@ This enables us to design algorithms for a multitude of features.
 This article is the extended version of our conference paper ``A Fast and Tight Heuristic for A* in Road Networks''~\cite{strasser_et_al:LIPIcs.SEA.2021.6}.
 The paper introduced the basic CH-Potentials heuristic, some query optimizations for handling of low-degree nodes, common in road networks, and some applications of CH-Potentials.
 In this article we discuss and evaluate Lazy RPHAST, the central ingredient of CH-Potentials, in much greater detail and introduce an improved variant for Customizable Contraction Hierarchies.
-Furthermore, we evaluate Lazy RPHAST in the context of one-to-many and many-to-many problems.
+% Furthermore, we evaluate Lazy RPHAST in the context of one-to-many and many-to-many problems.
 The original paper only discussed unidirectional CH-Potentials.
 In this journal version, we also discuss a bidirectional variant and also introduce an improved pruning criterion for symmetrical bidirectional A* which can also be utilized for other heuristic.
-Finally, we describe additional applications of CH-Potentials, for example alternative routes, and provide a significantly expanded evaluation.
+We also include a significantly expanded evaluation.
 
 The rest of the article is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
 After establishing preliminaries in Section~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and our algorithm to solve it efficiently in Section~\ref{sec:lazy-rphast}.
 CH-Potentials, our new distance estimation function is introduced in Section~\ref{sec:main-algo}.
-There we also discuss our improvements to the handling of low-degree nodes (Section~\ref{sec:low-deg-improvment}) and for symmetrical bidirectional A* (Section~\ref{sec:bidir_astar}).
-Section~\ref{sec:extensions} presents a multitude of applications of CH-Potentials.
+There, we also discuss our improvements to the handling of low-degree nodes (Section~\ref{sec:low-deg-improvment}) and for symmetrical bidirectional A* (Section~\ref{sec:bidir_astar}).
+% Section~\ref{sec:extensions} presents a multitude of applications of CH-Potentials.
 In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply the approach to different practical applications.
 Finally, in Section~\ref{sec:experiments}, we present an experimental evaluation of our approach.
 
@@ -180,13 +180,13 @@ Supporting turn costs in CCH was studied in~\cite{bwzz-cchtc-20}.
 
 Other extensions studied include electric vehicle routing~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11} or multi-criteria optimization~\cite{fns-opca-14,gks-rpfof-10}.
 
-Another feature which has received quite some attention is the computation alternative routes~\cite{bdgs-argrn-11,adgw-arrn-13}.
-Even formally defining what makes a good alternative route is non-trivial~\cite{bdgs-argrn-11}.
-A variety of paradigms exists.
-Competitive approaches require careful adjustment of their respective hierarchical speedup technique for the targeted paradigm.
-In~\cite{krs-eepma-13}, the CRP customization is utilized to repeatedly compute shortest paths on graphs with slightly modified weights.
-In~\cite{k-hdara-13}, partial shortest path trees are extracted from CH search spaces to find via-node candidates for alternative routes.
-In~\cite{barth2019alternative}, a multi-criteria CH is extended to compute alternative routes with regards to multiple edge weight functions.
+% Another feature which has received quite some attention is the computation alternative routes~\cite{bdgs-argrn-11,adgw-arrn-13}.
+% Even formally defining what makes a good alternative route is non-trivial~\cite{bdgs-argrn-11}.
+% A variety of paradigms exists.
+% Competitive approaches require careful adjustment of their respective hierarchical speedup technique for the targeted paradigm.
+% In~\cite{krs-eepma-13}, the CRP customization is utilized to repeatedly compute shortest paths on graphs with slightly modified weights.
+% In~\cite{k-hdara-13}, partial shortest path trees are extracted from CH search spaces to find via-node candidates for alternative routes.
+% In~\cite{barth2019alternative}, a multi-criteria CH is extended to compute alternative routes with regards to multiple edge weight functions.
 
 While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial.
 Further, in every extension the flexibility available at query time is fairly limited.
@@ -495,125 +495,125 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \label{algo:cch_pot}
 \end{algorithm2e}
 
-\subsection{Many-to-Many with Lazy RPHAST}
+% \subsection{Many-to-Many with Lazy RPHAST}
 
-RPHAST was originally developed to answer many-to-many queries.
-It was not designed to be used in conjunction with A*.
-Investigating how Lazy RPHAST performs in the many-to-many setting is therefore interesting.
-In this setting, a set of source and target nodes are given.
-The objective is to compute the distances between all pairs of source and target nodes.
-In this section, we described how Lazy RPHAST can be used to solve this many-to-many problem.
-Our experiments will show, that the achieved performance is comparable to the original RPHAST algorithm.
+% RPHAST was originally developed to answer many-to-many queries.
+% It was not designed to be used in conjunction with A*.
+% Investigating how Lazy RPHAST performs in the many-to-many setting is therefore interesting.
+% In this setting, a set of source and target nodes are given.
+% The objective is to compute the distances between all pairs of source and target nodes.
+% In this section, we described how Lazy RPHAST can be used to solve this many-to-many problem.
+% Our experiments will show, that the achieved performance is comparable to the original RPHAST algorithm.
 
-To solve the many-to-many problem, RPHAST uses SIMD vector instructions.
-Let $k$ denote the number of elements in one vector.
-RPHAST computes the distances from all source nodes to $k$ target nodes in one run.
-If the target set contains more than $k$ nodes, then the target set is split into smaller sets of $k$ elements\footnote{If the number of targets is not divisible by $k$, the set is increased by adding additional target nodes.}.
-The algorithm is then run for each of these smaller sets.
-Each RPHAST run performs vectorized variants of the selection and query phases.\todo{Is query phase definiert?}
+% To solve the many-to-many problem, RPHAST uses SIMD vector instructions.
+% Let $k$ denote the number of elements in one vector.
+% RPHAST computes the distances from all source nodes to $k$ target nodes in one run.
+% If the target set contains more than $k$ nodes, then the target set is split into smaller sets of $k$ elements\footnote{If the number of targets is not divisible by $k$, the set is increased by adding additional target nodes.}.
+% The algorithm is then run for each of these smaller sets.
+% Each RPHAST run performs vectorized variants of the selection and query phases.\todo{Is query phase definiert?}
 
-We translate this setup to the Lazy RPHAST setting as follows.
-First, a set of $k$ target nodes need to be fixed.
-A vectorized selection phase is then performed for this fixed target set.
-After the selection, the source nodes are iteratively revealed.
-Once a source node is revealed, the algorithm must compute the distances to all $k$ targets.
-Only after the distances are computed, the next source node is revealed.
+% We translate this setup to the Lazy RPHAST setting as follows.
+% First, a set of $k$ target nodes need to be fixed.
+% A vectorized selection phase is then performed for this fixed target set.
+% After the selection, the source nodes are iteratively revealed.
+% Once a source node is revealed, the algorithm must compute the distances to all $k$ targets.
+% Only after the distances are computed, the next source node is revealed.
 
-The core of Lazy RPHAST are the Algorithms~\ref{algo:ch-backward} and~\ref{algo:pot}.
-We describe vectorized variants of these algorithms.
-We replace the $B$ and $D$ arrays of scalars by arrays of $k$-dimensional vectors of scalars.
-To clarify which entities are SIMD vectors, we denote the vectorized arrays by $\hat{B}$ and $\hat{D}$.
-$\hat{D}[s]$ is an SIMD vector $\hat{v}$ of length $k$.
-The $i$-th element $\hat{v}[i]$ of $\hat{v}$ will contain the distance from $s$ to $i$-th selected target.
-We can also denote this distance using $\hat{D}[s][i]$.
-All operations on SIMD vectors are component-wise.
-Adding a scalar to an SIMD vector consists of adding the scalar to every element of the SIMD vector.
+% The core of Lazy RPHAST are the Algorithms~\ref{algo:ch-backward} and~\ref{algo:pot}.
+% We describe vectorized variants of these algorithms.
+% We replace the $B$ and $D$ arrays of scalars by arrays of $k$-dimensional vectors of scalars.
+% To clarify which entities are SIMD vectors, we denote the vectorized arrays by $\hat{B}$ and $\hat{D}$.
+% $\hat{D}[s]$ is an SIMD vector $\hat{v}$ of length $k$.
+% The $i$-th element $\hat{v}[i]$ of $\hat{v}$ will contain the distance from $s$ to $i$-th selected target.
+% We can also denote this distance using $\hat{D}[s][i]$.
+% All operations on SIMD vectors are component-wise.
+% Adding a scalar to an SIMD vector consists of adding the scalar to every element of the SIMD vector.
 
-\todo{Rechtschreibung: down edge vs down-edge und up edge vs up-edge. Geht beides aber bitte konsistent.}
+% \todo{Rechtschreibung: down edge vs down-edge und up edge vs up-edge. Geht beides aber bitte konsistent.}
 
-\begin{algorithm2e}
-\KwIn{$\hat{T}$: SIMD vector of $k$ target nodes}
-\KwData{$\hat{B}[x][i]$: tentative distance from $x$ to target $\hat{T}[i]$}
-\KwData{Minimum priority queue $Q$, also called open list, ordered by node rank}
-Make $Q$ an empty queue\;
-$\hat{B}[x][i] \leftarrow +\infty$ for all $x$ and $i$\;
-\For{all $i\in \{0\ldots k-1\}$}{
-  $\hat{B}[\hat{T}[i]][i] \leftarrow 0$\;
-  Add $\hat{T}[i]$ to $Q$\;
-}
-\While{not $Q$ empty}{
-  $y\leftarrow$ pop minimum element from $Q$\;
-  \For{all down-edges $xy$  in $G^+_\ell$}{
-    $\hat{B}[x] \leftarrow \min\{\hat{B}[x], \hat{B}[y] + w_\ell(xy)\}$\;
-    Add $x$ to $Q$ if not in $Q$\;
-  }
-}
-\caption{Vectorized Lazy RPHAST selection}
-\label{algo:simd-ch-backward}
-\end{algorithm2e}
+% \begin{algorithm2e}
+% \KwIn{$\hat{T}$: SIMD vector of $k$ target nodes}
+% \KwData{$\hat{B}[x][i]$: tentative distance from $x$ to target $\hat{T}[i]$}
+% \KwData{Minimum priority queue $Q$, also called open list, ordered by node rank}
+% Make $Q$ an empty queue\;
+% $\hat{B}[x][i] \leftarrow +\infty$ for all $x$ and $i$\;
+% \For{all $i\in \{0\ldots k-1\}$}{
+%   $\hat{B}[\hat{T}[i]][i] \leftarrow 0$\;
+%   Add $\hat{T}[i]$ to $Q$\;
+% }
+% \While{not $Q$ empty}{
+%   $y\leftarrow$ pop minimum element from $Q$\;
+%   \For{all down-edges $xy$  in $G^+_\ell$}{
+%     $\hat{B}[x] \leftarrow \min\{\hat{B}[x], \hat{B}[y] + w_\ell(xy)\}$\;
+%     Add $x$ to $Q$ if not in $Q$\;
+%   }
+% }
+% \caption{Vectorized Lazy RPHAST selection}
+% \label{algo:simd-ch-backward}
+% \end{algorithm2e}
 
-Vectorizing Algorithm~\ref{algo:ch-backward} needs some adjustments.
-In the original algorithm, the nodes are ordered by distance.
-In the vectorized variant, distances are SIMD vectors and can therefore not be ordered.
-To resolve this problem, we ordered the nodes in the queue not by distance but by CH rank.
-The CH rank is the position of a node in the contraction order. \todo{wurde rank schon eingeführt? Falls ja, dann kann der Satz weg.}
-All other modifications are straight-forward.
-The vectorized version is presented in Algorithm~\ref{algo:simd-ch-backward}.
-Algorithm~\ref{algo:pot} can be vectorized by just replacing the arrays by their SIMD variants.
-The result is illustrated in Algorithm~\ref{algo:simd-pot}.
-
-
-\begin{algorithm2e}
-\KwData{$\hat{B}[x][i]$: tentative distance from $x$ to $\hat{T}[i]$ as computed by Algorithm~\ref{algo:simd-ch-backward}}
-\KwData{$\hat{D}[x][i]$: memoized distance from $x$ to $\hat{T}[i]$, $\bot$ initially}
-\SetKwFunction{VecDist}{SIMDComputeAndMemoizeDist}
-\SetKwProg{Fn}{Function}{:}{}
-\Fn{\VecDist{$x$}}{
-  \If{$\hat{D}[x] = \bot$}{
-    $\hat{D}[x]\leftarrow \hat{B}[x]$\;
-    \For{all up-edges $xy$ in $G^+_\ell$}{
-      $\hat{D}[x]\leftarrow\min\{\hat{D}[x],w_\ell(xy)+\VecDist(y)\}$\;
-    }
-  }
-  \Return{$\hat{D}[x]$}\;
-}
-\caption{Vectorized Lazy RPHAST algorithm}
-\label{algo:simd-pot}
-\end{algorithm2e}
+% Vectorizing Algorithm~\ref{algo:ch-backward} needs some adjustments.
+% In the original algorithm, the nodes are ordered by distance.
+% In the vectorized variant, distances are SIMD vectors and can therefore not be ordered.
+% To resolve this problem, we ordered the nodes in the queue not by distance but by CH rank.
+% The CH rank is the position of a node in the contraction order. \todo{wurde rank schon eingeführt? Falls ja, dann kann der Satz weg.}
+% All other modifications are straight-forward.
+% The vectorized version is presented in Algorithm~\ref{algo:simd-ch-backward}.
+% Algorithm~\ref{algo:pot} can be vectorized by just replacing the arrays by their SIMD variants.
+% The result is illustrated in Algorithm~\ref{algo:simd-pot}.
 
 
-\todo{Hier beginnt der ältere Text}
-Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investigating the Lazy RPHAST performance in this setting seems worthwhile.
-SSE RPHAST starts by performing the selection phase on the full target set.
-% TODO flip directions?
-Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
-This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
-Naively translating this approach to Lazy RPHAST would mean selecting one target after another and for each doing the full lazy exploration from all sources.
-However, this approach would explore the upward search space of all the sources multiple times.
-This work seems redundant.
+% \begin{algorithm2e}
+% \KwData{$\hat{B}[x][i]$: tentative distance from $x$ to $\hat{T}[i]$ as computed by Algorithm~\ref{algo:simd-ch-backward}}
+% \KwData{$\hat{D}[x][i]$: memoized distance from $x$ to $\hat{T}[i]$, $\bot$ initially}
+% \SetKwFunction{VecDist}{SIMDComputeAndMemoizeDist}
+% \SetKwProg{Fn}{Function}{:}{}
+% \Fn{\VecDist{$x$}}{
+%   \If{$\hat{D}[x] = \bot$}{
+%     $\hat{D}[x]\leftarrow \hat{B}[x]$\;
+%     \For{all up-edges $xy$ in $G^+_\ell$}{
+%       $\hat{D}[x]\leftarrow\min\{\hat{D}[x],w_\ell(xy)+\VecDist(y)\}$\;
+%     }
+%   }
+%   \Return{$\hat{D}[x]$}\;
+% }
+% \caption{Vectorized Lazy RPHAST algorithm}
+% \label{algo:simd-pot}
+% \end{algorithm2e}
 
-Luckily, we can do better by integrating a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
-The Bucket CH selection phase works as follows:
-% TODO better structure or local outline
-% TODO besser herleiten, wieso kein 2d array
-For each node $x$, we maintain an initially empty list $B[x]$ of pair $(t_i, \textrm{dist}_{\textrm{up}}(x,t_i))$. 
-These pairs are called \emph{buckets}.
-These buckets are populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
-Now Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) can compute distances from a given source to \emph{all} targets at once.
-We only have to change $D[x]$ so that it is an array of distances to each $t_i$ instead of a single scalar value.
-After calling the adjusted \texttt{ComputeAndMemoizeDist} for each source, we know the shortest distances between each pair of source and target node.
-This way, the search space of the sources is explored only once.
 
-The Bucket-CH selection phase still explores the shared parts of the search space of the targets several times.
-This can be improved with the following modified CH backward search:
-All target nodes are inserted into the queue at once.
-The priority queue is ordered by importance instead of distance.
-Distance labels are buckets instead of scalar values.
-The buckets of each target node are initialized with a single entry for the respective node with distance zero.
-When relaxing an edge, the entries in the current node's bucket are increased by the edge's weight and merged with the bucket entries of the head node of the edge.
-By keeping the buckets sorted, this merging can be efficiently implemented with a coordinated linear sweep over both buckets.
-We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{sec:exp_lazy_rphast}.
-% TODO describe improved^2 Bucket CH
+% \todo{Hier beginnt der ältere Text}
+% Since SSE RPHAST is the fastest known algorithm for many-to-many computations, investigating the Lazy RPHAST performance in this setting seems worthwhile.
+% SSE RPHAST starts by performing the selection phase on the full target set.
+% % TODO flip directions?
+% Second, a query is performed for each source which yields the distances from this source to all targets (RPHAST).
+% This second step can be improved by processing $k$ (typically 16) sources at once using SIMD vector instructions (SSE RPHAST).
+% Naively translating this approach to Lazy RPHAST would mean selecting one target after another and for each doing the full lazy exploration from all sources.
+% However, this approach would explore the upward search space of all the sources multiple times.
+% This work seems redundant.
+
+% Luckily, we can do better by integrating a different One-to-Many CH variant -- the Bucket-CH algorithm~\cite{gssv-erlrn-12} -- to select all targets at once.
+% The Bucket CH selection phase works as follows:
+% % TODO better structure or local outline
+% % TODO besser herleiten, wieso kein 2d array
+% For each node $x$, we maintain an initially empty list $B[x]$ of pair $(t_i, \textrm{dist}_{\textrm{up}}(x,t_i))$.
+% These pairs are called \emph{buckets}.
+% These buckets are populated by running a backward CH search (Algorithm~\ref{algo:ch-backward}) from each $t_i$ and inserting the resulting distances into the buckets.
+% Now Algorithm~\ref{algo:pot} (or~ Algorithm~\ref{algo:cch_pot}) can compute distances from a given source to \emph{all} targets at once.
+% We only have to change $D[x]$ so that it is an array of distances to each $t_i$ instead of a single scalar value.
+% After calling the adjusted \texttt{ComputeAndMemoizeDist} for each source, we know the shortest distances between each pair of source and target node.
+% This way, the search space of the sources is explored only once.
+
+% The Bucket-CH selection phase still explores the shared parts of the search space of the targets several times.
+% This can be improved with the following modified CH backward search:
+% All target nodes are inserted into the queue at once.
+% The priority queue is ordered by importance instead of distance.
+% Distance labels are buckets instead of scalar values.
+% The buckets of each target node are initialized with a single entry for the respective node with distance zero.
+% When relaxing an edge, the entries in the current node's bucket are increased by the edge's weight and merged with the bucket entries of the head node of the edge.
+% By keeping the buckets sorted, this merging can be efficiently implemented with a coordinated linear sweep over both buckets.
+% We evaluate our Lazy RPHAST many-to-many algorithm with this improved Bucket-CH selection in Section~\ref{sec:exp_lazy_rphast}.
+% % TODO describe improved^2 Bucket CH
 
 \section{A* with CH-Potentials}\label{sec:main-algo}
 
@@ -956,59 +956,59 @@ Thus, with CCH-Potentials, we could also support a three-phase setup.
 This could, for example, be used to combine live traffic with turn costs and restrictions.
 One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
 
-\subsubsection{Alternative Routes with the Penalty Method}
+% \subsubsection{Alternative Routes with the Penalty Method}
 
-Providing users with multiple alternative good routes to choose from is another relevant feature for practical routing applications.
-The penalty method is an established framework for computing such alternative routes~\cite{bdgs-argrn-11,krs-eepma-13,pz-iarp-13,kobitzsch2015alternative}.
-It computes an alternative graph instead of a set of alternative routes.
-This graph is constructed iteratively.
-In each iteration, a shortest path between $s$ and $t$ is computed.
-This path (or certain parts of it) is then added to the alternative graph depending on certain quality criteria.
-Finally, all edge weights of the path and possibly adjoined edges are penalized.
-This is repeated until the current path is more than $1 + \epsilon$ times longer than the original distance or until certain other stopping criteria are fulfilled.
+% Providing users with multiple alternative good routes to choose from is another relevant feature for practical routing applications.
+% The penalty method is an established framework for computing such alternative routes~\cite{bdgs-argrn-11,krs-eepma-13,pz-iarp-13,kobitzsch2015alternative}.
+% It computes an alternative graph instead of a set of alternative routes.
+% This graph is constructed iteratively.
+% In each iteration, a shortest path between $s$ and $t$ is computed.
+% This path (or certain parts of it) is then added to the alternative graph depending on certain quality criteria.
+% Finally, all edge weights of the path and possibly adjoined edges are penalized.
+% This is repeated until the current path is more than $1 + \epsilon$ times longer than the original distance or until certain other stopping criteria are fulfilled.
 
-The running time of the penalty method is usually dominated by shortest path computations.
-The computations are performed on $G_{\ell}$ with a few increased edge weights.
-This setting seems like a natural fit for A* with CH-Potentials.
-While the alternative route schema outlined above is conceptually simple, it leaves open quite a few details which may have a strong impact on performance.
-In this work, we do not develop our own variant of the penalty method.
-Instead we aim to reproduce the configuration used by Kobitzsch in his dissertation~\cite{kobitzsch2015alternative}.
-To the best of our knowledge, this is the latest, most thoroughly engineered and evaluated iteration of the penalty method.
-It also achieves the qualitatively best results.
-Some details remain unclear from the description in~\cite{kobitzsch2015alternative}.
-Luckily, we could obtain the original implementation from the authors to resolve all open questions.
-As we use the same configuration, qualitative results are directly comparable.
-We can focus on comparing running times.
+% The running time of the penalty method is usually dominated by shortest path computations.
+% The computations are performed on $G_{\ell}$ with a few increased edge weights.
+% This setting seems like a natural fit for A* with CH-Potentials.
+% While the alternative route schema outlined above is conceptually simple, it leaves open quite a few details which may have a strong impact on performance.
+% In this work, we do not develop our own variant of the penalty method.
+% Instead we aim to reproduce the configuration used by Kobitzsch in his dissertation~\cite{kobitzsch2015alternative}.
+% To the best of our knowledge, this is the latest, most thoroughly engineered and evaluated iteration of the penalty method.
+% It also achieves the qualitatively best results.
+% Some details remain unclear from the description in~\cite{kobitzsch2015alternative}.
+% Luckily, we could obtain the original implementation from the authors to resolve all open questions.
+% As we use the same configuration, qualitative results are directly comparable.
+% We can focus on comparing running times.
 
-To ease our exposition, we briefly reiterate the details of Kobitzsch's configuration.
-The stretch is limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
-\todo{Das bedeutet, dass der Alternativgraph z.B. Zyklenfrei sein muss. Sobald es einen Zyklus gibt kann ich $w(P)$ beliebig groß machen.}
-Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was on the shortest path in $k$ iterations its weight will be $w_q = w_{\ell}\cdot\psi^k$.
-We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
-\todo{incident = nur incomming edges oder auch outgoing? rejoin klingt nur nach incomming, incident klingt nach beiden.}
-An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
-Analogously, an edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
-\todo{Was ist $w_q$ in diesem Kontext?}
-\todo{Ich habe nicht verstanden was diese $\psi_r$ Formeln tun.}
-$\psi_r$ is set to 0.01.
-To avoid over-penalization, we count the times a \emph{node} was on a shortest path and do not apply penalties, when this number exceeds $k_{\max} := \lceil\log_{\psi}(1+\epsilon)\rceil + 2$.
-Shortest paths are split into segments not yet contained in the alternative graph.
-A segment is only added if it is long enough (at least $0.05 \cdot \dist_{w_{\ell}}(s,t)$) and does not violate the maximum stretch condition.
-We terminate the algorithm when any of the following conditions becomes true:
-\begin{itemize}
-	\item All nodes on the current shortest path have been penalized $k_{\max}$ times.
-	\item 10 ore more segments have been added to the alternative graph.
-	\item The shortest path is longer than $(1+\epsilon) \cdot \dist_{w_{\ell}}(s,t)$ with respect to the original metric.
-	\item The shortest path is longer than $(1+\epsilon) \cdot \psi + 2\psi_r \cdot \dist_{w_{\ell}}(s,t)$ with respect to the penalized metric.
-\end{itemize}
-The last two stopping criteria can both be utilized for additional pruning in the A*.
-As a final optimization, we run the forward and backward search in parallel in two threads.
+% To ease our exposition, we briefly reiterate the details of Kobitzsch's configuration.
+% The stretch is limited to $\epsilon = 0.25$, i.e. for any path $P = (u,\dots,v)$ in the alternative graph $w(P) \leq (1+\epsilon) \cdot \dist(u,v)$.
+% \todo{Das bedeutet, dass der Alternativgraph z.B. Zyklenfrei sein muss. Sobald es einen Zyklus gibt kann ich $w(P)$ beliebig groß machen.}
+% Shortest path edges are penalized multiplicative with a factor of $\psi = 1.1$, i.e. when an edges was on the shortest path in $k$ iterations its weight will be $w_q = w_{\ell}\cdot\psi^k$.
+% We also penalize edges incident to shortest paths with an asymmetric additive rejoin penalty.
+% \todo{incident = nur incomming edges oder auch outgoing? rejoin klingt nur nach incomming, incident klingt nach beiden.}
+% An edge $uv$ where $u$ is on a shortest path but $v$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(s,u)}{\dist_{w_q}(s,t)}$.
+% Analogously, an edge $uv$ where $v$ is on a shortest path but $u$ is not will get its weight increased by $\psi_r \cdot \dist_{w_{\ell}}(s,t) \cdot \frac{\dist_{w_q}(v,t)}{\dist_{w_q}(s,t)}$.
+% \todo{Was ist $w_q$ in diesem Kontext?}
+% \todo{Ich habe nicht verstanden was diese $\psi_r$ Formeln tun.}
+% $\psi_r$ is set to 0.01.
+% To avoid over-penalization, we count the times a \emph{node} was on a shortest path and do not apply penalties, when this number exceeds $k_{\max} := \lceil\log_{\psi}(1+\epsilon)\rceil + 2$.
+% Shortest paths are split into segments not yet contained in the alternative graph.
+% A segment is only added if it is long enough (at least $0.05 \cdot \dist_{w_{\ell}}(s,t)$) and does not violate the maximum stretch condition.
+% We terminate the algorithm when any of the following conditions becomes true:
+% \begin{itemize}
+% 	\item All nodes on the current shortest path have been penalized $k_{\max}$ times.
+% 	\item 10 ore more segments have been added to the alternative graph.
+% 	\item The shortest path is longer than $(1+\epsilon) \cdot \dist_{w_{\ell}}(s,t)$ with respect to the original metric.
+% 	\item The shortest path is longer than $(1+\epsilon) \cdot \psi + 2\psi_r \cdot \dist_{w_{\ell}}(s,t)$ with respect to the penalized metric.
+% \end{itemize}
+% The last two stopping criteria can both be utilized for additional pruning in the A*.
+% As a final optimization, we run the forward and backward search in parallel in two threads.
 
-In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph.
-They return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
-However, their approach uses a simpler penalization schema.
-We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative} and denote this approach as \emph{penalty routes}.
-This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
+% In~\cite{adgw-arrn-13} Abraham et al. describe a variation of the penalty method to directly obtain alternative routes rather than an alternative graph.
+% They return the first path which shares less than 80\% with the original path and has stretch less than $1+\epsilon$.
+% However, their approach uses a simpler penalization schema.
+% We also implement this variant with CH-Potentials but stick to the penalization schema from Kobitzsch~\cite{kobitzsch2015alternative} and denote this approach as \emph{penalty routes}.
+% This leads to some qualitative improvements compared to the results reported in~\cite{adgw-arrn-13}.
 
 \subsubsection{Temporary Driving Bans}
 
@@ -1054,27 +1054,26 @@ Table~\ref{tab:graphs} contains an overview over the instances.
 In this table, we further include the sequential preprocessing running time to construct the (C)CH.
 We report preprocessing running times as averages over 10 runs.
 To evaluate point-to-point queries, we generate 10\,000 queries where both source and target are nodes drawn uniformly at random and report average results.
-For many-to-one and many-to-many algorithms, we use the methodology from~\cite{delling_et_al:OASIcs:2011:3266}.
+For many-to-one algorithms, we use the methodology from~\cite{delling_et_al:OASIcs:2011:3266}.
 We generate a \emph{ball} $B$ of nodes around 100 uniformly at random chosen nodes by running a Dijkstra search until $|B|$ nodes are settled where $|B|$ is a parameter varied throughout the experiments.
-From each ball we uniformly at random draw a set of sources $S$ and targets $T$ with $|S| = |T| = 2^{14}$.
-For one-to-many experiments, we pick 100 sources of $S$ and for each source compute the distances to all nodes in the respective $T$ for a total of 10\,000 one-to-many queries.
-For many-to-many experiments, we compute the distance table between the 100 $S$, $T$ pairs.
+From each ball we uniformly at random pick 100 targets and a set of sources $S$ with $|S| = 2^{14}$.
+We perform a many-to-one query for each target computing distances from all sources to it.
+This gives us 100 many-to-one queries per ball and a total of 10\,000 one-to-many queries per ball size.
 
 \subsection{Lazy RPHAST}\label{sec:exp_lazy_rphast}
-
-% better wrap story branch
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_inc.pdf}
 \caption{
-Total and per distance running times of incremental Lazy RPHAST with up to $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$ on OSM Germany.
+Running times of incremental Lazy RPHAST with up to $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$ on OSM Germany excluding selection times.
+The upper figure contains the total running time.
+The lower figure contains the averaged running time per query, i.e. $y/x$ from the upper figure.
 Note the different y-axis scales and units.
 }\label{fig:lazy_rphast_inc}
 \end{figure}
 
-To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed running time after $2^i$ result distances were computed. % TODO word smithing "result distances"
-% TODO selection not included
+To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed running time after distances from $2^i$ sources were queried.
 Figure~\ref{fig:lazy_rphast_inc} depicts the total elapsed time and the average running time to compute a single distance.
 The first few distances are the most expensive ones since a lot of the CH search space has not been explored yet.
 With around 100\,$\mu$s, the running times are comparable to standard CH queries.
@@ -1087,58 +1086,57 @@ With this trade-off, it depends on the ball size which variant is faster in term
 
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one.pdf}
+\includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one_both.pdf}
 \caption{
-Running times of CH based Lazy RPHAST for many-to-one queries with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
+Running times of (C)CH-based Lazy RPHAST for many-to-one queries with $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$.
+The running time includes the selection and the time to compute all distances.
 }\label{fig:many_to_one}
 \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[width=\linewidth]{fig/lazy_rphast_cch_many_to_one.pdf}
-\caption{
-Running times of CCH based Lazy RPHAST for many-to-one queries with $|T| = 2^{14}$ targets picked from a ball of varying size $|B|$.
-}\label{fig:many_to_one_cch}
-\end{figure}
+Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental many-to-one queries.
+Figure~\ref{fig:many_to_one} depicts average running times to compute distances between one target node and $2^{14}$ sources for different ball sizes.
+This experiment uses the exact methodology described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to roughly relate our results to the performance of other one-to-many algorithms.
+Keep in mind that algorithms like RPHAST optimize for a different setting than we do.
+We can compare the performance for fixed $S$-$t$ terminal sets.
+The difference is that with RPHAST one can efficiently compute distances from a different $t'$ to the same $S$ set while with Lazy RPHAST one can efficiently extend $S$ while $t$ stays the same.
 
-Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental one-to-many queries.
-Figures~\ref{fig:many_to_one} and~\ref{fig:many_to_one_cch} depict average running times to compute distances between one node and $2^{14}$ targets for different ball sizes.
-This experiment uses the exact methodology described in~\cite{delling_et_al:OASIcs:2011:3266} which allows to roughly relate our results to the performance of competing algorithms.
-When looking at total running times for a single many-to-one query, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}.
+When looking at total running times for a single many-to-one query including selection times, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}.
 For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACS Europe.
 Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
 The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
-This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster queries.
-When computing distances from different sources towards the same target set, RPHAST will outperform Lazy RPHAST.
-However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
+We conclude that that Lazy RPHAST is a very useful extension to RPHAST.
+It allows efficiently handling dynamic source sets and is even faster than RPHAST in the setting where both the target and the source set change between queries.
+% This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster queries.
+% When computing distances from different sources towards the same target set, RPHAST will outperform Lazy RPHAST.
+% However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
 
-\begin{figure}
-\centering
-\includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_many.pdf}
-\caption{
-Average running times of Lazy RPHAST for many-to-many queries with $|S| = |T| = 2^{14}$ sources and targets picked from a ball of varying size $|B|$ with standard deviation indicated as error bars.
-The lower part of the bars indicates the running time of the Bucket CH subphase.
-}\label{fig:many_to_many}
-\end{figure}
+% \begin{figure}
+% \centering
+% \includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_many.pdf}
+% \caption{
+% Average running times of Lazy RPHAST for many-to-many queries with $|S| = |T| = 2^{14}$ sources and targets picked from a ball of varying size $|B|$ with standard deviation indicated as error bars.
+% The lower part of the bars indicates the running time of the Bucket CH subphase.
+% }\label{fig:many_to_many}
+% \end{figure}
 
-Applying Lazy RPHAST to the many-to-many problem results in running times as depicted in Figure~\ref{fig:many_to_many}.
-The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266}.
-% TODO konkrete zahlen?
-The Bucket CH based first query phase of our implementation takes between half of the total query time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
-It is worth noting that contrary to SSE RPHAST, we did not explicitly utilize SIMD instructions.
-However, the code for Lazy RPHAST on an arrays of distances can be trivially vectorized by the compiler.
-We confirmed that the code was indeed vectorized by inspecting the generated assembly.
+% Applying Lazy RPHAST to the many-to-many problem results in running times as depicted in Figure~\ref{fig:many_to_many}.
+% The results are again at least competitive to the performance reported for SSE RPHAST in~\cite{delling_et_al:OASIcs:2011:3266}.
+% % TODO konkrete zahlen?
+% The Bucket CH based first query phase of our implementation takes between half of the total query time for $|B| = 2^{14}$ and a tenth of the time for $|B| = 2^{24}$.
+% It is worth noting that contrary to SSE RPHAST, we did not explicitly utilize SIMD instructions.
+% However, the code for Lazy RPHAST on an arrays of distances can be trivially vectorized by the compiler.
+% We confirmed that the code was indeed vectorized by inspecting the generated assembly.
 
-\subsubsection{k-Nearest-Neighbor Queries with CCH}
+% \subsubsection{k-Nearest-Neighbor Queries with CCH}
 
-One-to-many queries appear in many extended applications as a subproblem.
-In some of these cases Lazy RPHAST can be used to achieve significant speed-ups with surprisingly little effort.
-One such example are k-Nearest-Neighbor Queries with CCH~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
-There, shortest distances are computed repeatedly from the same source to boundary nodes of a cell of nodes.
-On our suggestion, the authors integrated Lazy RPHAST into their algorithm which took only a couple of lines of code\footnote{\url{https://github.com/vbuchhold/routing-framework/commit/c739dc8e81}}.
-We reran their improved experiments and include the results in our appendix.
-Briefly summarized, integrating Lazy RPHAST into this algorithm decreased running times by up to 15 times depending on the distribution of the target set for almost no effort.
-This demonstrates that Lazy RPHAST is not only useful as an A* potential but also applicable in other contexts.
+% One-to-many queries appear in many extended applications as a subproblem.
+% In some of these cases Lazy RPHAST can be used to achieve significant speed-ups with surprisingly little effort.
+% One such example are k-Nearest-Neighbor Queries with CCH~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
+% There, shortest distances are computed repeatedly from the same source to boundary nodes of a cell of nodes.
+% On our suggestion, the authors integrated Lazy RPHAST into their algorithm which took only a couple of lines of code\footnote{\url{https://github.com/vbuchhold/routing-framework/commit/c739dc8e81}}.
+% We reran their improved experiments and include the results in our appendix.
+% Briefly summarized, integrating Lazy RPHAST into this algorithm decreased running times by up to 15 times depending on the distribution of the target set for almost no effort.
+% This demonstrates that Lazy RPHAST is not only useful as an A* potential but also applicable in other contexts.
 
 \subsection{(C)CH-Potentials Heuristic}
 
@@ -1324,22 +1322,22 @@ With everything activated, our algorithm still has a speedup of 13.5 over the ba
 Interestingly, the PTV traffic predictions have a much smaller length increase than the Mapbox predictions.
 This results in somewhat smaller running times of our algorithm.
 
-\subsubsection{Alternative Routes}
+% \subsubsection{Alternative Routes}
 
-Our implementation of the penalty method reproduces the qualitative results reported in~\cite{kobitzsch2015alternative} (for random queries on DIMACS Europe we on average achieve a total distance of 2.93, an average distance of 1.04, 5.57 decision edges and a success rate of 98.7\% with 6.7 iterations).
-The average running times to compute an alternative graph are 1.37\,s on DIMACS Europe and 0.85\,s on OSM Germany.
-These running times are roughly one order of magnitude slower than the results achieved by Kobitzsch.
-The simpler penalty routes approach is much faster and takes only 156\,ms on DIMACS Europe and 66\,ms on OSM Germany.
-This is two orders of magnitude faster than the running times reported in~\cite{adgw-arrn-13} which is not surprising since their implementation uses an unaccelerated Dijkstra.
-Due to the advanced penalization schema, our average qualitative results differ from~\cite{adgw-arrn-13}: the success rate is with 96.8\% slightly higher, the UBS with around 9\% slightly worse, the sharing is with 42\% somewhat higher but the local optimality, which was the weakest point in the original approach, with 21\% significantly better.
-Finding these alternatives takes only 1.44 iterations on average.
-This makes CH-Potential-based penalty routes a simple and feasible practical approach to compute alternative routes.
+% Our implementation of the penalty method reproduces the qualitative results reported in~\cite{kobitzsch2015alternative} (for random queries on DIMACS Europe we on average achieve a total distance of 2.93, an average distance of 1.04, 5.57 decision edges and a success rate of 98.7\% with 6.7 iterations).
+% The average running times to compute an alternative graph are 1.37\,s on DIMACS Europe and 0.85\,s on OSM Germany.
+% These running times are roughly one order of magnitude slower than the results achieved by Kobitzsch.
+% The simpler penalty routes approach is much faster and takes only 156\,ms on DIMACS Europe and 66\,ms on OSM Germany.
+% This is two orders of magnitude faster than the running times reported in~\cite{adgw-arrn-13} which is not surprising since their implementation uses an unaccelerated Dijkstra.
+% Due to the advanced penalization schema, our average qualitative results differ from~\cite{adgw-arrn-13}: the success rate is with 96.8\% slightly higher, the UBS with around 9\% slightly worse, the sharing is with 42\% somewhat higher but the local optimality, which was the weakest point in the original approach, with 21\% significantly better.
+% Finding these alternatives takes only 1.44 iterations on average.
+% This makes CH-Potential-based penalty routes a simple and feasible practical approach to compute alternative routes.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 In this article, we introduced Lazy RPHAST, an efficient algorithm for the incremental many-to-one problem.
-We also showed that it delivers competitive performance for one-to-many and many-to-many problems.
+We also showed that it delivers competitive performance for many-to-one problems.
 Based on Lazy RPHAST, we developed (C)CH-Potentials, a fast, exact, and flexible two-phase algorithm based on A* and (C)CH for finding shortest paths in road networks.
 The approach can handle a multitude of complex, integrated routing scenarios with very little implementation complexity.
 CH-Potentials provides \emph{exact} distances with respect to lower bound weights known at preprocessing time as an A* heuristic.
@@ -1353,7 +1351,10 @@ Dropping the provable exactness requirement using a setup similar to anytime A*~
 Another promising research avenue would be to investigate graphs other than road networks.
 A lot of research into grid maps exists including a series of competitions called GPPC~\cite{DBLP:conf/socs/SturtevantTTUKS15}.
 Hierarchical techniques have been shown to work well on these graphs~\cite{DBLP:conf/aaai/UrasK14}.
-It might also be worthwhile to apply CH-Potentials to even more routing applications, for example to the shortest $\epsilon$-smooth path problem~\cite{dss-tarrn-18}.
+It might also be worthwhile to apply CH-Potentials to even more routing applications, for example to the shortest $\epsilon$-smooth path problem~\cite{dss-tarrn-18} or the problem of computing alternative routes~\cite{adgw-arrn-13,bdgs-argrn-11,kobitzsch2015alternative}.
+Many-to-one problems also appear as subproblems in other routing algorithms, for example in nearest neighbor computations~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
+Investigating whether Lazy RPHAST can be used to improve these algorithms appears to be a worthwhile direction for future research.
+Studying the performance of Lazy RPHAST in a many-to-many context would also be interesting.
 
 %%
 %% Bibliography
@@ -1364,58 +1365,58 @@ It might also be worthwhile to apply CH-Potentials to even more routing applicat
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
-\appendix
+% \appendix
 
-\section{Improved Results for k-Nearest-Neighbor Queries on CCH}
+% \section{Improved Results for k-Nearest-Neighbor Queries on CCH}
 
-In this section, we report the results of the k-Nearest-Neighbor Queries on CCH with Lazy RPHAST.
-The authors of~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} provide the code for their algorithm and their experiments on Github\footnote{\url{https://github.com/vbuchhold/routing-framework}}.
-This includes the code for both the old version and the new one improved with Lazy RPHAST.
-We reran the experiments performed for~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} in both the old and the new configuration on our machine.
-In the results, we denote the old version as \emph{CCH/CRAD} and the new one as \emph{CCH*/CRAD*}.
-Our results exhibit the same characteristics as observed in the original publication.
-Absolute running times of course vary slightly.
+% In this section, we report the results of the k-Nearest-Neighbor Queries on CCH with Lazy RPHAST.
+% The authors of~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} provide the code for their algorithm and their experiments on Github\footnote{\url{https://github.com/vbuchhold/routing-framework}}.
+% This includes the code for both the old version and the new one improved with Lazy RPHAST.
+% We reran the experiments performed for~\cite{buchhold_et_al:LIPIcs.SEA.2021.18} in both the old and the new configuration on our machine.
+% In the results, we denote the old version as \emph{CCH/CRAD} and the new one as \emph{CCH*/CRAD*}.
+% Our results exhibit the same characteristics as observed in the original publication.
+% Absolute running times of course vary slightly.
 
-Lazy RPHAST yields the greatest improvements of more than an order of magnitude when the points of interest (\emph{POIs}) are concentrated in a smaller region (see Table~\ref{tab:knn} and Figure~\ref{fig:knn_ball_size}).
-When the POIs are distributed over the whole graph, the speed-up is only around factor of three.
-Lazy RPHAST also achieves greater speed-ups for larger numbers of POIs (see Figure~\ref{fig:knn_num_pois}).
-For the demand generation application, this translates to a speed-up factor of around 2.5 (see Figure~\ref{fig:knn_demands}).
-For a more detailed discussion of these results and a comparison to competing algorithms, we refer to~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
+% Lazy RPHAST yields the greatest improvements of more than an order of magnitude when the points of interest (\emph{POIs}) are concentrated in a smaller region (see Table~\ref{tab:knn} and Figure~\ref{fig:knn_ball_size}).
+% When the POIs are distributed over the whole graph, the speed-up is only around factor of three.
+% Lazy RPHAST also achieves greater speed-ups for larger numbers of POIs (see Figure~\ref{fig:knn_num_pois}).
+% For the demand generation application, this translates to a speed-up factor of around 2.5 (see Figure~\ref{fig:knn_demands}).
+% For a more detailed discussion of these results and a comparison to competing algorithms, we refer to~\cite{buchhold_et_al:LIPIcs.SEA.2021.18}.
 
-\begin{table}
-\centering
-\caption{
-Performance of different closest-POI algorithms for various POI distributions.
-For each distribution, we report the time to index a set of POIs (selection time), the space consumed by the
-index (selection space), and the time to find the $k = 1, 4, 8$ closest POIs (query time).
-}\label{tab:knn}
-\input{table/knn.tex}
-\end{table}
+% \begin{table}
+% \centering
+% \caption{
+% Performance of different closest-POI algorithms for various POI distributions.
+% For each distribution, we report the time to index a set of POIs (selection time), the space consumed by the
+% index (selection space), and the time to find the $k = 1, 4, 8$ closest POIs (query time).
+% }\label{tab:knn}
+% \input{table/knn.tex}
+% \end{table}
 
-\begin{figure}
-\centering
-\includegraphics[width=\linewidth]{fig/knn_ball_size.pdf}
-\caption{
-Selection and query times of various closest-POI algorithms with $|P| = 2^{14}$ POIs picked at random from a ball of varying size $|B|$.
-Queries find the $k = 4$ closest POIs.
-}\label{fig:knn_ball_size}
-\end{figure}
+% \begin{figure}
+% \centering
+% \includegraphics[width=\linewidth]{fig/knn_ball_size.pdf}
+% \caption{
+% Selection and query times of various closest-POI algorithms with $|P| = 2^{14}$ POIs picked at random from a ball of varying size $|B|$.
+% Queries find the $k = 4$ closest POIs.
+% }\label{fig:knn_ball_size}
+% \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[width=\linewidth]{fig/knn_num_pois.pdf}
-\caption{
-Selection and query times of various closest-POI algorithms with a varying number $|P|$ of POIs picked at random from a ball of size $|B| = |V|$.
-Queries find the $k = 4$ closest POIs.
-}\label{fig:knn_num_pois}
-\end{figure}
+% \begin{figure}
+% \centering
+% \includegraphics[width=\linewidth]{fig/knn_num_pois.pdf}
+% \caption{
+% Selection and query times of various closest-POI algorithms with a varying number $|P|$ of POIs picked at random from a ball of size $|B| = |V|$.
+% Queries find the $k = 4$ closest POIs.
+% }\label{fig:knn_num_pois}
+% \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[width=.6363\linewidth]{fig/knn_demands.pdf}
-\caption{
-Time to generate a single trip with different demand generators for various values of $\lambda$.
-}\label{fig:knn_demands}
-\end{figure}
+% \begin{figure}
+% \centering
+% \includegraphics[width=.6363\linewidth]{fig/knn_demands.pdf}
+% \caption{
+% Time to generate a single trip with different demand generators for various values of $\lambda$.
+% }\label{fig:knn_demands}
+% \end{figure}
 
 \end{document}
