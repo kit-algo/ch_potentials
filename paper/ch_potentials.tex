@@ -65,7 +65,7 @@ On road networks, shortest paths can also be quickly computed using hierarchical
 They achieve speed and exactness but sacrifice A*'s flexibility.
 Extending them to certain practical applications can be hard.
 In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many distance estimates towards a single target and use it as a A* heuristic.
-Since it utilizes Contraction Hierarchies (CH), a hierarchical technique, we call our heuristic CH-Potentials.
+As it uses Contraction Hierarchies (CH), a hierarchical technique, we call our A* heuristic CH-Potentials.
 Our approach allows decoupling the supported applications from the hierarchical speed-up technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present a new pruning criterion for symmetrical bidirectional A*.
 An extensive experimental study confirms the practicality of our approach for many applications.
@@ -137,11 +137,12 @@ This enables us to design algorithms for a multitude of features.
 
 This article is the extended version of our conference paper ``A Fast and Tight Heuristic for A* in Road Networks''~\cite{strasser_et_al:LIPIcs.SEA.2021.6}.
 The paper introduced the basic CH-Potentials heuristic, some query optimizations for handling of low-degree nodes, common in road networks, and some applications of CH-Potentials.
-In this article we discuss and evaluate Lazy RPHAST, the central ingredient of CH-Potentials, in much greater detail and introduce an improved variant for Customizable Contraction Hierarchies.
+In this article, we discuss and evaluate Lazy RPHAST, the central ingredient of CH-Potentials, in greater detail and introduce an improved variant for Customizable Contraction Hierarchies.
 % Furthermore, we evaluate Lazy RPHAST in the context of one-to-many and many-to-many problems.
 The original paper only discussed unidirectional CH-Potentials.
-In this journal version, we also discuss a bidirectional variant and also introduce an improved pruning criterion for symmetrical bidirectional A* which can also be utilized for other heuristic.
-We also include a significantly expanded evaluation.
+In this journal version, we also discuss a bidirectional variant and introduce an improved pruning criterion for symmetrical bidirectional A*.
+The improved pruning is not specific to CH-Potentials and can also be used with other heuristics.
+Compared to the conference paper, the journal version contains a significantly expanded experimental evaluation.
 
 The rest of the article is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
@@ -212,47 +213,50 @@ In~\cite{DBLP:conf/ijcai/0002UJAKK18} the weighted graph is embedded into Euclid
 The Euclidean distance is then used as a distance estimate for A*.
 % This results in a good but not a preprocessing-tight heuristic.
 
-
 \section{Preliminaries}\label{sec:preliminaries}
 
 We consider directed graphs $G=(V,E)$ with $n=|V|$ nodes and $m=|E|$ edges with weight functions $w : E \to \mathbb{R}$.
-Given nodes $s$ and $t$ we want to obtain a path $P=(s=v_0,\dots,t=v_k)$ of minimum weight $w(P) := \sum_{i} w(v_{i-1}v_i)$.
+Given nodes $s$ and $t$ we want to obtain a $st$-path $P=(s=v_0,\dots,t=v_k)$ of minimum weight $w(P) := \sum_{i} w(v_{i-1}v_i)$.
 We denote this shortest path weight as the distance $\dist_w(s,t)$ between $s$ and $t$.
+If there is no path, we set $\dist_w(s,t)=\infty$.
 
 \subsection{Dijkstra's Algorithm}
 
-Dijkstra's algorithm~\cite{d-ntpcg-59} can be used to solve this shortest path problem.
-In this section, we recall the classical algorithm and establish some notation that we will employ in the remainder of this paper.
-Dijkstra's algorithm maintains an array of tentative distances $D$ and a priority queue of nodes ordered by increasing distance from $s$.
+In the this section, we recall the central aspects of Dijkstra's classical shortest path algorithm~\cite{d-ntpcg-59} and introduce notation used throughout this paper.
+Dijkstra's algorithm maintains an array of tentative distances $D$ and a priority queue $Q$ of nodes ordered by increasing distance from $s$.
 Initially, all distances are set to $\infty$.
-The start node distance $D[s]$ is set to zero and the queue initialized with $s$.
-Then, in each iteration, the closest remaining node $u$ is popped from the queue and \emph{settled}.
+The start node distance $D[s]$ is set to zero and the queue is initialized with $s$.
+In each iteration, the closest remaining node $u$ is popped from the queue and \emph{settled}.
 Outgoing edges $uv$ are relaxed, i.e. $D[v]$ is set to $\min(D[v], D[u] + w(uv))$.
-If the distance at the head node $v$ was improved it will be inserted into the queue or the queue position will be updated if $v$ was already in the queue.
-Once $t$ was settled, $D[t]$ contains the distance between $s$ and $t$.
+If the tentative distance at the head node $D[v]$ was improved, it's added to the queue or its position in the queue is adjusted.
+Once $t$ was settled, $D[t]$ contains the shortest path distance between $s$ and $t$.
+The search can stop when $t$ is settled.
+
+\todo{$w(uv)$ vs $w(u,v)$, egal welches aber bitte konsistent.}
 
 Dijkstra's algorithm can also be run from the target $t$ on the reversed graph.
 We call this a \emph{backward search}.
-Running two Dijkstra searches, one from $s$ and a backward search from $t$, until the searches meet is called a \emph{Bidirectional Dijkstra}.
+Running two Dijkstra searches simultaneously, one from $s$ and a backward search from $t$, until the searches meet is called a \emph{Bidirectional Dijkstra}.\todo{Kann von mir aus bleiben, aber ich muss immer an Janus denken bei ``Bidirectional Dijkstra''.}
 Typically, the searches are interleaved by alternating settling a node from each direction.
 Another common approach is to always settle a node from the direction with the smaller minimum queue key.
 Theoretically any direction interleaving strategy is possible.
-The searches can also be run in parallel in two threads.
+The searches can also be run in parallel in two threads.\todo{Bringt es uns etwas, dass hier Alternierungsstrategien aufgelistet werden, oder kann das weg?}
 When the sum of the minimum keys in both queues $\overrightarrow{k} + \overleftarrow{k}$ is greater than the so far best known tentative total distance $\mu$ the algorithm can terminate.
 
 \subsection{A* Algorithm}\label{sec:a_star}
 
 A* is a goal-directed variant of Dijkstra's algorithm.
 % A* uses a \emph{heuristic} to guide the search towards the goal.
-It uses a heuristic function $h_t(v)$ that maps a node $v$ onto an estimate of the distance from $v$ to the target.
-The priority queue is ordered by $d[v] + h_t(v)$.
-Thus, nodes closer to the target a explored earlier.
-
+It uses a heuristic function $h_t(v)$ that maps a node $v$ onto an estimate of the distance from $v$ to the target $t$.
+A* orders the nodes in the priority queue by $D[v] + h_t(v)$ instead of $D[v]$ as is done by Dijkstra's algorithm.
+This results in nodes closer to the target being explored earlier.
+Dijkstra's algorithm can be obtained as a special case of A* by setting $h_t(v)=0$.
 A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights}~\cite{hnr-afbhd-68}.
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
-A heuristic function is called \emph{feasible} if $w_{h_t} \geq 0$ for all edges.
-A* is guaranteed to compute an optimal path, if the heuristic is feasible.
-In this article, we therefore limit our discussion to feasible heuristics.
+
+For A* to be optimal, the heuristic needs to be feasible.
+A heuristic function is called \emph{feasible}, if $w_{h_t}(e) \geq 0$ for all edges $e$.
+In this article, we limit our discussion to feasible heuristics.
 
 \subsection{Contraction Hierarchies (CH)}
 
@@ -328,17 +332,23 @@ On graphs with low treewidth, this is also the case~\cite{dsw-cch-15,hs-gbpo-18}
 
 \subsection{Customizable Contraction Hierarchies (CCH)}
 
-Customizable Contraction Hierarchies~\cite{dsw-cch-15} are a special variant of Contraction Hierarchies.
-They use a node importance order independent of the weight function.
-% TODO so far, we only have levels but not ranks
-This allows splitting the preprocessing in two subphases.
-The first one is slow but independent of the weight function.
-The second one, called \emph{customization}, is fast (a couple of seconds or less) and applies a weight function to the preprocessed data.
-This allows regular updates to the weight function, for example to incorporate live traffic.
+\label{sec:cch-intro}
 
-As for CH, the result of the preprocessing is an augmented graph $G^+$ fulfilling the same properties as for CH.
-Thus, the CH query algorithms can be applied without modifications.
+Some hierarchical techniques were extended to support a three phase setup.
+The phases consist of a slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
+The preprocessing phase typically takes hours, the customization seconds, and the query milliseconds.
+The preprocessing phase is independent of the weights and only exploits the graph topology.
+Weights are introduces in the customization phase.
+Paths are computed in the query phase.
+This setup is useful to allow for weight changes that are common to all vehicles such as life traffic updates.
+The first technique to follow this setup is CRP~\cite{dgpw-crprn-13}
+
+Customizable Contraction Hierarchies~\cite{dsw-cch-15} are a variant of Contraction Hierarchies that uses this three phase setup.
+The key idea is to use a node importance order that is independent of the weight function.
+As a CCH is also a CH, the same concepts such as the augmented graph $G^+$ exists.
+The CH query algorithms can therefore be applied without modifications.
 However, the CCH preprocessing grants some additional useful properties.
+
 During preprocessing, an \emph{elimination tree} can be constructed.
 The root of the elimination tree is the most important node.
 % TODO so far, we only have levels but not ranks
@@ -348,7 +358,10 @@ This makes it possible to explore the CCH search space with a more efficient sho
 For the forward search, start at the source and follow the elimination tree upward until the root is reached.
 All outgoing edges of encountered nodes are relaxed.
 The backward search works analogously but starts at the target.
-Because this algorithm does not require a queue, it is faster than a Dijkstra-based CH query.
+Because this elimination tree based algorithm does not require a queue, it is faster than a Dijkstra-based CCH query.
+However, only weight-independent node orderings admit an elimination tree of low height.
+The elimination tree query can therefore not be used for a general CH.
+Using a CH with a weight-specific importance order is often faster than a CCH with elimination tree query.
 
 \subsection{PHAST}
 
@@ -419,7 +432,7 @@ Since the target selection time is included, computing the distances to all node
 Also, since the source set is only provided incrementally, RPHAST in its basic form is not well suited to our problem.
 Fortunately, we can do better.
 
-\subsection{Lazy RPHAST}
+\subsection{Lazy RPHAST for Contraction Hierarchies}
 
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
@@ -450,12 +463,12 @@ As not all shortest up-down paths contain an up-edge, we set $D[s_i] = \min \{ B
 This calculation is correct, as it computes the minimum up-down $s_it$-path distance in $G^+_\ell$, which corresponds to the minimum $s_it$-path distance in a CH.
 % A* with this heuristic is the basic CH-Potentials algorithm.
 
-\subsection{Lazy RPHAST on CCH}
+\subsection{Lazy RPHAST for Customizable Contraction Hierarchies}
 
 Algorithm~\ref{algo:pot} can be applied to CCH without any modifications.
 However, we can also exploit the elimination tree in the Lazy RPHAST algorithm.
 To compute the distance $D[x]$ of a node $x$ the distances of all upward neighbors must be final.
-In Algorithm~\ref{algo:pot} we have to compute all these distances recursively.
+In Algorithm~\ref{algo:pot}, we have to compute all these distances recursively.
 However, on CCH it is sufficient to ensure that the distance of the elimination tree parent of $x$ is final.
 All upward neighbors of $x$ are by definition included in the search space, thus they are also ancestors in the elimination tree.
 Thus, if the distance of the parent in the elimination tree is final, the distances of all other upward neighbors must already be final, too.
@@ -466,22 +479,24 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \begin{algorithm2e}
 \KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
 \KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
-\KwData{$P[x]$: parent node of $x$ in the elimination tree}
-\KwData{$S$: stack with nodes to compute distances}
+\KwData{$P[x]$: parent node of $x$ in the elimination tree, parent of root is $\bot$}
+\KwData{$S$: stack with nodes to compute distances, empty initially, only used to store intermediate data}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKwFunction{Push}{push}
 \SetKwFunction{Pop}{pop}
 \SetKw{Break}{break}
 \SetKwProg{Fn}{Function}{:}{}
 \Fn{\Dist{$x$}}{
+  \tcp{Determine for what nodes, the $D$ needs to be filled}
   $y \gets x$\;
 	\While{$D[y] = \bot$}{
     $S$.\Push{$y$}\;
 		\If{$P[y] = \bot$}{
       \Break\;
 		}
-    $y \gets P[y]$
+    $y \gets P[y]$\;
   }
+  \tcp{Fill $D$ for those nodes}
   \While{$S$ not empty}{
     $y \gets S$.\Pop{}\;
 		$D[y]\gets B[y]$\;
@@ -696,7 +711,7 @@ The final result is the concatenation of both paths.
 
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
-On road graphs, bidirectional search provides an easy way to halve the running time of Dijkstra's algorithm.
+On road graphs, bidirectional search provides a way to halve the running time of Dijkstra's algorithm.\todo{sag niemals etwas sei ``easy''. Es gibt immer jemand der es schwer fand. Den schlägst du ins Gesicht.}
 A bidirectional variant of A* therefore also seems desirable.
 However, as shown in~\cite{gh-cspas-05}, the necessary modifications are not straightforward.
 We revisit bidirectional A* and propose an alternative approach.
@@ -946,14 +961,22 @@ This straight-forward integration of complex routing problems is the strength of
 
 \subsubsection{CCH Potentials}
 
-Supporting live traffic is also possible with a three-phase setup:
-A slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
-The customization phase is run regularly and incorporates updates to the weights into the auxiliary preprocessing data.
-CRP~\cite{dgpw-crprn-13} and CCH~\cite{dsw-cch-15} follow this setup.
-As discussed in Section~\ref{sec:lazy-rphast}, the Lazy RPHAST algorithm and thus CH-Potentials can also be used with a CCH.
-In terms of our framework this would mean having a second preprocessing phase which allows updating $w_\ell$ to the current traffic situation.
-Thus, with CCH-Potentials, we could also support a three-phase setup.
-This could, for example, be used to combine live traffic with turn costs and restrictions.
+Live traffic can alternatively be supported using a three-phase setup as described in Section~\ref{sec:cch-intro}.
+We do this by exchanging the CH for a CCH.
+The preprocessing phase is identical as for a CCH and is independent of $w_\ell$.
+The $w_\ell$ is fixed during the customization phase.
+It can be changed arbitrarily by rerunning the customization.
+The A* algorithm is part of the query phase.
+The weights $w_q$ used in the query phase must not be smaller than the $w_\ell$ used during the last customization.
+
+This setup provides an alternative way of integrating live traffic compared to the approach described in~\ref{sec:live-predicted-traffic}.
+Changes to the live traffic situation are handled by changing $w_\ell$ via a customization.
+Vehicle specific restrictions are accounted for in the query by adjusting $w_q$.
+For severe traffic events, the three phase approach is likely faster.
+However, it comes at the expense of a more complex algorithm.
+Further, integrating predicted traffic becomes difficult, as $w_q$ may not drop below the $w_\ell$ with integrated congestion.
+
+\todo{Den Gedanken sollte man ausbauen oder streichen}
 One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
 
 % \subsubsection{Alternative Routes with the Penalty Method}
@@ -1184,23 +1207,25 @@ As the density varies, the running times vary.
 
 Table~\ref{tab:building_blocks} depicts the performance of unidirectional A* with different heuristics and optimizations.
 We compare (C)CH-Potentials to three other heuristics.
-First, the Zero heuristic where $h(x)=0$ for all nodes $x$.
+The first heuristic is, the \emph{Zero} heuristic where $h(x)$ is $0$ for all nodes $x$.
 This corresponds to using Dijkstra's algorithm.
-Second, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
+Secondly, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
 We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
 Finally, we compare against a hypothetical \emph{Oracle-A*} heuristic.
 This heuristic has instant access to a shortest distance array with respect to $w_\ell$, i.e. it is faster than the fastest heuristic possible in our model.
 We fill this array before each query using a reverse Dijkstra search from the target node.
+In this experiment, we do not account for the running time of Dijkstra's algorithm.
 Thus, the reported running times of Oracle-A* do \emph{not} account for any heuristic evaluation.
-CH-Potentials compute the same distance estimates but the heuristic evaluation has some overhead.
+(C)CH-Potentials compute the same distance estimates but the heuristic evaluation has some overhead.
 Comparing against Oracle-A* allows us to measure this overhead.
-Also, no other heuristic, which only has access to the preprocessing weights, can be faster than Oracle-A*.
+No other heuristic, which only has access to the preprocessing weights, can be faster than Oracle-A*.
 
 We observe that the number of queue pushes roughly correlates with running time.
+As (C)CH-Potentials and Oracle-A* have the same heuristic values, the number of queue pushes are by construction equal.
 Each optimization reduces both queue pushes and running times.
 All optimizations yield a combined speed-up of around 3.
 % Skipping degree three nodes has the smallest impact.
-CH-Potentials outperform ALT by a factor of between six and seven and settle correspondingly fewer nodes.
+(C)CH-Potentials outperform ALT by a factor of between six and seven and settle correspondingly fewer nodes.
 This is not surprising, since ALT computes worse distance estimates.
 In contrast, CH-Potentials already compute exact distances with respect to $w_\ell$.
 The number of popped nodes is the same for CH-Potentials, CCH-Potentials and Oracle-A*.
@@ -1210,7 +1235,8 @@ Thus, CH-Potentials are already very close to the best possible heuristic in thi
 % Very interesting is the comparison with Oracle-A*.
 % Our algorithm is only 1.6 times slower than accessing the exact $w_\ell$ distances instantly from a precomputed array.
 This means that no competing algorithm such as ALT or CPD-Heuristics can be significantly faster.
-CCH-Potentials are slightly slower than CH-Potentials because their search space is denser.
+CCH-Potentials are slightly slower than CH-Potentials because they use a weight independent node importance order.
+This enables CCH-Potentials to support a customization whereas CH-Potentials cannot.
 
 \subsection{Bidirectional A*}
 
@@ -1225,11 +1251,15 @@ Table~\ref{tab:bidir_pruning} depicts the performance of different variants of b
 As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
 Symmetric bidirectional A* without our improved pruning has the worst performance.
 Enabling the improved pruning brings the performance symmetric bidirectional A* on par with the average potential for all heuristics except ALT.
+\todo{den nächsten Satz verstehe ich nicht}
 Apparently, the average potential gives ALT a better heuristic than the original one for for each direction individually, contrary to the statements made in~\cite{gh-cspas-05}.
 For all other heuristics, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
 Without the low degree improvements, the improved symmetric variant is marginally faster and with the low degree improvements the average potential remains slightly faster.
 This is due to the reduced impact of the heuristic evaluation overhead with the low degree optimizations.
 Enabling the improved pruning for the average potential, marginally reduces the search space size and slightly increases running times.
+
+\todo{Vergleich zwischen Tabelle 3 und 4? Warum ist uni directional langsamer? Hier sollte man schreiben, dass das Thema bei Tabelle 5 addressiert wird}
+\todo{was ist die Alternierungsstrategie von Tabelle 3?}
 
 \begin{table}
 \centering
