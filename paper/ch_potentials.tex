@@ -308,17 +308,17 @@ For details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
 \begin{algorithm2e}
-\KwData{$B[x]$: tentative distance from $x$ to target $t$}
+\KwData{$B[v]$: tentative distance from $v$ to target $t$}
 \KwData{Minimum priority queue $Q$, also called open list, ordered by tentative distances}
-$B[x] \leftarrow +\infty$ for all $x\neq t$;
-$B[t] \leftarrow 0$\;
+$B[v] \gets +\infty$ for all $v\neq t$;
+$B[t] \gets 0$\;
 Make $Q$ only contain $t$ with weight $0$\;
 \While{$Q$ not empty}{
-  $y\leftarrow$ pop minimum element from $Q$\;
-  \For{all down-edges $xy$ in $G^+_\ell$}{
-    \If{$B[x] > w_\ell(xy) + B[y]$}{
-      $B[x]\leftarrow w_\ell(xy) + B[y]$\;
-                        Add $x$ or decrease $x$'s key in $Q$ to $B[x]$\;
+  $u\gets$ pop minimum element from $Q$\;
+  \For{all down-edges $vu$ in $G^+_\ell$}{
+    \If{$B[v] > w_\ell(vu) + B[u]$}{
+      $B[v]\gets w_\ell(vu) + B[u]$\;
+                        Add $v$ or decrease $v$'s key in $Q$ to $B[v]$\;
     }
   }
 }
@@ -398,12 +398,12 @@ The elimination tree query can therefore not be used for a general CH.
 \subsection{PHAST}
 
 \begin{algorithm2e}
-\KwData{$P[x]$: tentative distance from $x$ to $t$}
+\KwData{$P[v]$: tentative distance from $v$ to $t$}
 Execute Algorithm~\ref{algo:ch-backward}\;
 \For{all CH levels $L$ from most to least important}{
-	\For{all up-edges $xy$ in $G^+_\ell$ with $x$ in $L$}{
-		\If{$P[x] < P[y] + w_\ell(xy)$}{
-			$P[x] \leftarrow P[y] + w_\ell(xy)$\;
+	\For{all up-edges $uv$ in $G^+_\ell$ with $u$ in $L$}{
+		\If{$P[u] < P[v] + w_\ell(uv)$}{
+			$P[u] \leftarrow P[v] + w_\ell(uv)$\;
 		}
 	}
 }
@@ -467,18 +467,18 @@ Fortunately, we can do better.
 \subsection{Lazy RPHAST for Contraction Hierarchies}
 
 \begin{algorithm2e}
-\KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
-\KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
+\KwData{$B[v]$: tentative distance from $v$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
+\KwData{$D[v]$: memoized distance from $v$ to $t$, $\bot$ initially}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKwProg{Fn}{Function}{:}{}
-\Fn{\Dist{$x$}}{
-	\If{$D[x] = \bot$}{
-		$D[x]\leftarrow B[x]$\;
-		\For{all up-edges $xy$ in $G^+_\ell$}{
-                        $D[x]\leftarrow\min\{D[x],w_\ell(xy)+\Dist(y)\}$\;
+\Fn{\Dist{$u$}}{
+	\If{$D[u] = \bot$}{
+		$D[u]\leftarrow B[u]$\;
+		\For{all up-edges $uv$ in $G^+_\ell$}{
+                        $D[u]\leftarrow\min\{D[u],w_\ell(uv)+\Dist(v)\}$\;
 		}
 	}
-	\Return{$D[x]$}\;
+	\Return{$D[u]$}\;
 }
 \caption{Lazy RPHAST algorithm}
 \label{algo:pot}
@@ -486,55 +486,54 @@ Fortunately, we can do better.
 
 The core idea of our algorithm is to do the (R)PHAST computation lazily and using memoization as depicted in Algorithm~\ref{algo:pot}.
 In the target selection, we first run the backward CH search from $t$ to obtain an array $B$.
-$B[x]$ is the minimum down $xt$-path distance or $+\infty$, if there is no such path.
+$B[v]$ is the minimum down $vt$-path distance or $+\infty$, if there is no such path.
 $B$ is computed as shown in Algorithm~\ref{algo:ch-backward}.
 
-To compute the distance from a source $s_i$, we recursively compute for all up-edges $(s_i x)$ the distance $D[x]$.
-Next, we compute the minimum distance over all up-down paths that contain at least one up-edge using $d = \min_x\{w_\ell(s_i x) + D[x]\}$.
+To compute the distance from a source $s_i$, we recursively compute for all up-edges $(s_i v)$ the distance $D[v]$.
+Next, we compute the minimum distance over all up-down paths that contain at least one up-edge using $d = \min_v\{w_\ell(s_i v) + D[v]\}$.
 As not all shortest up-down paths contain an up-edge, we set $D[s_i] = \min \{ B[s_i], d \}$.
 This calculation is correct, as it computes the minimum up-down $s_it$-path distance in $G^+_\ell$, which corresponds to the minimum $s_it$-path distance in a CH.
-% A* with this heuristic is the basic CH-Potentials algorithm.
 
 \subsection{Lazy RPHAST for Customizable Contraction Hierarchies}
 
 Algorithm~\ref{algo:pot} can be applied to CCH without any modifications.
 However, we can also exploit the elimination tree in the Lazy RPHAST algorithm.
-To compute the distance $D[x]$ of a node $x$ the distances of all upward neighbors must be final.
+To compute the distance $D[v]$ of a node $v$ the distances of all upward neighbors must be final.
 In Algorithm~\ref{algo:pot}, we have to compute all these distances recursively.
-However, on CCH it is sufficient to ensure that the distance of the elimination tree parent of $x$ is final.
-All upward neighbors of $x$ are by definition included in the search space, thus they are also ancestors in the elimination tree.
-Thus, if the distance of the parent in the elimination tree is final, the distances of all other upward neighbors must already be final, too.
-Thus, it is sufficient to recursively (or iteratively) ensure that the distance of the parent in the elimination tree has been computed.
+However, on CCH it is sufficient to ensure that the distance of the elimination tree parent of $v$ is final.
+All upward neighbors of $v$ are by definition included in the search space, thus they are also ancestors in the elimination tree.
+If the distance of the parent in the elimination tree is final, the distances of all other upward neighbors must already be final, too.
+Thus, it is sufficient to iteratively ensure that the distance of the parent in the elimination tree has been computed.
 As soon as a node with final distance is encountered, all ancestors are known to have their final distance.
 This allows for the more efficient implementation depicted in Algorithm~\ref{algo:cch_pot}.
 
 \begin{algorithm2e}
-\KwData{$B[x]$: tentative distance from $x$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
-\KwData{$D[x]$: memoized distance from $x$ to $t$, $\bot$ initially}
-\KwData{$P[x]$: parent node of $x$ in the elimination tree, parent of root is $\bot$}
+\KwData{$B[v]$: tentative distance from $v$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
+\KwData{$D[v]$: memoized distance from $v$ to $t$, $\bot$ initially}
+\KwData{$P[v]$: parent node of $v$ in the elimination tree, parent of root is $\bot$}
 \KwData{$S$: stack with nodes to compute distances, empty initially, only used to store intermediate data}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
 \SetKw{Break}{break}
 \SetKwProg{Fn}{Function}{:}{}
-\Fn{\Dist{$x$}}{
+\Fn{\Dist{$u$}}{
   \tcp{Determine for what nodes, the $D$ needs to be filled}
-  $y \gets x$\;
-	\While{$D[y] = \bot$}{
-    Push $y$ onto $S$\;
-		\If{$P[y] = \bot$}{
+  $v \gets u$\;
+	\While{$D[v] = \bot$}{
+    Push $v$ onto $S$\;
+		\If{$P[v] = \bot$}{
       \Break\;
 		}
-    $y \gets P[y]$\;
+    $v \gets P[v]$\;
   }
   \tcp{Fill $D$ for those nodes}
   \While{$S$ not empty}{
-    $y\leftarrow$ pop top element from $S$\;
-		$D[y]\gets B[y]$\;
-		\For{all up-edges $yz$ in $G^+_\ell$}{
-                        $D[y]\gets\min\{D[y],w_\ell(yz)+D[z]\}$\;
+    $v\leftarrow$ pop top element from $S$\;
+		$D[v]\gets B[v]$\;
+		\For{all up-edges $vw$ in $G^+_\ell$}{
+                        $D[v]\gets\min\{D[v],w_\ell(vw)+D[w]\}$\;
 		}
 	}
-	\Return{$D[x]$}\;
+	\Return{$D[u]$}\;
 }
 \caption{Elimination tree based Lazy RPHAST algorithm}
 \label{algo:cch_pot}
@@ -669,7 +668,7 @@ Finally, we introduce an algorithmic framework to apply A* with CH-Potentials to
 
 The \emph{CH-Potentials} heuristic is a straightforward application of the Lazy RPHAST algorithm.
 In the beginning of each query, we perform the target selection, a backward CH search, from the target $t$.
-The heuristic function $h_t(x)$ is implemented by a call to the \texttt{ComputeAndMemoizeDist} for node $x$.
+The heuristic function $h_t(v)$ is implemented by a call to the \texttt{ComputeAndMemoizeDist} for node $v$.
 
 This yields a \emph{perfect} heuristic, at least as long as the CH preprocessing and the A* algorithm are performed on the same graph with the same weight function.
 This case is of course not particularly interesting.
@@ -686,24 +685,24 @@ Avoiding pushing low degree nodes into the queue is the focus of this section.
 The techniques discussed here are a lazy variant of the ideas used in TopoCore~\cite{DBLP:conf/gis/DibbeltSW15}.
 
 We modify A* by processing low degree nodes consecutively without pushing them into the queue.
-Our algorithm uses the undirected degree $d(x)$ of a node $x$.
-Formally, $d(x)$ is the number of nodes $y$ such that $(xy)\in E$ or $(yx)\in E$.
+Our algorithm uses the undirected degree $d(v)$ of a node $v$.
+Formally, $d(v)$ is the number of nodes $u$ such that $(vu)\in E$ or $(uv)\in E$.
 
-Analogous to A*, our algorithm stores for every node $x$ a tentative distance $D[x]$.
+Analogous to A*, our algorithm stores for every node $v$ a tentative distance $D[v]$.
 Additionally, it maintains a minimum priority queue.
 Diverging from A*, not all nodes can be pushed but every node has a tentative distance.
 
 \subsubsection{Skip Degree Two Nodes}
 
-Our algorithm differs from A* when removing a node $x$ from the queue.
-A* iterates over the outgoing edges $(xy)$ of $x$ and tries to reduce $D[y]$ by relaxing $(xy)$.
-If A* succeeds, $y$'s weight in the queue is set to $D[y]+h_t(y)$.
-Our algorithm, however, behaves differently, if $d(y)\le 2$.
-Our algorithm determines the longest degree two chain of nodes $x y_1,\ldots, y_k, z$ such that $d(y_i)=2$ and $d(z) > 2$.
-If our algorithm succeeds in reducing $D[y_1]$, it does not push $y_1$ into the queue.
-Instead, it iteratively tries to reduce all $D[y_i]$.
-If it does not reach $z$, then only $D$ is modified but no queue action is performed.
-If $D[z]$ is modified and $d(z)>2$, $z$'s weight in the queue is set to $D[z]+h_t(z)$.
+Our algorithm differs from A* when removing a node $u$ from the queue.
+A* iterates over the outgoing edges $(uv)$ of $u$ and tries to reduce $D[v]$ by relaxing $(uv)$.
+If A* succeeds, $v$'s weight in the queue is set to $D[v]+h_t(v)$.
+Our algorithm, however, behaves differently, if $d(v)\le 2$.
+Our algorithm determines the longest degree two chain of nodes $u, v_1,\ldots, v_k, w$ such that $d(v_i)=2$ and $d(w) > 2$.
+If our algorithm succeeds in reducing $D[v_1]$, it does not push $v_1$ into the queue.
+Instead, it iteratively tries to reduce all $D[v_i]$.
+If it does not reach $w$, then only $D$ is modified but no queue action is performed.
+If $D[w]$ is modified and $d(w)>2$, $w$'s weight in the queue is set to $D[w]+h_t(w)$.
 
 As the target node $t$ might have degree two, our algorithm cannot rely on stopping, when $t$ is removed from the queue.
 Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight in the queue.
@@ -711,13 +710,13 @@ Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight i
 \subsubsection{Skip Degree Three Nodes}
 
 We can also skip some degree three nodes.
-Denote by $x y_1,\ldots, y_k, z$ a degree two chain as described in the previous section.
-If $d(z) > 3$ or $z$ is in the queue, our algorithm proceeds as in the previous section.
-Otherwise, there exist up to two degree chains $z a_1,\ldots,a_p b$ and $z,\alpha_1,\ldots,\alpha_q,\beta$ such that $a_1\neq y_k \neq \alpha_1$.
-Our algorithm iteratively tries to reduce all $D[a_i]$ and $D[\alpha_i]$.
-If it reaches $\beta$, $\beta$'s weight in the queue is set to $D[\beta]+h_t(\beta)$.
-Analogously, if $b$ is reached, $b$'s weight is set to $D[b]+h_t(b)$.
-If $b$ respectively $\beta$ are not reached, our algorithm does nothing.
+Denote by $u, v_1,\ldots, v_k, w$ a degree two chain as described in the previous section.
+If $d(w) > 3$ or $w$ is in the queue, our algorithm proceeds as in the previous section.
+Otherwise, there exist up to two degree chains $w, x_1,\ldots,x_p, y$ and $w,a_1,\ldots,a_q,b$ such that $x_1\neq y_k \neq a_1$.
+Our algorithm iteratively tries to reduce all $D[x_i]$ and $D[a_i]$.
+If it reaches $b$, $b$'s weight in the queue is set to $D[b]+h_t(b)$.
+Analogously, if $y$ is reached, $y$'s weight is set to $D[y]+h_t(y)$.
+If $y$ respectively $b$ are not reached, our algorithm does nothing.
 
 \subsubsection{Stay in Largest Biconnected Component}\label{sec:largested-biconnected-component}
 
@@ -747,9 +746,9 @@ However, as shown in~\cite{gh-cspas-05}, the necessary modifications are not str
 We revisit bidirectional A* and propose an alternative approach.
 Our experiments show that it is competitive with the solution described by~\cite{gh-cspas-05}.
 
-The straightforward idea is to use two heuristics $\overrightarrow{h}_t(x)$ and $\overleftarrow{h}_s(x)$.
-The forward search has its queue ordered by $\overrightarrow{D}[x] + \overrightarrow{h}_t(x)$, where $\overrightarrow{h}_t(x)$ estimates the distance $\dist(x,t)$ from $x$ to $t$.
-Similarly, the backward search has its queue ordered by $\overleftarrow{D}[x] + \overleftarrow{h}_s(x)$, where $\overleftarrow{h}_s(x)$ is an estimate of the distance $\dist(s,x)$ from $s$ to $x$.
+The straightforward idea is to use two heuristics $\overrightarrow{h}_t(v)$ and $\overleftarrow{h}_s(v)$.
+The forward search has its queue ordered by $\overrightarrow{D}[v] + \overrightarrow{h}_t(v)$, where $\overrightarrow{h}_t(v)$ estimates the distance $\dist(v,t)$ from $v$ to $t$.
+Similarly, the backward search has its queue ordered by $\overleftarrow{D}[v] + \overleftarrow{h}_s(v)$, where $\overleftarrow{h}_s(v)$ is an estimate of the distance $\dist(s,v)$ from $s$ to $v$.
 We denote by $\overrightarrow{k}$ and $\overleftarrow{k}$ the minimum queue keys and by $\mu$ the length of the shortest $st$-path found so far.
 
 The problem with this straightforward approach is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
@@ -767,17 +766,17 @@ It combines a forward and a backward heuristic $\overrightarrow{h}_t$ and $\over
 The idea is to use a common reduced graph, whose weights are the average weights of the individual reduced graphs.
 Both searches run on the same common reduced graph.
 This allows stopping the searches when $\overrightarrow{k} + \overleftarrow{k} \geq \mu$.
-Formally, $h_{\overline{st}}(x)$ is defined as $(\overrightarrow{h}_t(x) - \overleftarrow{h}_s(x))/2$.
-The forward search uses $h_{\overline{st}}(x)$ as its heuristic.
-The backward search uses $-h_{\overline{st}}(x)$.
+Formally, $h_{\overline{st}}(v)$ is defined as $(\overrightarrow{h}_t(v) - \overleftarrow{h}_s(v))/2$.
+The forward search uses $h_{\overline{st}}(v)$ as its heuristic.
+The backward search uses $-h_{\overline{st}}(v)$.
 Unfortunately, average potentials have two downsides.
 First, evaluating the average potential requires evaluating both $\overrightarrow{h}_t$ and $\overleftarrow{h}_s$.
 Evaluating the average heuristic is therefore slower than evaluating just one of the composing heuristics.
 Second, the bidirectional stopping criterion comes at the cost of worse estimates for each direction on its own.
-$h_{\overline{st}}(x)$ is a worse estimate for $\dist(x,t)$ than $\overrightarrow{h}_t$.
-Similarly, $-h_{\overline{st}}(x)$ is a worse estimate for $\dist(s,x)$ than $\overleftarrow{h}_s$.
+$h_{\overline{st}}(v)$ is a worse estimate for $\dist(v,t)$ than $\overrightarrow{h}_t$.
+Similarly, $-h_{\overline{st}}(v)$ is a worse estimate for $\dist(s,v)$ than $\overleftarrow{h}_s$.
 The second downside can be partially mitigated through pruning with the composing heuristics.
-When the forward search scans an edge $xy$ where $\overrightarrow{D}[x] + w(xy) + \overrightarrow{h}_s(y) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, it is not necessary to push $y$ into the queue.
+When the forward search scans an edge $uv$ where $\overrightarrow{D}[u] + w(uv) + \overrightarrow{h}_s(v) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, it is not necessary to push $y$ into the queue.
 The pruning rule for the backward search is analogous.
 
 To avoid the downsides of the average potential, we revisit symmetric bidirectional A* and propose a new pruning criterion.
@@ -790,18 +789,18 @@ Such a pruning rule will eventually prune all remaining branches and stop the se
 The stopping criteria for each direction remain the same (unidirectional) as before.
 However, usually the search stops early because the queues are empty.
 
-Let $xy$ be an edge that we relax in the forward search.
-Before pushing $y$ into the queue, we apply the new pruning rule.
-If we can prove that every path using $xy$ is at least as long as the shortest known path length $\mu$, then we do not have to push $y$.
-We therefore want to obtain a lower bound for $\dist(s,x)+w(xy)+\dist(y,t)$.
-As $x$ was settled, $\overrightarrow{D}[x]$ contains the shortest path length $\dist(s,x)$, i.e., $\dist(s,x)=\overrightarrow{D}[x]$.
-$w(xy)$ is also exactly known as it's just an edge weight.
-It remains to lower bound $\dist(y,t)$.
-Nodes are removed from the backward queue ordered by $\overleftarrow{h}(y) + \dist(y,t)$.
-If $y$ was not yet removed from the backward queue, we know that $\overleftarrow{h}(y) + \dist(y,t) \geq \overleftarrow{k}$.
-This gives us the required lower bound, i.e. $\dist(y,t) \geq \overleftarrow{k}-\overleftarrow{h}(y)$.
-Thus, $y$ does not have to be pushed if $\overrightarrow{D}[x]+w(xy)+\overleftarrow{k}-\overleftarrow{h}(y)\ge \mu$.
-The node $y$ might still be pushed into the queue when there is another edge $zy$ for which the pruning is not possible.
+Let $uv$ be an edge that we relax in the forward search.
+Before pushing $v$ into the queue, we apply the new pruning rule.
+If we can prove that every path using $uv$ is at least as long as the shortest known path length $\mu$, then we do not have to push $v$.
+We therefore want to obtain a lower bound for $\dist(s,u)+w(uv)+\dist(v,t)$.
+As $u$ was settled, $\overrightarrow{D}[u]$ contains the shortest path length $\dist(s,u)$, i.e., $\dist(s,u)=\overrightarrow{D}[u]$.
+$w(uv)$ is also exactly known as it's just an edge weight.
+It remains to lower bound $\dist(v,t)$.
+Nodes are removed from the backward queue ordered by $\overleftarrow{h}(v) + \dist(v,t)$.
+If $v$ was not yet removed from the backward queue, we know that $\overleftarrow{h}(v) + \dist(v,t) \geq \overleftarrow{k}$.
+This gives us the required lower bound, i.e. $\dist(v,t) \geq \overleftarrow{k}-\overleftarrow{h}(v)$.
+Thus, $v$ does not have to be pushed if $\overrightarrow{D}[u]+w(uv)+\overleftarrow{k}-\overleftarrow{h}(v)\ge \mu$.
+The node $v$ might still be pushed into the queue when there is another edge $wv$ for which the pruning is not possible.
 Checking the pruning rule requires evaluating the backward heuristic.
 However, pruning is only possible once the searches have met, i.e. $\mu < \infty$.
 Before that, each direction only has to evaluate its own heuristic.
@@ -940,7 +939,7 @@ Without the FIFO property the problem becomes NP-hard \cite{or-tnp-89}.
 The FIFO property states that it is not possible to arrive earlier by departing later.
 Formally stated, the following must hold $\forall e\in E,\tau\in \mathbb{R},\delta\in \mathbb{R}^+: w_q(e, \tau) \le w_q(e, \tau+\delta) + \delta$.
 Our implementation stores edge travel times using piece-wise linear functions.
-The A* search uses the tentative distance $\tau$ at a node $x$ when to evaluating the travel time of outgoing edges $x y$.
+The A* search uses the tentative distance $\tau$ at a node $u$ when to evaluating the travel time of outgoing edges $u v$.
 This strategy is very similar to TD-ALT~\cite{ndls-bastd-12,dw-lbrdg-07}.
 
 For the preprocessing, we set $w_\ell(e) = \min_\tau w_q(e,\tau)$, that is the minimum travel time.
@@ -1118,9 +1117,9 @@ This gives us 100 many-to-one queries per ball and a total of 10\,000 one-to-man
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_inc.pdf}
 \caption{
-Running times of incremental Lazy RPHAST with up to $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$ on OSM Germany excluding selection times.
-The upper figure contains the total running time.
-The lower figure contains the averaged running time per query, i.e. $y/x$ from the upper figure.
+Average running times of incremental Lazy RPHAST while querying $|S| = 2^{14}$ from a ball of varying size $|B|$ on OSM Germany excluding selection times.
+The upper figure contains the total elapsed running time.
+The lower figure contains the averaged running time per source, i.e. $y/x$ from the upper figure.
 Note the different y-axis scales and units.
 }\label{fig:lazy_rphast_inc}
 \end{figure}
@@ -1236,7 +1235,7 @@ As the density varies, the running times vary.
 
 Table~\ref{tab:building_blocks} depicts the performance of unidirectional A* with different heuristics and optimizations.
 We compare (C)CH-Potentials to three other heuristics.
-The first heuristic is, the \emph{Zero} heuristic where $h(x)$ is $0$ for all nodes $x$.
+The first heuristic is, the \emph{Zero} heuristic where $h(v)$ is $0$ for all nodes $v$.
 This corresponds to using Dijkstra's algorithm.
 Secondly, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
 We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
