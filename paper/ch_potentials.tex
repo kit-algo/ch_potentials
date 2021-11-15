@@ -236,11 +236,10 @@ The search can stop when $t$ is settled.
 
 Dijkstra's algorithm can also be run from the target $t$ on the reversed graph.
 We call this a \emph{backward search}.
-Running two Dijkstra searches simultaneously, one from $s$ and a backward search from $t$, until the searches meet is called a \emph{Bidirectional Dijkstra}.\todo{Kann von mir aus bleiben, aber ich muss immer an Janus denken bei ``Bidirectional Dijkstra''.}
+Running two Dijkstra searches simultaneously, one from $s$ and a backward search from $t$, until the searches meet is called \emph{bidirectional} search.
 Typically, the searches are interleaved by alternating settling a node from each direction.
 Another common approach is to always settle a node from the direction with the smaller minimum queue key.
-Theoretically any direction interleaving strategy is possible.
-The searches can also be run in parallel in two threads.\todo{Bringt es uns etwas, dass hier Alternierungsstrategien aufgelistet werden, oder kann das weg?}
+Theoretically, any direction interleaving strategy is possible.
 When the sum of the minimum keys in both queues $\overrightarrow{k} + \overleftarrow{k}$ is greater than the so far best known tentative total distance $\mu$ the algorithm can terminate.
 
 \subsection{A* Algorithm}\label{sec:a_star}
@@ -248,15 +247,15 @@ When the sum of the minimum keys in both queues $\overrightarrow{k} + \overlefta
 A* is a goal-directed variant of Dijkstra's algorithm.
 % A* uses a \emph{heuristic} to guide the search towards the goal.
 It uses a heuristic function $h_t(v)$ that maps a node $v$ onto an estimate of the distance from $v$ to the target $t$.
-A* orders the nodes in the priority queue by $D[v] + h_t(v)$ instead of $D[v]$ as is done by Dijkstra's algorithm.
+A* orders the nodes in the priority queue by $D[v] + h_t(v)$ instead of $D[v]$ as Dijkstra's algorithm does it.
 This results in nodes closer to the target being explored earlier.
-Dijkstra's algorithm can be obtained as a special case of A* by setting $h_t(v)=0$.
+Dijkstra's algorithm is a special case of A*  with $h_t(v)=0$.
 A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights}~\cite{hnr-afbhd-68}.
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
-
-For A* to be optimal, the heuristic needs to be feasible.
 A heuristic function is called \emph{feasible}, if $w_{h_t}(e) \geq 0$ for all edges $e$.
+If the employed heuristic is feasible, A* is guaranteed to find optimal distances.
 In this article, we limit our discussion to feasible heuristics.
+% TODO more explicit details on A* correctness?
 
 \subsection{Contraction Hierarchies (CH)}
 
@@ -331,7 +330,6 @@ On graphs with low treewidth, this is also the case~\cite{dsw-cch-15,hs-gbpo-18}
 % For this we need another component called PHAST~\cite{dgnw-phast-13}.
 
 \subsection{Customizable Contraction Hierarchies (CCH)}
-
 \label{sec:cch-intro}
 
 Some hierarchical techniques were extended to support a three phase setup.
@@ -343,15 +341,16 @@ Paths are computed in the query phase.
 This setup is useful to allow for weight changes that are common to all vehicles such as life traffic updates.
 The first technique to follow this setup is CRP~\cite{dgpw-crprn-13}
 
-Customizable Contraction Hierarchies~\cite{dsw-cch-15} are a variant of Contraction Hierarchies that uses this three phase setup.
+Customizable Contraction Hierarchies~\cite{dsw-cch-15} (CCH) are a variant of Contraction Hierarchies that uses this three phase setup.
 The key idea is to use a node importance order that is independent of the weight function.
-As a CCH is also a CH, the same concepts such as the augmented graph $G^+$ exists.
+A CCH is also a CH.
+The final result of the preprocessing is also an augmented graph $G^+$.
+It fulfills all necessary properties for CH query algorithms.
 The CH query algorithms can therefore be applied without modifications.
 However, the CCH preprocessing grants some additional useful properties.
 
 During preprocessing, an \emph{elimination tree} can be constructed.
 The root of the elimination tree is the most important node.
-% TODO so far, we only have levels but not ranks
 For every other node its parent is its least important upward neighbor.
 In~\cite{bcrw-s-16}, it was proven that set of ancestors of a node in the elimination tree is equal to the nodes reachable in a CH search.
 This makes it possible to explore the CCH search space with a more efficient shortest path algorithm:
@@ -361,7 +360,6 @@ The backward search works analogously but starts at the target.
 Because this elimination tree based algorithm does not require a queue, it is faster than a Dijkstra-based CCH query.
 However, only weight-independent node orderings admit an elimination tree of low height.
 The elimination tree query can therefore not be used for a general CH.
-Using a CH with a weight-specific importance order is often faster than a CCH with elimination tree query.
 
 \subsection{PHAST}
 
@@ -711,7 +709,7 @@ The final result is the concatenation of both paths.
 
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
-On road graphs, bidirectional search provides a way to halve the running time of Dijkstra's algorithm.\todo{sag niemals etwas sei ``easy''. Es gibt immer jemand der es schwer fand. Den schlägst du ins Gesicht.}
+On road graphs, bidirectional search provides a way to halve the running time of Dijkstra's algorithm.
 A bidirectional variant of A* therefore also seems desirable.
 However, as shown in~\cite{gh-cspas-05}, the necessary modifications are not straightforward.
 We revisit bidirectional A* and propose an alternative approach.
@@ -969,15 +967,14 @@ It can be changed arbitrarily by rerunning the customization.
 The A* algorithm is part of the query phase.
 The weights $w_q$ used in the query phase must not be smaller than the $w_\ell$ used during the last customization.
 
-This setup provides an alternative way of integrating live traffic compared to the approach described in~\ref{sec:live-predicted-traffic}.
+This setup provides an alternative way of integrating live traffic compared to the approach described in Section~\ref{sec:live-predicted-traffic}.
 Changes to the live traffic situation are handled by changing $w_\ell$ via a customization.
-Vehicle specific restrictions are accounted for in the query by adjusting $w_q$.
-For severe traffic events, the three phase approach is likely faster.
+Additional features such as turn restrictions can be implemented by adjusting $w_q$.
+For severe traffic events, the three phase approach will be significantly faster than the one described in Section~\ref{sec:live-predicted-traffic}.
 However, it comes at the expense of a more complex algorithm.
 Further, integrating predicted traffic becomes difficult, as $w_q$ may not drop below the $w_\ell$ with integrated congestion.
 
-\todo{Den Gedanken sollte man ausbauen oder streichen}
-One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
+% One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
 
 % \subsubsection{Alternative Routes with the Penalty Method}
 
@@ -1242,7 +1239,10 @@ This enables CCH-Potentials to support a customization whereas CH-Potentials can
 
 \begin{table}
 \centering
-\caption{Performance of different variants of bidirectional A* on OSM Ger with $w_q = 1.05 \cdot w_\ell$.}\label{tab:bidir_pruning}
+\caption{
+Performance of different variants of bidirectional A* on OSM Ger with $w_q = 1.05 \cdot w_\ell$.
+All variants alternate between the forward and the backward search.}
+\label{tab:bidir_pruning}
 \input{table/bidir_pruning.tex}
 \end{table}
 
@@ -1256,10 +1256,9 @@ Apparently, the average potential gives ALT a better heuristic than the original
 For all other heuristics, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
 Without the low degree improvements, the improved symmetric variant is marginally faster and with the low degree improvements the average potential remains slightly faster.
 This is due to the reduced impact of the heuristic evaluation overhead with the low degree optimizations.
-Enabling the improved pruning for the average potential, marginally reduces the search space size and slightly increases running times.
+Enabling the improved pruning for the average potential marginally reduces the search space size and slightly increases running times.
 
 \todo{Vergleich zwischen Tabelle 3 und 4? Warum ist uni directional langsamer? Hier sollte man schreiben, dass das Thema bei Tabelle 5 addressiert wird}
-\todo{was ist die Alternierungsstrategie von Tabelle 3?}
 
 \begin{table}
 \centering
