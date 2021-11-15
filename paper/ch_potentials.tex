@@ -236,8 +236,6 @@ If the tentative distance at the head node $D[v]$ was improved, it's added to th
 Once $t$ was settled, $D[t]$ contains the shortest path distance between $s$ and $t$.
 The search can stop when $t$ is settled.
 
-\todo{$w(uv)$ vs $w(u,v)$, egal welches aber bitte konsistent.}
-
 Dijkstra's algorithm can also be run from the target $t$ on the reversed graph.
 We call this a \emph{backward search}.
 Running two Dijkstra searches simultaneously, one from $s$ and a backward search from $t$, until the searches meet is called \emph{bidirectional} search.
@@ -779,7 +777,7 @@ Second, the bidirectional stopping criterion comes at the cost of worse estimate
 $h_{\overline{st}}(x)$ is a worse estimate for $\dist(x,t)$ than $\overrightarrow{h}_t$.
 Similarly, $-h_{\overline{st}}(x)$ is a worse estimate for $\dist(s,x)$ than $\overleftarrow{h}_s$.
 The second downside can be partially mitigated through pruning with the composing heuristics.
-When the forward search scans an edge $xy$ where $\overrightarrow{D}[x] + w(x,y) + \overrightarrow{h}_s(y) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, it is not necessary to push $y$ into the queue.
+When the forward search scans an edge $xy$ where $\overrightarrow{D}[x] + w(xy) + \overrightarrow{h}_s(y) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, it is not necessary to push $y$ into the queue.
 The pruning rule for the backward search is analogous.
 
 To avoid the downsides of the average potential, we revisit symmetric bidirectional A* and propose a new pruning criterion.
