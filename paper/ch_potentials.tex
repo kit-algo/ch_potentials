@@ -696,7 +696,7 @@ Diverging from A*, not all nodes can be pushed but every node has a tentative di
 \subsubsection{Skip Degree Two Nodes}
 
 Our algorithm differs from A* when removing a node $x$ from the queue.
-A* iterates over the outgoing arcs $(xy)$ of $x$ and tries to reduce $D[y]$ by relaxing $(xy)$.
+A* iterates over the outgoing edges $(xy)$ of $x$ and tries to reduce $D[y]$ by relaxing $(xy)$.
 If A* succeeds, $y$'s weight in the queue is set to $D[y]+h_t(y)$.
 Our algorithm, however, behaves differently, if $d(y)\le 2$.
 Our algorithm determines the longest degree two chain of nodes $x y_1,\ldots, y_k, z$ such that $d(y_i)=2$ and $d(z) > 2$.
