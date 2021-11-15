@@ -315,7 +315,7 @@ In this section, we give an introduction.
 $B[x] \leftarrow +\infty$ for all $x\neq t$;
 $B[t] \leftarrow 0$\;
 Make $Q$ only contain $t$ with weight $0$\;
-\While{not $Q$ empty}{
+\While{$Q$ not empty}{
   $y\leftarrow$ pop minimum element from $Q$\;
   \For{all down-edges $xy$ in $G^+_\ell$}{
     \If{$B[x] > w_\ell(xy) + B[y]$}{
@@ -516,15 +516,13 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
 \KwData{$P[x]$: parent node of $x$ in the elimination tree, parent of root is $\bot$}
 \KwData{$S$: stack with nodes to compute distances, empty initially, only used to store intermediate data}
 \SetKwFunction{Dist}{ComputeAndMemoizeDist}
-\SetKwFunction{Push}{push}
-\SetKwFunction{Pop}{pop}
 \SetKw{Break}{break}
 \SetKwProg{Fn}{Function}{:}{}
 \Fn{\Dist{$x$}}{
   \tcp{Determine for what nodes, the $D$ needs to be filled}
   $y \gets x$\;
 	\While{$D[y] = \bot$}{
-    $S$.\Push{$y$}\;
+    Push $y$ onto $S$\;
 		\If{$P[y] = \bot$}{
       \Break\;
 		}
@@ -532,7 +530,7 @@ This allows for the more efficient implementation depicted in Algorithm~\ref{alg
   }
   \tcp{Fill $D$ for those nodes}
   \While{$S$ not empty}{
-    $y \gets S$.\Pop{}\;
+    $y\leftarrow$ pop top element from $S$\;
 		$D[y]\gets B[y]$\;
 		\For{all up-edges $yz$ in $G^+_\ell$}{
                         $D[y]\gets\min\{D[y],w_\ell(yz)+D[z]\}$\;
