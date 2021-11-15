@@ -14,6 +14,10 @@
 \usepackage[algo2e,vlined]{algorithm2e}
 \usepackage{todonotes}
 
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,positioning,calc}
+\tikzstyle{node}=[circle,inner sep=0.5mm,minimum size=6.5mm,draw = black]
+
 \newcommand*{\dist}{\mathcal{D}}
 
 %% Rights management information.  This information is sent to you
@@ -259,29 +263,42 @@ In this article, we limit our discussion to feasible heuristics.
 
 \subsection{Contraction Hierarchies (CH)}
 
-\begin{algorithm2e}
-\KwData{$B[x]$: tentative distance from $x$ to target $t$}
-\KwData{Minimum priority queue $Q$, also called open list, ordered by tentative distances}
-$B[x] \leftarrow +\infty$ for all $x\neq t$;
-$B[t] \leftarrow 0$\;
-Make $Q$ only contain $t$ with weight $0$\;
-\While{not $Q$ empty}{
-	$y\leftarrow$ pop minimum element from $Q$\;
-	\For{all down-edges $xy$ in $G^+_\ell$}{
-		\If{$B[x] > w_\ell(xy) + B[y]$}{
-			$B[x]\leftarrow w_\ell(xy) + B[y]$\;
-                        Add $x$ or decrease $x$'s key in $Q$ to $B[x]$\;
-		}
-	}
-}
-\caption{CH backward search}
-\label{algo:ch-backward}
-\end{algorithm2e}
-
 \begin{figure}
 \centering
-\includegraphics{fig/ch}
-% TODO nicer fig
+\begin{tikzpicture}[]
+\tikzset{auto rotate/.style={to path={let \p1=(\tikztostart),\p2=(\tikztotarget),
+\n1={atan2(\y2-\y1,\x2-\x1)},\n2={\n1-10},\n3={\n1+190}
+in (\tikztostart.\n2) -- (\tikztotarget.\n3) \tikztonodes}}}
+
+\node (s) at (0,0)     [node] {$s$};
+\node (2) at (1.5,1.5) [node] {};
+\node (3) at (3.7,1)   [node] {};
+\node (4) at (5,3)     [node] {$m$};
+\node (5) at (5.75,-0.1)  [node] {};
+\node (6) at (6.75,1.2)   [node] {};
+\node (7) at (7.75,-0.5)    [node] {};
+\node (8) at (8.5,2)   [node] {};
+\node (t) at (10,0.5)  [node] {$t$};
+
+\draw[->] (-1,-1) -- (-1,3.5) node [midway, above, sloped] { rank };
+
+\draw (s) edge[red, auto rotate] (2);
+\draw[red] (2) -- (3);
+\draw[red] (3) -- (4);
+\draw[red] (4) -- (5);
+\draw[red] (5) -- (6);
+\draw[red] (6) -- (7);
+\draw[red] (7) -- (8);
+\draw (8) edge[red, auto rotate] (t);
+
+\draw (2) edge[blue, auto rotate] (s);
+\draw[blue, dashed] (2) -- (4);
+\draw[blue, dashed] (4) -- (8);
+\draw (t) edge[blue, auto rotate] (8);
+
+\draw[dashed] (4) -- (6);
+\draw[dashed] (6) -- (8);
+\end{tikzpicture}
 \caption{
 Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-path in $G$. Blue is equaly long up-down $st$-path in $G^+$. $m$ is the mid node.
 }
@@ -291,6 +308,25 @@ Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-p
 A CH is a two phase technique to efficiently compute exact, shortest paths.
 For details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
+
+\begin{algorithm2e}
+\KwData{$B[x]$: tentative distance from $x$ to target $t$}
+\KwData{Minimum priority queue $Q$, also called open list, ordered by tentative distances}
+$B[x] \leftarrow +\infty$ for all $x\neq t$;
+$B[t] \leftarrow 0$\;
+Make $Q$ only contain $t$ with weight $0$\;
+\While{not $Q$ empty}{
+  $y\leftarrow$ pop minimum element from $Q$\;
+  \For{all down-edges $xy$ in $G^+_\ell$}{
+    \If{$B[x] > w_\ell(xy) + B[y]$}{
+      $B[x]\leftarrow w_\ell(xy) + B[y]$\;
+                        Add $x$ or decrease $x$'s key in $Q$ to $B[x]$\;
+    }
+  }
+}
+\caption{CH backward search}
+\label{algo:ch-backward}
+\end{algorithm2e}
 
 In a CH, each node gets a unique rank representing its ``importance''.
 By convention, important nodes are usually depicted at the ``top'' while unimportant nodes are positioned at the ``bottom''.
