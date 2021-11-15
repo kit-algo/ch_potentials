@@ -32,8 +32,6 @@
 
 \begin{document}
 
-\bibliographystyle{plainurl} % the mandatory bibstyle
-
 \title{Using Incremental Many-to-One Queries to Build a Fast and Tight Heuristic for A* in Road Networks}
 
 \author{Ben Strasser}
@@ -107,6 +105,11 @@ Both approaches achieve speed-ups of at least three orders of magnitude over Dij
 \includegraphics[width=.6\columnwidth]{fig/searchspace_st.png}
 \caption{Nodes explored by A*. Color indicates the node removal order from the queue. Blue was removed first. Next is green. Red was removed last.}
 \label{img:search-space}
+\Description[A map where nodes visited by A* are marked.]{
+A map of Karlsruhe where nodes visited by A* are marked.
+The shape of the area with the visited nodes is similar to a drop.
+The source node roughly lies in the center of the drop, the target node at the tip.
+}
 \end{figure}
 
 Unfortunately, for many real world applications, this basic graph model is too simplistic.
@@ -301,6 +304,12 @@ in (\tikztostart.\n2) -- (\tikztotarget.\n3) \tikztonodes}}}
 Solid lines are edges in $G$. Dotted lines are shortcuts. Red is shortest $st$-path in $G$. Blue is equaly long up-down $st$-path in $G^+$. $m$ is the mid node.
 }
 \label{fig:ch}
+\Description[Nodes and edges of a shortest path in the original graph and the corresponding path in the augmented graph.]{
+Nodes and edges of a shortest path in the original graph and the corresponding path in the augmented graph.
+The y-position on the figure indicates the rank of each node.
+Where the original shortest path down and then up, a shortcut edge connects the two higher nodes.
+The path in the augmented graph goes only up and then down.
+}
 \end{figure}
 
 A CH is a two phase technique to efficiently compute exact, shortest paths.
@@ -1122,6 +1131,17 @@ The upper figure contains the total elapsed running time.
 The lower figure contains the averaged running time per source, i.e. $y/x$ from the upper figure.
 Note the different y-axis scales and units.
 }\label{fig:lazy_rphast_inc}
+\Description{
+Two line graphs with each eight lines for different ball sizes and algorithms.
+The x-axis in both graphs is the number of nodes that were queried up to that point in the incremental query.
+In each graph, all lines have a similar shape and appear as scaled variants of each other.
+The bigger the ball size the slower the whole algorithm.
+The CCH based variant is somewhat slower for the most part.
+Only for small ball sizes it is marginally faster when computing distances for more then 4096 sources.
+When the ball is the entire graph, the CH based variant takes around 2.5ms for the first 512 sources, 5ms for 2048 sources and 25ms for 16384 sources.
+Conversely, the average time per query is around 100mus for the first few queries, then drops to around 5mus after 512 sources, down to 2mus after 16384 sources.
+For the smallest ball size of 16384, everything is 1.5 orders of magnitude faster.
+}
 \end{figure}
 
 To evaluate Lazy RPHAST in the incremental setting, we measure the elapsed running time after distances from $2^i$ sources were queried.
@@ -1142,6 +1162,12 @@ With this trade-off, it depends on the ball size which variant is faster in term
 Running times of (C)CH-based Lazy RPHAST for many-to-one queries with $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$.
 The running time includes the selection and the time to compute all distances.
 }\label{fig:many_to_one}
+\Description{
+A double logarithmic line plot with four lines with similar shapes and absolute values.
+Running times for both algorithms and graphs with a ball size of 16384 is around 1ms.
+For a ball size of 2 to the 20 CH based variants need 10ms and CCH based variants slightly more.
+For a ball size of 2 to the 24 CH based variants are at 30ms and CCH based variants slightly above 40ms.
+}
 \end{figure}
 
 Despite the laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental many-to-one queries.
@@ -1201,6 +1227,7 @@ The band in the box indicates the median, the diamond the mean.
 The whiskers cover 1.5 times the interquartile range.
 All other running times are indicated as outliers.
 }\label{fig:scaled_weights}
+\Description{Fully described in the text.}
 \end{figure}
 
 The performance of A* depends on the tightness of the heuristic and the overhead of evaluating the heuristic.
