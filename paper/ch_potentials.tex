@@ -258,7 +258,7 @@ Dijkstra's algorithm is a special case of A*  with $h_t(v)=0$.
 A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights}~\cite{hnr-afbhd-68}.
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
 A heuristic function is called \emph{feasible}, if $w_{h_t}(e) \geq 0$ for all edges $e$.
-If the employed heuristic is feasible, A* is guaranteed to find optimal distances.
+If the employed heuristic is feasible, A* is guaranteed to have found the optimal distance after settling $t$.
 In this article, we limit our discussion to feasible heuristics.
 % TODO more explicit details on A* correctness?
 
@@ -1304,19 +1304,16 @@ All variants alternate between the forward and the backward search.}
 \input{table/bidir_pruning.tex}
 \end{table}
 
-In this section, we closely investigate the performance of bidirectional A*.
+In this section, we investigate the performance of bidirectional A*.
+We first evaluate different variants of bidirectional A* in Table~\ref{tab:bidir_pruning} and~\ref{tab:bidir_switching} then compare the best ones against unidirectional A* in Table~\ref{tab:bidir}.
 Table~\ref{tab:bidir_pruning} depicts the performance of different variants of bidirectional A* with and without our improved pruning.
 As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
 Symmetric bidirectional A* without our improved pruning has the worst performance.
-Enabling the improved pruning brings the performance symmetric bidirectional A* on par with the average potential for all heuristics except ALT.
-\todo{den nächsten Satz verstehe ich nicht}
-Apparently, the average potential gives ALT a better heuristic than the original one for for each direction individually, contrary to the statements made in~\cite{gh-cspas-05}.
-For all other heuristics, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
+Enabling the improved pruning significantly improves the performance of symmetric bidirectional A*.
+For all heuristics except ALT, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
 Without the low degree improvements, the improved symmetric variant is marginally faster and with the low degree improvements the average potential remains slightly faster.
 This is due to the reduced impact of the heuristic evaluation overhead with the low degree optimizations.
 Enabling the improved pruning for the average potential marginally reduces the search space size and slightly increases running times.
-
-\todo{Vergleich zwischen Tabelle 3 und 4? Warum ist uni directional langsamer? Hier sollte man schreiben, dass das Thema bei Tabelle 5 addressiert wird}
 
 \begin{table}
 \centering
