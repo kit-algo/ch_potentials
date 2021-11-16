@@ -118,6 +118,18 @@ with open("paper/table/bidir_switching.tex", 'w') as f:
   f.write(output)
 
 
+unidir_data = [json.load(open(path)) for path in glob.glob("exp/building_blocks/*.json")]
+unidir_queries = pd.DataFrame.from_records([{
+    **algo,
+    'BCC': run['bcc_core'],
+    'Skip Deg. 2': run['skip_deg2'],
+    'Skip Deg. 3': run['skip_deg3'],
+    'Heuristic': run['potential'],
+    'num_queue_pops': algo['num_queue_pops'] + algo.get('core_search', {}).get('num_queue_pops', 0),
+    'num_queue_pushs': algo['num_queue_pushs'] + algo.get('core_search', {}).get('num_queue_pushs', 0),
+    'num_relaxed_arcs': algo['num_relaxed_arcs'] + algo.get('core_search', {}).get('num_relaxed_arcs', 0),
+} for run in unidir_data for algo in run['algo_runs'] if algo.get('algo') in ['Virtual Topocore Component Query', 'Dijkstra Query']])
+unidir_queries['num_queue_pushs_k'] = unidir_queries['num_queue_pushs'] / 1000
 
 bidir = queries.loc[lambda x: x['algo'].str.contains('Topocore')] \
     .loc[lambda x: x['choose_direction_strategy'] != 'min_key'] \
@@ -127,6 +139,8 @@ bidir = queries.loc[lambda x: x['algo'].str.contains('Topocore')] \
     .reindex(index=['weight_scale', 'probabilistic_scale_by_speed'], level=0) \
     .reindex(index=[1.0], level=2) \
     .reindex(index=['unidir', 'Average', 'Symmetric'], level=3)
+
+bidir.loc[('weight_scale', 1.05, 1.00, 'unidir')] = unidir_queries.groupby(['Heuristic', 'BCC', 'Skip Deg. 2', 'Skip Deg. 3'])[['running_time_ms', 'num_queue_pushs_k']].mean().unstack(0).loc[(True, True, True)]
 
 bidir[('num_queue_pushs_k', '(C)CH/Oracle')] = bidir[('num_queue_pushs_k', 'CH')]
 bidir = bidir.drop([('num_queue_pushs_k', 'CH'), ('num_queue_pushs_k', 'CCH'), ('num_queue_pushs_k', 'Oracle')], axis = 'columns')
