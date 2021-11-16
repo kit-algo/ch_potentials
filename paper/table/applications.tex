@@ -1,27 +1,21 @@
-\begin{tabular}{lllrrrrr}
+\begin{tabular}{llrrrrrr}
 \toprule
  & & &   Running &                Queue &     Length & Dijkstra & Speedup \\ & & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\
 \midrule
 DIMACS Eur & Unmodified $w_q = w_{\ell}$ & CH U &              0.9 &              1.1 &       0.0 &                    2106.0 &   2405.8 \\
 \addlinespace
-OSM Ger & Unmodified $w_q = w_{\ell}$ & CH U &              0.6 &              0.5 &       0.0 &                    2182.6 &   3795.4 \\
-\addlinespace
+OSM Ger & Unmodified $w_q = w_{\ell}$ & CH U &              0.6 &              0.5 &       0.0 &                    2182.6 &   3795.4 \\[2pt]
         & No Tunnels & CH U &             29.2 &             46.8 &       5.2 &                    2198.0 &     75.2 \\
-        &    & CH B &             33.4 &             35.7 &       5.2 &                    2198.0 &     65.8 \\
-\addlinespace
+        &    & CH B &             33.4 &             35.7 &       5.2 &                    2198.0 &     65.8 \\[2pt]
         & No Highways & CH U &            378.7 &            583.8 &      42.5 &                    1992.5 &      5.3 \\
-        &    & CH B &            433.1 &            481.6 &      42.5 &                    1992.5 &      4.6 \\
-\addlinespace
+        &    & CH B &            433.1 &            481.6 &      42.5 &                    1992.5 &      4.6 \\[2pt]
         & Live & CH U &            129.4 &            193.9 &      15.0 &                    2119.3 &     16.4 \\
         &    & CH B &            193.6 &            188.8 &      15.0 &                    2119.3 &     10.9 \\
-        &    & CCH U &              1.1 &              0.8 &       0.0 &                    2119.3 &   1920.4 \\
-\addlinespace
+        &    & CCH U &              1.1 &              0.8 &       0.0 &                    2119.3 &   1920.4 \\[2pt]
         & Turns & CH U &              3.0 &              5.7 &       1.1 &                    4708.2 &   1556.0 \\
-        &    & CH B &              1.1 &              0.8 &       1.1 &                    4708.2 &   4223.8 \\
-\addlinespace
+        &    & CH B &              1.1 &              0.8 &       1.1 &                    4708.2 &   4223.8 \\[2pt]
         & Live + Turns & CCH U &              4.8 &              8.8 &       1.0 &                    4621.8 &    959.7 \\
-        &    & CCH B &              2.1 &              1.6 &       1.1 &                    4621.8 &   2168.1 \\
-\addlinespace
+        &    & CCH B &              2.1 &              1.6 &       1.1 &                    4621.8 &   2168.1 \\[2pt]
         & TD & CH U &            120.8 &            104.4 &      12.3 &                    3133.7 &     25.9 \\
         & TD + Live & CH U &            198.3 &            170.3 &      20.7 &                    3436.5 &     17.3 \\
         & TD + Live + Turns & CH U &            474.2 &            657.8 &      21.7 &                    6420.5 &     13.5 \\
