@@ -169,7 +169,7 @@ The proposed approach achieves fast queries, but preprocessing becomes an order 
 A considerable amount of research and engineering effort has been put into studying the combination of traffic predictions with CH.
 Several papers~\cite{bdsv-tdch-09,bgns-tdcha-10,klsv-dtdch-10,bgsv-mtdtt-13} and an entire dissertation~\cite{b-tdrpc-14} have been published on the subject.
 Different variants with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
-Recently, a new approach has been published~\cite{swz-sfert-20} which simultaneously achieves competitive results in all three aspects but only at the cost of considerable implementation complexity.
+Recently, a new approach has been published~\cite{swz-sfert-21} which simultaneously achieves competitive results in all three aspects but only at the cost of considerable implementation complexity.
 
 CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of MLD~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
 For this, a faster, second preprocessing phase is introduced.
@@ -925,7 +925,7 @@ The classical shortest path problem assumes that edge weights are scalars.
 However, in practice, travel times vary along an edge due to the traffic situation.
 % The primary reason is traffic.
 Recurring traffic can be predicted by observing the traffic in the past.
-It is common \cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-20} to represent these predictions as \emph{travel time functions}.
+It is common \cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-21} to represent these predictions as \emph{travel time functions}.
 An edge weight is no longer a scalar value but a function that maps the entry time onto the traversal time.
 % Performing this prediction is outside of the scope of this paper.
 % It is common to refer to routing with predicted traffic as \emph{time-dependent routing}.
@@ -955,7 +955,7 @@ This strategy is very similar to TD-ALT~\cite{ndls-bastd-12,dw-lbrdg-07}.
 
 For the preprocessing, we set $w_\ell(e) = \min_\tau w_q(e,\tau)$, that is the minimum travel time.
 % With this setup, we extended CH-Potentials to support time-dependent routing.
-By keeping travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-20,dn-crdtd-12} which have to create shortcuts of travel time functions.
+By keeping travel time functions out of the CH, we avoid a lot of algorithmic complications compared to~\cite{bgsv-mtdtt-13,bdpw-dtdrp-16,swz-sfert-21,dn-crdtd-12} which have to create shortcuts of travel time functions.
 
 \subsubsection{Live and Predicted Traffic}
 \label{sec:live-predicted-traffic}
