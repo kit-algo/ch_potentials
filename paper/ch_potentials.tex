@@ -66,7 +66,7 @@ Computing tight distance estimates is a challenge on its own.
 On road networks, shortest paths can also be quickly computed using hierarchical speedup techniques.
 They achieve speed and exactness but sacrifice A*'s flexibility.
 Extending them to certain practical applications can be hard.
-In this paper, we present Lazy RPHAST, an algorithm to efficiently compute many distance estimates towards a single target and use it as an A* heuristic.
+In this paper, we present Lazy RPHAST, an algorithm to efficiently compute distances from many nodes towards a single target and use it as an A* heuristic.
 As it uses Contraction Hierarchies (CH), a hierarchical technique, we call our A* heuristic CH-Potentials.
 Our approach allows decoupling the supported applications from the hierarchical speed-up technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree nodes, which often occur in road networks and present a new pruning criterion for symmetrical bidirectional A*.
@@ -153,8 +153,8 @@ Compared to the conference paper, the journal version contains a significantly e
 
 The rest of the article is organized as follows.
 In Section~\ref{sec:related_work}, we discuss related works on goal directed search and extensions for realistic applications for hierarchical techniques.
-After establishing preliminaries in Section~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and our algorithm to solve it efficiently in Section~\ref{sec:lazy-rphast}.
-CH-Potentials, our new distance estimation function is introduced in Section~\ref{sec:main-algo}.
+After establishing preliminaries in Section~\ref{sec:preliminaries}, we introduce the incremental many-to-one problem and Lazy RPHAST, our algorithm to solve it efficiently, in Section~\ref{sec:lazy-rphast}.
+CH-Potentials, our new A* heuristic is introduced in Section~\ref{sec:main-algo}.
 There, we also discuss our improvements to the handling of low-degree nodes (Section~\ref{sec:low-deg-improvment}) and for symmetrical bidirectional A* (Section~\ref{sec:bidir_astar}).
 % Section~\ref{sec:extensions} presents a multitude of applications of CH-Potentials.
 In Section~\ref{sec:extensions}, we demonstrate CH-Potential's flexibility, by describing how to apply the approach to different practical applications.
@@ -312,7 +312,7 @@ The path in the augmented graph goes only up and then down.
 }
 \end{figure}
 
-A CH is a two phase technique to efficiently compute exact, shortest paths.
+A CH is a two-phase technique to efficiently compute exact, shortest paths.
 For details, we refer to \cite{gssv-erlrn-12,dsw-cch-15}.
 In this section, we give an introduction.
 
@@ -343,12 +343,12 @@ An edge goes \emph{up} when its tail node has lower rank than its head node.
 An \emph{up-down path} is a path where only one node $m$ is more important than both its neighbors.
 $m$ is called the \emph{mid} node.
 An \emph{up path} is a path where the last node is the mid node.
-Similarly, the first node is the mid node of a \emph{down path}.
+Similarly, for a \emph{down path}, the first node has to be the mid node.
 % Every up and down path is an up-down path.
 %
 In the preprocessing phase, first, a node ordering is computed heuristically.
 Then, \emph{shortcut} edges are added to the input graph $G$ to obtain $G^+$.
-This is done by repeatedly contracting the least important node and adding shortcuts between its neighbors.
+This is done by repeatedly contracting the least important node and adding shortcuts between its higher ranked neighbors.
 %See~\cite{gssv-erlrn-12} for the details.
 After the preprocessing, for every pair of nodes $s$ and $t$ there exists a shortest up-down $st$-path in $G^+$ with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for a proof sketch.
@@ -379,7 +379,7 @@ Some hierarchical techniques were extended to support a three-phase setup.
 The phases consist of a slow preprocessing phase, a faster \emph{customization} phase, and fast queries.
 The preprocessing phase typically takes hours, the customization seconds, and the query milliseconds.
 The preprocessing phase is independent of the weights and only exploits the graph topology.
-Weights are introduces in the customization phase.
+Weights are introduced in the customization phase.
 Paths are computed in the query phase.
 This setup is useful to allow for weight changes that are common to all vehicles such as life traffic updates.
 The first technique to follow this setup is CRP~\cite{dgpw-crprn-13}.
@@ -390,7 +390,7 @@ A CCH is also a CH.
 The final result of the preprocessing is also an augmented graph $G^+$.
 It fulfills all necessary properties for CH query algorithms.
 The CH query algorithms can therefore be applied without modifications.
-However, the CCH preprocessing grants some additional useful properties.
+However, the CCH preprocessing grants some useful additional properties.
 
 During preprocessing, an \emph{elimination tree} can be constructed.
 The root of the elimination tree is the most important node.
@@ -721,7 +721,7 @@ Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight i
 We can also skip some degree three nodes.
 Denote by $u, v_1,\ldots, v_k, w$ a degree two chain as described in the previous section.
 If $d(w) > 3$ or $w$ is in the queue, our algorithm proceeds as in the previous section.
-Otherwise, there exist up to two degree chains $w, x_1,\ldots,x_p, y$ and $w,a_1,\ldots,a_q,b$ such that $x_1\neq y_k \neq a_1$.
+Otherwise, there exist up to two degree chains $w, x_1,\ldots,x_p, y$ and $w,a_1,\ldots,a_q,b$ such that $x_1\neq v_k \neq a_1$.
 Our algorithm iteratively tries to reduce all $D[x_i]$ and $D[a_i]$.
 If it reaches $b$, $b$'s weight in the queue is set to $D[b]+h_t(b)$.
 Analogously, if $y$ is reached, $y$'s weight is set to $D[y]+h_t(y)$.
@@ -763,7 +763,7 @@ We denote by $\overrightarrow{k}$ and $\overleftarrow{k}$ the minimum queue keys
 The problem with this straightforward approach is that these two potentials induce different reduced graphs (see Section~\ref{sec:a_star}).
 Thus, in the equivalent bidirectional Dijkstra search each direction would run on a different graph.
 This breaks the usual bidirectional Dijkstra stopping criterion.
-To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until the unidirectional stopping criterion is met for one direction.
+To the best of our knowledge, no better stopping criterion exists than running \emph{both} searches until the unidirectional stopping criterion is met for either direction.
 The forward search can skip nodes already settled by the backward search and vice versa.
 However, this straightforward bidirectional A* still performs more work than a unidirectional A*~\cite{gh-cspas-05}.
 Thus, on its own it is not a useful algorithm.
@@ -783,7 +783,10 @@ First, evaluating the average potential requires evaluating both $\overrightarro
 Evaluating the average heuristic is therefore slower than evaluating just one of the composing heuristics.
 Second, the bidirectional stopping criterion comes at the cost of worse estimates for each direction on its own.
 $h_{\overline{st}}(v)$ is a worse estimate for $\dist(v,t)$ than $\overrightarrow{h}_t$.
-Similarly, $-h_{\overline{st}}(v)$ is a worse estimate for $\dist(s,v)$ than $\overleftarrow{h}_s$.
+Similarly, $-h_{\overline{st}}(v)$ is a worse estimate for $\dist(s,v)$ than $\overleftarrow{h}_s$\footnote{
+To obtain an actual lower bound from this average heuristic, one has to add $\overleftarrow{h}_s(t)/2$ in the forward case and $\overrightarrow{h}_t(s)/2$ in the backward.
+Adding any constant to a heuristic function does not change the reduced graph.
+}.
 The second downside can be partially mitigated through pruning with the composing heuristics.
 When the forward search scans an edge $uv$ where $\overrightarrow{D}[u] + w(uv) + \overrightarrow{h}_s(v) > \mu$ holds, i.e. the distance plus the estimate of the remaining distance is already greater than the currently known tentative distance, it is not necessary to push $y$ into the queue.
 The pruning rule for the backward search is analogous.
@@ -841,7 +844,7 @@ For example, in the case of live-traffic, $w_q$ represents scalar edge weights.
 However, values of $w_q$ might change between queries.
 In the case of traffic predictions, $w_q$ is a function which maps the edge entry time to the traversal time and the query takes an additional departure time parameter.
 
-To enable quick shortest path computations, we consider a two phase setup with an additional off-line preprocessing phase before the on-line query phase.
+To enable quick shortest path computations, we consider a two-phase setup with an additional off-line preprocessing phase before the on-line query phase.
 The input to the preprocessing phase is a graph $G_\ell$ with lower bound weights $w_\ell$ and a node mapping function $\phi$.
 $w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
 We require that $w_q(u v)$ is greater or equal to the shortest distance $\dist_\ell(\phi(u), \phi(v))$ from $\phi(u)$ to $\phi(v)$ in $G_\ell$. % with respect to $w_\ell$.
@@ -979,7 +982,7 @@ Denote by $w_p(e,\tau)$ the predicted travel time along edge $e$ at moment $\tau
 Further, $w_c(e)$ is the travel time according to current live traffic.
 Finally, we denote by $\tau_{\mathrm{soon}}$ the moment when we switch to predicted traffic.
 In our experiments, we set $\tau_{\mathrm{soon}}$ to one hour in the future.
-We need to make sure that the modified travel time function fulfills the no-waiting property.
+We need to make sure that the modified travel time function fulfills the FIFO property.
 For this reason, we cannot make a hard switch at $\tau_{\mathrm{soon}}$.
 Our modified travel time function linearly approaches the predicted travel time. % with a bounded slope.
 %
@@ -988,8 +991,8 @@ Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$ is true.
 If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 % We then run the algorithm of Section~\ref{sec:predicted-traffic} with $w_q$ as query weight.
-In our implementation, we to not modify the representation of $w_p$ but evaluate the formulas above at each travel time evaluation.
-We set $w_\ell$ again to the freeflow travel time.
+In our implementation, we do not modify the representation of $w_p$ but evaluate the formulas above at each travel time evaluation.
+We set $w_\ell$ to the freeflow travel time.
 
 With this setup, CH-Potentials support a combination of live and predicted traffic.
 We did not make any modification, that would hinder a combination with other extensions.
@@ -1011,7 +1014,7 @@ Changes to the live traffic situation are handled by changing $w_\ell$ via a cus
 Additional features such as turn restrictions can be implemented by adjusting $w_q$.
 For severe traffic events, the three-phase approach will be significantly faster than the one described in Section~\ref{sec:live-predicted-traffic}.
 However, it comes at the expense of a more complex algorithm.
-Further, integrating predicted traffic becomes difficult, as $w_q$ may not drop below the $w_\ell$ with integrated congestion.
+Further, when integrating predicted traffic, CCH-Potentials will not have much advantage over CH-Potentials because the heuristic must be a lower bound for the entire time considered and not only the current situation.
 
 % One could also apply live traffic updates to $w_q$ immediately and only update $w_\ell$ once the difference between $w_\ell$ and $w_q$ grows too big or when some edge weight update would set $w_q < w_\ell$.
 
@@ -1180,8 +1183,8 @@ When looking at total running times for a single many-to-one query including sel
 For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACS Europe.
 Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
 The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
-We conclude that that Lazy RPHAST is a very useful extension to RPHAST.
-It allows efficiently handling dynamic source sets and is even faster than RPHAST in the setting where both the target and the source set change between queries.
+While the numbers are not perfectly comparable due to different benchmark machines, we can still conclude that Lazy RPHAST is a very useful extension to RPHAST.
+It allows efficiently handling dynamic source sets and is competitive in the setting where both the target and the source set change between queries.
 % This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster queries.
 % When computing distances from different sources towards the same target set, RPHAST will outperform Lazy RPHAST.
 % However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
@@ -1261,7 +1264,7 @@ As the density varies, the running times vary.
 
 Table~\ref{tab:building_blocks} depicts the performance of unidirectional A* with different heuristics and optimizations.
 We compare (C)CH-Potentials to three other heuristics.
-The first heuristic is, the \emph{Zero} heuristic where $h(v)$ is $0$ for all nodes $v$.
+The first heuristic is the \emph{Zero} heuristic where $h(v)$ is $0$ for all nodes $v$.
 This corresponds to using Dijkstra's algorithm.
 Secondly, we compare against our own implementation of ALT~\cite{gw-cppsp-05}.
 We use 16 landmarks generated with the avoid strategy~\cite{gw-cppsp-05} and activate all during every query.
@@ -1305,7 +1308,7 @@ All variants alternate between the forward and the backward search.}
 
 In this section, we investigate the performance of bidirectional A*.
 We first evaluate different variants of bidirectional A* in Table~\ref{tab:bidir_pruning} and~\ref{tab:bidir_switching} then compare the best ones against unidirectional A* in Table~\ref{tab:bidir}.
-Table~\ref{tab:bidir_pruning} depicts the performance of different variants of bidirectional A* with and without our improved pruning.
+Table~\ref{tab:bidir_pruning} studies the impact of our improved pruning and the low degree optimizations.
 As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
 Symmetric bidirectional A* without our improved pruning has the worst performance.
 Enabling the improved pruning significantly improves the performance of symmetric bidirectional A*.
@@ -1356,7 +1359,7 @@ By construction, the ALT heuristic has better reduced weights for edges which ar
 Conversely, unimportant edges have bad reduced weights.
 This makes bidirectional search so critical for ALTs performance.
 In contrast, having a potential as tight as CH-Potentials makes bidirectional search in many scenarios unnecessary.
-Bidirectional search for CH-Potentials only pays of when the reduced weights exhibit certain very specific patterns.
+Bidirectional search for CH-Potentials only pays off when the reduced weights are bad around the terminals.
 
 \subsection{Applications}
 
@@ -1379,7 +1382,7 @@ This is the problem variant solved by the basic CH algorithm.
 CH achieves average query running times of 0.16\,ms on OSM Ger.
 CH-Potentials are roughly four times slower but still achieve a huge speedup of 3795 over Dijkstra.
 Such large speedups are typical for CH.
-This shows that CH-Potentials gracefully converges toward a CH in the $w_q = w_\ell$ special case.
+This shows that CH-Potentials gracefully converge toward CH in the $w_q = w_\ell$ special case.
 On DIMACS Europe, the average degree is somewhat higher which makes the low-degree optimizations less effective which leads to more queue operations and a slightly slower running time.
 
 In the other scenarios, the performance of CH-Potentials strongly depends on the quality of the heuristic.
