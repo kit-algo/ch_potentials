@@ -79,7 +79,7 @@ table['algo'] = table['exp'].map({
     'bidir_no_tunnels': 'CH B',
 })
 table['app'] = table['exp'].map({
-    'perfect': 'Unmodified $w_q = w_{\ell}$',
+    'perfect': 'Unmodified $w_q = w_{\\ell}$',
     'chpot_td': 'TD',
     'chpot_live': 'Live',
     'chpot_turns': 'Turns',
@@ -96,15 +96,17 @@ table['app'] = table['exp'].map({
     'bidir_no_tunnels': 'No Tunnels',
 })
 table = table.set_index(['graph', 'app', 'algo']) \
-    .reindex(index=['Unmodified $w_q = w_{\ell}$', 'No Tunnels', 'No Highways', 'Live', 'Turns', 'Live + Turns', 'TD', 'TD + Live', 'TD + Live + Turns'], level=1) \
+    .reindex(index=['Unmodified $w_q = w_{\\ell}$', 'No Tunnels', 'No Highways', 'Live', 'Turns', 'Live + Turns', 'TD', 'TD + Live', 'TD + Live + Turns'], level=1) \
     .reindex(index=['CH U', 'CH B', 'CCH U', 'CCH B'], level=2) \
     .drop(columns=['exp'])
 table.at[('OSM Ger', 'No Tunnels', 'CH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'No Tunnels', 'CH U'), 'dijkstra_running_time_ms']
 table.at[('OSM Ger', 'No Highways', 'CH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'No Highways', 'CH U'), 'dijkstra_running_time_ms']
-table.at[('OSM Ger', 'Live', 'CH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live', 'CH U'), 'dijkstra_running_time_ms']
-table.at[('OSM Ger', 'Live', 'CCH U'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live', 'CH U'), 'dijkstra_running_time_ms']
+if 'ONLY_PUBLIC' not in os.environ:
+    table.at[('OSM Ger', 'Live', 'CH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live', 'CH U'), 'dijkstra_running_time_ms']
+    table.at[('OSM Ger', 'Live', 'CCH U'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live', 'CH U'), 'dijkstra_running_time_ms']
 table.at[('OSM Ger', 'Turns', 'CH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Turns', 'CH U'), 'dijkstra_running_time_ms']
-table.at[('OSM Ger', 'Live + Turns', 'CCH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live + Turns', 'CCH U'), 'dijkstra_running_time_ms']
+if 'ONLY_PUBLIC' not in os.environ:
+    table.at[('OSM Ger', 'Live + Turns', 'CCH B'), 'dijkstra_running_time_ms'] = table.at[('OSM Ger', 'Live + Turns', 'CCH U'), 'dijkstra_running_time_ms']
 table['speedup'] = table['dijkstra_running_time_ms'] / table['running_time_ms']
 table = table.round(1)
 
@@ -116,14 +118,15 @@ lines = [
     R" & & &   Running &                Queue &     Length & Dijkstra & Speedup \\ & & & time [ms] & $[\cdot 10^3]$ & incr. [\%] &     [ms] &         \\"
 ] + lines[4:]
 
-lines[3] += R" \addlinespace"
-lines[18] += R" \addlinespace"
-lines[4] += "[2pt]"
-lines[6] += "[2pt]"
-lines[8] += "[2pt]"
-lines[11] += "[2pt]"
-lines[13] += "[2pt]"
-lines[15] += "[2pt]"
+if 'ONLY_PUBLIC' not in os.environ:
+    lines[3] += R" \addlinespace"
+    lines[18] += R" \addlinespace"
+    lines[4] += "[2pt]"
+    lines[6] += "[2pt]"
+    lines[8] += "[2pt]"
+    lines[11] += "[2pt]"
+    lines[13] += "[2pt]"
+    lines[15] += "[2pt]"
 
 output = "\n".join(lines) + "\n"
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]

@@ -93,7 +93,8 @@ osm_eur = "#{data_dir}/osm_europe/"
 dimacs_graph = "#{data_dir}/europe/"
 
 # static_graphs = [osm_ger, osm_eur, dimacs_graph]
-static_graphs = [osm_ger, dimacs_graph]
+static_graphs = [osm_ger]
+static_graphs += [dimacs_graph] unless only_public
 td_graphs = []
 unless only_public
   td_graphs += [
@@ -134,6 +135,9 @@ namespace "prep" do
         sh "#{wd}/code/osm_import/build/import_osm #{osm_ger_src_file} #{Dir[live_dir + '*'].join(' ')} #{typical_file}"
       end
     end
+    Dir.chdir "code/rust_road_router" do
+      sh "cargo run --release --bin write_unit_files -- #{osm_ger} 1000 1"
+    end
   end
 
   file "#{osm_ger}/live_travel_time" => osm_ger do
@@ -157,6 +161,9 @@ namespace "prep" do
     wd = Dir.pwd
     Dir.chdir osm_eur do
       sh "#{wd}/code/osm_import/build/import_osm #{osm_eur_src_file}"
+    end
+    Dir.chdir "code/rust_road_router" do
+      sh "cargo run --release --bin write_unit_files -- #{osm_eur} 1000 1"
     end
   end
 
@@ -271,7 +278,7 @@ namespace "exp" do
       [[], ['chpot-improved-pruning']].each do |pruning_feats|
         [[], ['chpot-alt'], ['chpot-cch'], ['chpot-oracle'], ['chpot-only-topo']].each do |pot_feats|
           if pot_feats == ['chpot-only-topo']
-            sh "CHPOT_NUM_QUERIES=1000 cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{osm_ger} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
+            sh "CHPOT_NUM_QUERIES=#{(ENV['NUM_DIJKSTRA_QUERIES'] || 1000).to_i} cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{osm_ger} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
           else
             sh "cargo run --release --bin chpot_bidir #{features(pruning_feats + pot_feats)} -- #{osm_ger} > #{exp_dir}/bidir_features/$(date --iso-8601=seconds).json"
           end
@@ -293,9 +300,9 @@ namespace "exp" do
         sh "cargo run --release --bin cchpot_live -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin cchpot_live_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
         sh "cargo run --release --bin bidir_chpot_live -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       end
 
-      sh "cargo run --release --bin chpot_unmodified -- #{dimacs_graph} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_unmodified -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_turns -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
       sh "cargo run --release --bin chpot_blocked -- #{osm_ger} > #{exp_dir}/applications/$(date --iso-8601=seconds).json"
