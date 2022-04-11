@@ -415,7 +415,7 @@ The elimination tree query can therefore not be used for a general CH.
 Execute Algorithm~\ref{algo:ch-backward}\;
 \For{all CH levels $L$ from most to least important}{
 	\For{all up-edges $uv$ in $G^+_\ell$ with $u$ in $L$}{
-		\If{$P[u] < P[v] + w_\ell(uv)$}{
+		\If{$P[u] > P[v] + w_\ell(uv)$}{
 			$P[u] \leftarrow P[v] + w_\ell(uv)$\;
 		}
 	}
