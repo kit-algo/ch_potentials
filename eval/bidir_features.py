@@ -52,7 +52,7 @@ pruning = pruning.rename(columns={
 lines = pruning.to_latex(escape=False, index=False, multicolumn_format='c', column_format='c@{\hskip6pt}c@{\hskip3pt}crrrrrrrr').split("\n")
 
 lines = lines[0:2] + [
-    R' &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-11}',
+    R' &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushes [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-11}',
     R'Low Deg.      & Bidirectional & New & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} & \multirow{2}{*}{Oracle} & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & (C)CH/ \\',
     R'Opt. & Potential     & Pruning  & & & & & & & & Oracle \\'
 ] + lines[4:9] + ['\\addlinespace'] + lines[9:]
@@ -82,7 +82,7 @@ bidir_switch_strat = bidir_switch_strat.drop([('num_queue_pushs_k', 'CH'), ('num
 
 bidir_switch_strat = bidir_switch_strat.rename(columns={
         'running_time_ms': 'Running time [ms]',
-        'num_queue_pushs_k': 'Queue pushs [$\\cdot 10^3$]',
+        'num_queue_pushs_k': 'Queue pushes [$\\cdot 10^3$]',
     }) \
     .rename(index={
         'alternating': 'Alternating',
@@ -102,14 +102,14 @@ table.loc[9:11, '$w_q$'] = ''
 lines = table.to_latex(escape=False, index=False, multicolumn_format='c', column_format='cccrrrrrrrr').split("\n")
 
 lines = lines[0:2] + [
-    R' &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-11}'
+    R' &  &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushes [$\cdot 10^3$]} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-11}'
     R'\multirow{2}{*}{$w_q$} & Bidirectional & Choose    & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} & \multirow{2}{*}{Oracle} & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & (C)CH/ \\',
     R' & Potential     & Direction & & & & & & & & Oracle \\'
 ] + lines[4:9] + ['\\addlinespace'] + lines[9:13] + ['\\addlinespace'] + lines[13:]
 
 output = "\n".join(lines) + "\n"
-output = output.replace('> 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v >$ 80kph}}')
-output = output.replace('< 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v <$ 80kph}}')
+output = output.replace('> 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ speed \\ > 80kph}}')
+output = output.replace('< 80kph', R'\multirow{4}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ speed \\ < 80kph}}')
 output = output.replace('unmodified', R'\multirow{4}{*}{$w_{\ell}$}')
 output = output.replace('*1.05', R'\multirow{4}{*}{$w_{\ell} \cdot 1.05$}')
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]
@@ -147,7 +147,7 @@ bidir = bidir.drop([('num_queue_pushs_k', 'CH'), ('num_queue_pushs_k', 'CCH'), (
 
 bidir = bidir.rename(columns={
     'running_time_ms': 'Running time [ms]',
-    'num_queue_pushs_k': 'Queue pushs [$\\cdot 10^3$]',
+    'num_queue_pushs_k': 'Queue pushes [$\\cdot 10^3$]',
 }, index={'unidir': 'Unidirectional'})
 
 bidir.loc[('probabilistic_scale_by_speed', 1.5, 1.0), '$w_q$'] = '< 80kph'
@@ -158,14 +158,14 @@ bidir = bidir.reset_index(level=[0,1,2], drop=True).reset_index().set_index(['$w
 lines = bidir.to_latex(escape=False, multicolumn_format='c', column_format='ccrrrrrrrr').split("\n")
 
 lines = lines[0:2] + [
-    R' &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushs [$\cdot 10^3$]} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10}'
+    R' &  & \multicolumn{5}{c}{Running time [ms]} & \multicolumn{3}{c}{Queue pushes [$\cdot 10^3$]} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10}'
     R'\multirow{2}{*}{$w_q$} & & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} & \multirow{2}{*}{Oracle} & \multirow{2}{*}{Zero} & \multirow{2}{*}{ALT} & (C)CH/ \\',
     R' & & & & & & & & & Oracle \\'
 ] + lines[5:9] + ['\\addlinespace'] + lines[9:12] + ['\\addlinespace'] + lines[12:]
 
 output = "\n".join(lines) + "\n"
-output = output.replace('> 80kph', R'\multirow{3}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v >$ 80kph}}')
-output = output.replace('< 80kph', R'\multirow{3}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ $v <$ 80kph}}')
+output = output.replace('> 80kph', R'\multirow{3}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ speed \\ > 80kph}}')
+output = output.replace('< 80kph', R'\multirow{3}{*}{\shortstack{$w_{\ell} \cdot 1.5$ if\\ speed \\ < 80kph}}')
 output = output.replace('unmodified', R'\multirow{3}{*}{$w_{\ell}$}')
 output = output.replace('*1.05', R'\multirow{3}{*}{$w_{\ell} \cdot 1.05$}')
 output = re.sub(re.compile('([0-9]{3}(?=[0-9]))'), '\\g<0>,\\\\', output[::-1])[::-1]

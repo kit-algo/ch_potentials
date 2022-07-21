@@ -82,7 +82,7 @@ lines = table.to_latex(escape=False).split("\n")
 
 lines = lines[:2] + [
   R" &                &                & \multicolumn{3}{c}{Preprocessing [s]} \\ \cmidrule(lr){4-6}"
-  R" & Nodes          & Edges          & \multirow{2}{*}{CH} & \multicolumn{2}{c}{CCH} \\ \cmidrule(lr){5-6}"
+  R" & Vertices       & Edges          & \multirow{2}{*}{CH} & \multicolumn{2}{c}{CCH} \\ \cmidrule(lr){5-6}"
   R" & $[\cdot 10^6]$ & $[\cdot 10^6]$ &                     & Phase 1 & Phase 2 \\"
 ] + lines[4:]
 

@@ -30,7 +30,7 @@ table = table.unstack(0).stack(0) \
     .loc[['running_time_ms', 'num_queue_pushs']][['Zero', 'ALT', 'CH', 'CCH', 'Oracle']].reset_index(level=[2,3]) \
     .rename(index={
         'running_time_ms': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Running\\time [ms]}}}',
-        'num_queue_pushs': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Queue\\pushs [$\cdot 10^3$]}}}',
+        'num_queue_pushs': R'\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{Queue\\ {} [$\cdot 10^3$]}}}',
     })
 
 lines = table.to_latex(escape=False).split("\n")
