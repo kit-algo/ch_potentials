@@ -19,7 +19,7 @@ def path_to_graph(path):
         'osm_europe': 'OSM Europe',
         'osm_ger': 'OSM Ger',
         'osm_ger_td': 'OSM Ger',
-        'europe': 'DIMACs Eur',
+        'europe': 'DIMACS Eur',
     }[[x for x in path.split('/') if x != ''][-1]]
 
 algos = ['Virtual Topocore Component Query', 'Virtual Topocore Bidirectional Core Query']

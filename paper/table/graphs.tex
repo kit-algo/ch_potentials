@@ -1,12 +1,12 @@
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrrr}
 \toprule
- &                &                & \multicolumn{3}{c}{Preprocessing [s]} \\ \cmidrule(lr){4-6} & Vertices          & Edges          & \multirow{2}{*}{CH} & \multicolumn{2}{c}{CCH} \\ \cmidrule(lr){5-6} & $[\cdot 10^6]$ & $[\cdot 10^6]$ &                     & Phase 1 & Phase 2 \\
+ &                &                & \multicolumn{3}{c}{Preprocessing [s]} & \multicolumn{2}{c}{Aux. Data [MiB]} \\ \cmidrule(lr){4-6} \cmidrule(lr){7-8}
+ & Vertices          & Edges          & \multirow{2}{*}{CH} & \multicolumn{2}{c}{CCH} & \multirow{2}{*}{CH} & \multirow{2}{*}{CCH} \\ \cmidrule(lr){5-6} & $[\cdot 10^6]$ & $[\cdot 10^6]$ &                     & Phase 1 & Phase 2 \\
 \midrule
-OSM Germany   &       16.2 &       35.4 &                          298.7 &        1\,467.4 &          10.1 \\
-DIMACS Europe &       18.0 &       42.2 &                          276.2 &        2\,480.9 &          12.4 \\
-TDGer06       &        4.7 &       10.8 &                           59.2 &         331.7 &           2.7 \\
-TDEur17       &       25.8 &       55.5 &                          293.9 &        2\,102.3 &          14.1 \\
-TDEur20       &       28.5 &       60.9 &                          311.9 &        2\,219.5 &          15.2 \\
+OSM Germany   &       16.2 &       35.4 &                          298.7 &        1\,467.4 &          10.1 &  645 & 616 \\
+DIMACS Europe &       18.0 &       42.2 &                          276.2 &        2\,480.9 &          12.4 &  742 & 765 \\
+TDGer06       &        4.7 &       10.8 &                           59.2 &           331.7 &           2.7 &  196 & 169 \\
+TDEur17       &       25.8 &       55.5 &                          293.9 &        2\,102.3 &          14.1 & 1030 & 881 \\
+TDEur20       &       28.5 &       60.9 &                          311.9 &        2\,219.5 &          15.2 & 1130 & 959 \\
 \bottomrule
 \end{tabular}
-
