@@ -45,7 +45,7 @@
 \author{Ben Strasser}
 \email{academia@ben-strasser.net}
 \affiliation{%
-  \institution{Institute of Theoretical Informatics, Algorithmics I, Karlsruhe Institute of Technology}
+  \institution{Institute of Theoretical Informatics, Algorithmics, Karlsruhe Institute of Technology}
   \city{Karlsruhe}
   \country{Germany}
 }
@@ -54,7 +54,7 @@
 \email{tim.zeitz@kit.edu}
 \orcid{0000-0003-4746-3582}
 \affiliation{%
-  \institution{Institute of Theoretical Informatics, Algorithmics I, Karlsruhe Institute of Technology}
+  \institution{Institute of Theoretical Informatics, Algorithmics, Karlsruhe Institute of Technology}
   \city{Karlsruhe}
   \country{Germany}
 }
@@ -80,7 +80,7 @@ They achieve speed and exactness but sacrifice A*'s flexibility.
 Extending them to certain practical applications can be hard.
 In this paper, we present Lazy RPHAST, an algorithm to efficiently compute distances from many vertices towards a single target and use it as an A* heuristic.
 As it uses Contraction Hierarchies (CH), a hierarchical technique, we call our A* heuristic CH-Potentials.
-Our approach allows decoupling the supported applications from the hierarchical speed-up technique.
+Our approach allows decoupling the supported applications from the hierarchical speedup technique.
 Additionally, we describe A* optimizations to accelerate the processing of low degree vertices, which often occur in road networks and present a new pruning criterion for symmetrical bidirectional A*.
 An extensive experimental study confirms the practical applicability of our approach for many applications.
 \end{abstract}
@@ -101,96 +101,144 @@ Vertices represent intersections.
 Roads are modeled using edges.
 Edges are weighted by their traversal times.
 The problem can be solved with Dijkstra's algorithm~\cite{d-ntpcg-59}.
-Unfortunately, on continental sized networks, it is too slow for many applications.
-Thus, speed-up techniques have been developed.
-One popular example are Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
-They have been used successfully in many real world applications.
-A CH exploits the inherent hierarchy of road networks.
-In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network at query time.
-Another popular example is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
-It is also used in practice~\cite{bingblog}.
-MLD also uses shortcut edges.
-Both approaches achieve speed-ups of at least three orders of magnitude over Dijkstra's algorithm.
+Unfortunately, on continental-sized networks, it is too slow for many applications.
+Therefore, speedup techniques have been developed.
+These techniques employ an offline \emph{preprocessing} phase where auxiliary data is precomputed.
+This auxiliary data is then utilized to accelerate shortest path computations in the online \emph{query} phase.
+With this approach, speedups of more than three orders of magnitude have been achieved.
+This allows interactive query times of milliseconds or less on continental-sized road networks.
 
-\begin{figure}
-\centering
-\includegraphics[width=.6\columnwidth]{fig/searchspace_st.png}
-\caption{Vertices explored by A*. Color indicates the vertex removal order from the queue. Blue was removed first. Next is green. Red was removed last.}
-\label{img:search-space}
-\Description[A map where vertices visited by A* are marked.]{
-A map of Karlsruhe where vertices visited by A* are marked.
-The shape of the area with the visited vertices is similar to a drop.
-The source vertex roughly lies in the center of the drop, the target vertex at the tip.
-}
-\end{figure}
-
-Unfortunately, for many real world applications, this basic graph model is too simplistic.
+However, for many real world applications, this basic model is too simplistic.
 For realistic routing, many additional features need to be considered.
-This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions. %, temporary driving bans for certain types of vehicles.
+This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions.
 Some applications may have additional application-specific requirements.
 Extending Dijkstra's algorithm to support these features is usually easy.
-Extending hierarchical speed-up techniques is often possible, too.
-However, the algorithm development is vastly more complex. % TODO cite some papers
-For every feature, dedicated research papers exist that extend CH and other approaches.
-Supporting the combination of several features is even harder.
-For example, we are not aware of any work combining all features mentioned above.
-In this article, we describe an algorithmic building block, that allows handling the combination of all above-mentioned features.
+In contrast, extending speedup techniques is vastly more complex.
+The results on extending specific speedup techniques to specific extended problem fill many research papers~\cite{dgpw-crprn-13} and sometimes entire dissertations~\cite{b-tdrpc-14}. % TODO cite some papers
+We will present a brief overview in Section~\ref{sec:related_work}.
+While techniques achieving fast query times have been successfully developed for many extended scenarios, we observe two problems:
+The resulting techniques are complex to implement and hard to further extend and adjust.
+For example, while there are efficient speedup techniques for each of the above mentioned features, we are not aware of any work supporting the combination of these features.
+We believe that for \emph{practical} algorithms, a different trade-off is necessary.
+Therefore, in this work, we prioritize a simple and extensible approach over the fastest possible query times.
 
-Our approach decouples the development of extensions from the hierarchical speed-up technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
-A* is a goal-directed variant of Dijkstra's algorithm.
-See Figure~\ref{img:search-space} for an example of vertices traversed during an A* search.
-A* uses a \emph{heuristic} to guide the search towards the goal.
-A heuristic is a function that maps a vertex to an estimate of the remaining distance to the goal.
-A*'s running time crucially depends on how tight this estimate is.
-Further, evaluating the heuristic must be fast.
-% The free flow travel time to the goal is a valid heuristic for most features.
-% In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
-% However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
-In this article, we introduce Lazy RPHAST and build on it CH-Potentials, a fast heuristic with tight estimates.
-Internally, the heuristic uses a CH.
-Fortunately, this is an implementation detail from the perspective of the A*.
-To support a new feature, we only need to modify the A* algorithm.
-The heuristic core containing the CH remains untouched.
-Extending A* is vastly easier than extending a CH.
-This enables us to design algorithms for a multitude of features.
+% In this article, we describe an algorithmic building block, that allows handling the combination of all above-mentioned features.
+% Our approach decouples the development of extensions from the hierarchical speedup technique by utilizing the A* algorithm~\cite{hnr-afbhd-68}.
+% A* is a goal-directed variant of Dijkstra's algorithm.
+% See Figure~\ref{img:search-space} for an example of vertices traversed during an A* search.
+% A* uses a \emph{heuristic} to guide the search towards the goal.
+% A heuristic is a function that maps a vertex to an estimate of the remaining distance to the goal.
+% A*'s running time crucially depends on how tight this estimate is.
+% Further, evaluating the heuristic must be fast.
+% % The free flow travel time to the goal is a valid heuristic for most features.
+% % In many settings, it is the tightest lower bound available during preprocessing, i.e., independent of real-time data and user settings.
+% % However, to be useful we must be able to evaluate the free flow heuristic \todo{ist free flow heuristic besser als tight heuristic?} quickly and exactly.
+% In this article, we introduce Lazy RPHAST and build on it CH-Potentials, a fast heuristic with tight estimates.
+% Internally, the heuristic uses a CH.
+% Fortunately, this is an implementation detail from the perspective of the A*.
+% To support a new feature, we only need to modify the A* algorithm.
+% The heuristic core containing the CH remains untouched.
+% Extending A* is vastly easier than extending a CH.
+% This enables us to design algorithms for a multitude of features.
 
 \subsection{Related Work}\label{sec:related_work}
 
-% classical
-% goal, hierarchy, labeling
-% extended query (m2o)
+In the past two decades, a considerable amount of research effort has been put into accelerating shortest path computations in transportation networks.
+For a comprehensive overview, we refer to~\cite{bdgmpsww-rptn-16}.
+Here, we first highlight a few key results for the classical shortest path problem on road networks specifically relevant to our work.
+In the second part of this section, we will discuss adaptions of these techniques to extended problem models.
+
+\paragraph{Speedup Techniques for Shortest Paths in Road Networks}
+A*~\cite{hnr-afbhd-68} is a well-known approach to accelerate shortest path queries by directing the search towards the target through heuristic distance estimates.
+It has been successfully employed in many problems beyond route planning in transportation networks~\cite{DBLP:conf/socs/StrasserHB14,DBLP:conf/ijcai/BonoGHS19,DBLP:conf/ijcai/0002UJAKK18}.
+It is one of the algorithms fundamental to our work.
+The performance of A* crucially depends on the quality of the heuristic estimates.
+A natural but rather ineffective heuristic can be obtained through euclidian distances.
+On road networks, it performs worse than Dijkstra's algorithm~\cite{gh-cspas-05}.
+A much more accurate heuristic can be obtained with ALT~\cite{gh-cspas-05,gw-cppsp-05}.
+ALT was one of the early speedup technique for routing in road networks.
+It uses precomputed distances to certain landmark vertices combined with the triangle inequality to compute distance estimates.
+On road networks, this achieves speedups of around two orders of magnitude over Dijkstra's algorithm.
+However, the speedups obtained by ALT are still limited by the quality of the distance estimates.
+To achieve faster queries, Core-ALT has been developed~\cite{bdsssw-chgds-10}.
+Here, parts of the network are \emph{contracted} during the preprocessing, leaving a much smaller remaining core graph to run the goal directed search on.
+This yields speedups of about three orders of magnitude compared to Dijkstra's algorithm.
+Since then, there has been little development on A*-based techniques for routing in road networks.
+This is because hierarchical techniques have proven much more effective.
+
+Hierarchical speedup techniques utilize the inherent hierarchy in road networks, usually in combination with the \emph{contraction} of less important vertices.
+One popular example is Contraction Hierarchies~(CH)~\cite{gssv-erlrn-12}.
+In a preprocessing step, additional shortcut edges are inserted, which allow skipping unimportant parts of the network at query time.
+The ``importance'' of vertices is determined heuristically during preprocessing.
+This results in queries taking less than a tenth of a millisecond which is a speedup of four or more orders of magnitude over Dijkstra's algorithm.
+The preprocessing takes only a few minutes.
+CH has been used successfully in many real world applications and quite a few open-source implementations exist\footnote{
+\url{https://gist.github.com/PayasR/bc46af938195a827e42006c3f5544e4a}.
+While this list is certainly not exhaustive and possibly not representative for what algorithms are used in cooperate contexts, it still paints a fairly clear picture on which techniques have reached a certain popularity in practice.
+}.
+CH is another fundamental algorithm for our work.
+More specifically, we extend on PHAST~\cite{dgnw-phast-13} and RPHAST~\cite{delling_et_al:OASIcs:2011:3266}.
+These algorithms reuse the CH preprocessing but modify the query phase to efficiently support \emph{one-to-all} queries from one source vertex to \emph{all} other vertices (PHAST), or \emph{one-to-many} queries to a subset of vertices known in advance (RPHAST).
+%
+Another popular hierarchical speedup technique also used in practice~\cite{bingblog} is Multi-Level-Dijkstra~(MLD)~\cite{swz-umlgt-02} also known as CRP~\cite{dgpw-crprn-13}.
+It is based on a multi-level partition of the road network computed during preprocessing.
+Queries are slightly slower than CH queries but still three to four orders of magnitude faster than Dijkstra's algorithm.
+Hierarchical speedup techniques have been combined with goal-directed search and A* in~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
+However, these works also primarily focused on obtaining faster queries rather than simple and flexible approaches.
+
+The speedup technique known to currently achieve the fastest queries is Hub Labels (HL)~\cite{TODO}.
+With HL, query times in less than a microseconds are possible.
+This is only a couple of times the time of an uncached memory access.
+This comes at the cost of an expensive preprocessing phase and a tremendous memory footprint, more than an order of magnitude larger than the input graph.
+Despite the extremely fast query times, it appears that the trade-off offered by HL is, in practice, often not very attractive.
+Simpler techniques like CH already offer queries fast enough to completely disappear behind other parts of practical applications (network latency, etc.).
+Also, we are not aware of any works extending HL to extended problem models.
+
 % extended application
+\paragraph{Speedup Technique Adaptions for Extended Problems}
+One of the earliest approaches to adapt speedup techniques to extended problems was based on A*.
+In~\cite{dw-lbrdg-07}, ALT is used for routing on dynamic and time-dependent graphs.
+This approach is conceptually similar to ours.
+However, because the heuristic is ALT-based, the accuracy of the estimates is limited and the resulting query performance not competitive.
+Further, the evaluation was performed only with synthetic traffic data.
+With production-grade real-world traffic data, the problem becomes significantly harder~\cite{swz-sfert-21}.
+Similar to the development for the classical problem, the approach was also combined with contraction~\cite{ndls-bastd-12,dn-crdtd-12}.
+Even though this improves query running times, they obtained speedups are not competitive with purely hierarchical techniques.
 
+CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of MLD~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
+For this, a second, faster, preprocessing phase is introduced which takes at most a few seconds.
+This phase is called the \emph{customization}.
+It can be run regularly to update weights.
+This enables the integration of live traffic and user preferences.
+CRP was designed to support turn costs without any additional modifications.
+Queries in CRP take at most a few milliseconds.
+CRP is one of the few examples of a speedup technique designed for flexibility rather than maximum query performance.
+However, its flexibility is also limited.
+Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
+Achieving reasonable memory consumption and query times was only possible by giving up exactness.
+Further, TD-CRP can only compute approximate shortest distances (rather than paths).
 
-% TODO RPHAST etc
-
-There is a lot of work that extends hierarchical speed-up techniques to more complex settings~\cite{bdgmpsww-rptn-16}.
-For example, in~\cite{gv-errnt-11} turn information is integrated into CH.
+There is also lot of work that extends CH to more complex problem models.
+In~\cite{gv-errnt-11}, turn information is integrated into CH.
 The proposed approach achieves fast queries, but preprocessing becomes an order of magnitude slower compared to classical CH.
-
+In~\cite{dsw-cch-15}, CH is extended to Customizable Contraction Hierarchies (CCH).
+CCH also has a second preprocessing (customization) phase where weights can be altered.
+This allows to support user preferences and live traffic with queries an order of magnitude faster than CRP.
+Supporting turn costs in CCH was studied in~\cite{bwzz-cchtc-20}.
+Even with all improvements proposed in~\cite{bwzz-cchtc-20}, turn integration still causes a slowdown of at least factor three to the customization phase.
 A considerable amount of research and engineering effort has been put into studying the combination of traffic predictions with CH.
 Several papers~\cite{bdsv-tdch-09,bgns-tdcha-10,klsv-dtdch-10,bgsv-mtdtt-13} and an entire dissertation~\cite{b-tdrpc-14} have been published on the subject.
 Different variants with trade-offs regarding exactness, query speed and space consumption were proposed~\cite{bgsv-mtdtt-13}.
 Recently, a new approach has been published~\cite{swz-sfert-21} which simultaneously achieves competitive results in all three aspects but only at the cost of considerable implementation complexity. % TODO argue what is complicated to implement?
 
-CRP~(Customizable Route Planning)~\cite{dgpw-crprn-13} is an engineered variant of MLD~\cite{swz-umlgt-02} which was developed to allow updating weights without invalidating the entire preprocessing.
-For this, a faster, second preprocessing phase is introduced.
-It can be run regularly to update weights.
-In theory, this enables the integration of live traffic and user preferences.
-In practice, live traffic feed data is imperfect.
-Computing ``good'' routes without undesired detours due to artifacts in the data requires additional algorithmic extensions~\cite{dss-tarrn-18}.
-CRP also supports turn costs.
-Integrating traffic predictions into CRP was studied in~\cite{bdpw-dtdrp-16}.
-On continental sized networks, TD-CRP can only compute approximate shortest distances (rather than paths).
+Finally, note that there are many other extended problem models.
+While they are beyond the scope of this work, they highlight the need for extensible speedup techniques.
+Examples for this are electric vehicle routing~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11},
+multi-criteria optimization~\cite{fns-opca-14,gks-rpfof-10},
+computing alternative routes~\cite{bdgs-argrn-11,adgw-arrn-13},
+routing with incomplete and noisy traffic data~\cite{dss-tarrn-18},
+and routing for trucks~\cite{kswz-erptd-p-20}.
 
-In~\cite{dsw-cch-15}, CH is extended to Customizable CH (CCH). % TODO paragraph looks ugly, somehow make more compact
-CCH also has a second preprocessing phase where weights can be altered.
-Supporting turn costs in CCH was studied in~\cite{bwzz-cchtc-20}.
-Turn integration still causes a slowdown of at least factor three to the second preprocessing phase.
-
-Other extensions studied include electric vehicle routing~\cite{DBLP:journals/algorithmica/BaumDPSWZ20,DBLP:conf/aaai/EisnerFS11} or multi-criteria optimization~\cite{fns-opca-14,gks-rpfof-10}.
-
-% Another feature which has received quite some attention is the computation alternative routes~\cite{bdgs-argrn-11,adgw-arrn-13}.
 % Even formally defining what makes a good alternative route is non-trivial~\cite{bdgs-argrn-11}.
 % A variety of paradigms exists.
 % Competitive approaches require careful adjustment of their respective hierarchical speedup technique for the targeted paradigm.
@@ -198,42 +246,35 @@ Other extensions studied include electric vehicle routing~\cite{DBLP:journals/al
 % In~\cite{k-hdara-13}, partial shortest path trees are extracted from CH search spaces to find via-node candidates for alternative routes.
 % In~\cite{barth2019alternative}, a multi-criteria CH is extended to compute alternative routes with regards to multiple edge weight functions.
 
-Clearly, extending hierarchical approaches is possible, but it requires significant research effort.
+% Clearly, extending hierarchical approaches is possible, but it requires significant research effort.
 % While these works show that it is possible to extend hierarchical approaches, they also show that it is non-trivial. % TODO Reviewer1 similarly, discuss why "they also show it is non trivial". What does this mean?
-Further, extensions to these speedup techniques cannot easily be composed with each other.
-Combining these extensions is an unsolved problem.
-
-CH-Potentials is not the first technique to combine hierarchical approaches and A*~\cite{bdsssw-chgds-10,gkw-blwr-07,bdgwz-sfpcs-19}.
-However, previous works mostly focused on accelerating hierarchical approaches further rather than exploiting A*'s flexibility.
-
-ALT~\cite{gh-cspas-05,gw-cppsp-05} and CPD-Heuristics~\cite{DBLP:conf/ijcai/BonoGHS19} are the two techniques with high conceptual similarity to CH-Potentials.
-% Just as our approach, ALT is A*-based.
-ALT has been combined with shortcuts~\cite{bdsssw-chgds-10} and also extended for dynamic graphs~\cite{dw-lbrdg-07} and time-dependent routing~\cite{ndls-bastd-12,dn-crdtd-12}.
-% However, ALT's heuristic is not preprocessing-tight.
-%
-CPD-Heuristics are a combination of A* and Compressed Path Databases (CPD).
-A CPD can quickly compute the first edge of a shortest path between any two vertices.
-In~\cite{DBLP:conf/ijcai/BonoGHS19}, SRC~\cite{DBLP:conf/socs/StrasserHB14} is used as CPD.
-For every distance estimation, a shortest path to the target is computed, whose length is used as the heuristic value.
-Unfortunately, the employed CPD's quadratic preprocessing running time is problematic on large road networks.
-%
-% MtsCopa~\cite{DBLP:journals/tciaig/BaierBHH15} uses a similar idea to CPD-Heuristics but is only applied in a hunter-prey application.
-%
-In~\cite{DBLP:conf/ijcai/0002UJAKK18} the weighted graph is embedded into Euclidean space using FastMap. % such that distances in space and distances in the graph roughly correspond.
-The Euclidean distance is then used as a distance estimate for A*.
-% This results in a good but not a preprocessing-tight heuristic.
+% Further, extensions to these speedup techniques cannot easily be composed with each other.
+% Combining these extensions is an unsolved problem.
 
 \subsection{Contribution and Outline}
 
-After discussing notation and fundamental algorithms in Section~\ref{sec:preliminaries}, we introduce Lazy RPHAST, a simple and efficient CH-based algorithm for the incremental many-to-one shortest path problem in Section~\ref{sec:lazy-rphast}.
+Clearly, there is a plethora of efficient speedup techniques for routing in road networks.
+Further, for many extended problems there are dedicated research results on extensions of some techniques.
+While many problems can be solved very efficiently, we still believe that this situation is not satisfactory in practice.
+For practical applications, a simple, unified, and extensible approach is often more important than the fastest query performance.
+Therefore, in this work, we revisit the A* algorithm and build a flexible, unified framework for a multitude of routing problems.
+The core of our approach is a new CH-based A* heuristic.
+It allows for much tighter estimates than previous A* heuristics and thus significantly faster queries.
+While the query running times of our approach are for the most part not competitive with approaches significantly tailored to specific problems, they are still sufficient for practical applications.
+The remainder of this work is organized as follows:
+
+We discuss notation and fundamental algorithms in Section~\ref{sec:preliminaries}.
+In Section~\ref{sec:lazy-rphast}, we introduce Lazy RPHAST, a simple and efficient CH-based algorithm for the incremental many-to-one shortest path problem.
 Section~\ref{sec:astar_opts} contains several optimizations for A* in road networks accelerating the processing of low degree vertices (Section~\ref{sec:low-deg-improvment}) and an improved variant of bidirectional A* (Section~\ref{sec:bidir_astar}).
-Our main contribution, the CH-Potentials framework is presented in Section~\ref{sec:framework} where we show how to use Lazy RPHAST to build a fast and tight heuristic for A* in road networks.
+Our main contribution, the CH-Potentials framework, is presented in Section~\ref{sec:framework}.
+There, we first show how to use Lazy RPHAST to build a fast and tight heuristic for A* in road networks.
 Based on this heuristic, we provide a unified framework (Section~\ref{sec:formal_framework} and~\ref{sec:chpot}) for a variety of practical route planning problems (Section~\ref{sec:applications}).
 CH-Potentials can be applied to all of these problems without any modifications to the preprocessing.
 In Section~\ref{sec:experiments}, we provide an extensive experimental evaluation analyzing the performance characteristics of our algorithms.
 It shows that CH-Potentials achieve decent running times when tight lower bounds are available at preprocessing time.
 However, the strength of our approach is not in query running times but in its flexibility:
-Problem extensions can be supported at the cost of some slowdown to the queries but without any algorithmic adjustments.
+Problem extensions can be supported without complex algorithmic adjustments.
+The price for each extension is a certain query slowdown depending on how tight the lower bounds used during preprocessing remain.
 
 \section{Preliminaries}\label{sec:preliminaries}
 
@@ -273,17 +314,33 @@ When the sum of the minimum keys in both queues $\overrightarrow{k} + \overlefta
 \subsection{A* Algorithm}\label{sec:a_star}
 
 A* is a goal-directed variant of Dijkstra's algorithm.
-% A* uses a \emph{heuristic} to guide the search towards the goal.
 It uses a heuristic function $h_t(v)$ that maps a vertex $v$ onto an estimate of the distance from $v$ to the target $t$.
 A* orders the vertices in the priority queue by $D[v] + h_t(v)$ instead of $D[v]$ as Dijkstra's algorithm does it.
 This results in vertices closer to the target being explored earlier.
+Figure~\ref{img:search-space} depicts an example of the search space of the A* algorithm.
+With Dijkstra's algorithm, all vertices closer to $s$ than the target would have been explored.
+Thus the search space would be something resembling a circle around $s$.
+With A*, the search is directed towards the target and fewer vertices are explored.
 Dijkstra's algorithm is a special case of A* with $h_t(v)=0$.
+
 A* is equivalent to running Dijkstra's algorithm on the graph with \emph{reduced weights}~\cite{hnr-afbhd-68}.
 This reduced weight function is defined as $w_{h_t}(uv) := w(uv) - h_t(u) + h_t(v)$.
 A heuristic function is called \emph{feasible}, if $w_{h_t}(e) \geq 0$ for all edges $e$.
 If the employed heuristic is feasible, A* is guaranteed to have found the optimal distance after settling $t$.
 In this article, we limit our discussion to feasible heuristics.
 % TODO more explicit details on A* correctness?
+
+\begin{figure}
+\centering
+\includegraphics[width=.6\columnwidth]{fig/searchspace_st.png}
+\caption{Vertices explored by A*. Color indicates the vertex removal order from the queue. Blue was removed first. Next is green. Red was removed last.}
+\label{img:search-space}
+\Description[A map where vertices visited by A* are marked.]{
+A map of Karlsruhe where vertices visited by A* are marked.
+The shape of the area with the visited vertices is similar to a drop.
+The source vertex roughly lies in the center of the drop, the target vertex at the tip.
+}
+\end{figure}
 
 \subsection{Contraction Hierarchies}
 
@@ -354,7 +411,7 @@ Make $Q$ only contain $t$ with tentative distance $0$\;
 \label{algo:ch-backward}
 \end{algorithm2e}
 
-\emph{Contraction Hierarchies} (CH) is a two-phase speed-up technique to accelerate shortest path computations on road networks through precomputation.
+\emph{Contraction Hierarchies} (CH) is a two-phase speedup technique to accelerate shortest path computations on road networks through precomputation.
 For a detailed discussion we refer to~\cite{gssv-erlrn-12}.
 Here, we only briefly introduce necessary notation and algorithms used in this paper.
 In a preprocessing phase, vertices are ordered totally by ``importance'' where more important vertices should lie on more shortest paths.
@@ -442,12 +499,13 @@ The preprocessing phase remains the same as for CH.
 The query phase is split into two steps.
 The first step is analogue to the CH query:
 From $t$, all reachable vertices via reversed down-edges are explored, as shown in Algorithm~\ref{algo:ch-backward}.
-For the second step, PHAST organizes vertices into \emph{levels}.
+For the second step, PHAST utilizes an assignment of vertices into \emph{levels}.
 These levels correspond to the importance ordering but allow multiple vertices in the same level.
 However, no edge must connect two vertices within the same level.
 Such a level assignment can be obtained by assigning all vertices without lower ranked neighbors to the lowest level.
 All other vertices are then iteratively assigned to the next level above the highest level of any downward neighbor.
-PHAST then iterates over all CH levels from top to bottom.
+
+The main work of the second step consists in iterating over all CH levels from top to bottom.
 In each iteration, all up-edges starting within the current level are followed in reverse.
 After all levels are processed, the shortest distances from all vertices to $t$ were computed.
 Pseudocode is provided in Algorithm~\ref{algo:phast}.
@@ -468,10 +526,10 @@ See~\cite{dgnw-phast-13} for an in-depth experimental performance analysis.
 
 RPHAST~\cite{delling_et_al:OASIcs:2011:3266}, short for Restricted PHAST, is a PHAST extension for efficiently computing distances from a smaller set of source vertices to one target vertex (again, the reversed case works analogously), solving the \emph{many-to-one} problem.
 Given a set of source vertices $S$, the first step is to copy the combined search space of all sources into a \emph{restricted subgraph}.
-Formally, let $V_{\operatorname{restr}}$ be the set of vertices reachable in $\gchu$ from any $s_i \in S$.
+Let $V_{\operatorname{restr}}$ be the set of vertices reachable in $\gchu$ from any $s_i \in S$.
 The restricted subgraph $\gchu_{\operatorname{restr}}$ is subgraph of $\gchu$ induced by $V_{\operatorname{rest}}$.
-Copying the relevant edges into this restricted subgraph makes up the \emph{selection} step.
-Then, in the query step, a target $t$ is given and the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the restricted subgraph.
+Finding and copying the relevant edges into this restricted subgraph makes up the \emph{selection} step.
+In the query step, a target $t$ is given and the PHAST algorithm is applied but the downward sweep (second step of the PHAST algorithm) is performed only on the restricted subgraph.
 RPHAST is particularly effective when many targets are queried for the same source set $S$.
 If the source set changes often, selection times may become problematic.
 % RPHAST can also be applied to the \emph{many-to-many} problem, computing a distance matrix between sets $S$ and $T$ of vertices.
@@ -1337,7 +1395,7 @@ No other heuristic, which only has access to the preprocessing weights, can be f
 We observe that the number of queue pushes roughly correlates with running time.
 As (C)CH-Potentials and Oracle-A* have the same heuristic values, the number of queue pushes are by construction equal.
 Each optimization reduces both queue pushes and running times.
-All optimizations yield a combined speed-up of around 3.
+All optimizations yield a combined speedup of around 3.
 % Skipping degree three vertices has the smallest impact.
 (C)CH-Potentials outperforms ALT by a factor of between six and seven and settle correspondingly fewer vertices.
 This is not surprising, since ALT computes worse distance estimates.
@@ -1366,7 +1424,7 @@ All variants alternate between the forward and the backward search.}
 In this section, we investigate the performance of bidirectional A*.
 We first evaluate different variants of bidirectional A* in Table~\ref{tab:bidir_pruning} and~\ref{tab:bidir_switching} then compare the best ones against unidirectional A* in Table~\ref{tab:bidir}.
 Table~\ref{tab:bidir_pruning} studies the impact of our improved pruning and the low degree optimizations.
-As observed in the previous section, enabling the low degree optimization achieves a speed-up by roughly a factor of three.
+As observed in the previous section, enabling the low degree optimization achieves a speedup by roughly a factor of three.
 Symmetric bidirectional A* without our improved pruning has the worst performance.
 Enabling the improved pruning significantly improves the performance of symmetric bidirectional A*.
 For all heuristics except ALT, symmetric A* with the improved pruning has smaller search spaces than the average potential and very similar running times.
@@ -1400,7 +1458,7 @@ All variants use all low degree optimizations.
 \end{table}
 
 In Table~\ref{tab:bidir} we investigate the effectiveness of bidirectional search compared to unidirectional search depending on the query weights.
-Interestingly, only the zero heuristic and ALT consistently achieve speed-ups through bidirectional search on all query weights.
+Interestingly, only the zero heuristic and ALT consistently achieve speedups through bidirectional search on all query weights.
 With $w_q = w_{\ell}$, unidirectional CH-Potentials is already optimal and only traverses the shortest path.
 Here, bidirectional search will only introduce unnecessary overhead.
 When query weights are scaled up uniformly, bidirectional search achieves some search space reduction, but it is not enough to significantly reduce running times due to the overhead of running a second search.
@@ -1448,11 +1506,11 @@ Forbidding highways results in the largest length increase and in the smallest s
 The other extreme are turn restrictions.
 They have only a small impact on the length increase.
 The achieved speedups are therefore comparable to CH speedups.
-Since turn costs and restrictions appear mostly in the beginning and end of shortest-paths and not in the middle on highways, utilizing bidirectional search results in even better speed-ups.
+Since turn costs and restrictions appear mostly in the beginning and end of shortest-paths and not in the middle on highways, utilizing bidirectional search results in even better speedups.
 Mapbox live traffic has a length increase of around 15\%, which yields running times of 130\,ms.
 Applying bidirectional CH-Potentials in this case is actually detrimental to the performance because the bad reduced edge weights appear in the middle of shortest paths.
 The same is the case for forbidden tunnels or highways.
-Applying CCH-Potentials customized to the current traffic (or the metric with forbidden edges) to these problems yields running times similar to the unmodified case and speed-ups of more than three orders of magnitude.
+Applying CCH-Potentials customized to the current traffic (or the metric with forbidden edges) to these problems yields running times similar to the unmodified case and speedups of more than three orders of magnitude.
 With bidirectional CCH-Potentials, one can easily additionally support turn costs and still have running times of a few milliseconds without any adjustments to the customization.
 
 The length increase of Mapbox traffic predictions is about 12.3\%, and results in a running time of 120\,ms.
