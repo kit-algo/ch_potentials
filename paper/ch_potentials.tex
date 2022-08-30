@@ -503,7 +503,7 @@ From $t$, all reachable vertices via reversed down-edges are explored as shown i
 For the second step, PHAST utilizes an assignment of vertices into \emph{levels}.
 These levels correspond to the importance ordering but allow multiple vertices in the same level.
 However, no edge must connect two vertices within the same level.
-Such a level assignment can be obtained by assigning all vertices without lower ranked neighbors to the lowest level.
+Such a level assignment can be obtained by assigning all vertices without lower-ranked neighbors to the lowest level.
 All other vertices are then iteratively assigned to the next level above the highest level of any downward neighbor.
 
 The main work of the second step consists in iterating over all CH levels from top to bottom.
@@ -945,7 +945,7 @@ In the case of traffic predictions, $w_q$ is a function which maps the edge entr
 To enable quick shortest path computations, we consider a two-phase setup with an additional offline preprocessing phase before the online query phase.
 The input to the preprocessing phase is a lower bound graph $G_\ell = (V_{\ell}, E_{\ell})$ with lower bound weights $w_\ell$ where $w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
 The output of the preprocessing is auxiliary data that allows to quickly compute distances on $G_\ell$ with respect to $w_\ell$.
-In the applications considered in this paper, $w_\ell$ is always the \emph{freeflow} travel time.
+In the applications considered in this paper, $w_\ell$ is always the \emph{free-flow} travel time.
 
 The query phase may use this auxiliary data to answer shortest path queries between vertices $s$ and $t$ on $G_q = (V_q, E_q)$ with weights $w_q$.
 Let $\phi : V_q \to V_{\ell}$ denote a function mapping vertices in the query graph to vertices in the lower bound graph.
@@ -976,9 +976,9 @@ Thus, A* will always determine the correct shortest distances.
 
 Avoiding tunnels and/or highways is a common feature of navigation devices.
 Implementing this feature with CH-Potentials is easy.
-We set $w_\ell$ to the freeflow travel time.
+We set $w_\ell$ to the free-flow travel time.
 If an edge is a tunnel and/or a highway, we set $w_q$ to $+\infty$.
-Otherwise, $w_q$ is set to the freeflow travel time.
+Otherwise, $w_q$ is set to the free-flow travel time.
 
 \subsubsection{Forbidden Turns and Turn Costs}
 \label{sec:no-turns}
@@ -1077,7 +1077,7 @@ However, just using live traffic data is problematic for long routes as traffic 
 At some point, one wants to switch from live traffic to the predicted traffic.
 In this section, we first describe a setup with only live traffic and then combine it with predicted traffic.
 
-To support only live traffic, we set $w_\ell$ to the freeflow travel time.
+To support only live traffic, we set $w_\ell$ to the free-flow travel time.
 $w_q$ is set to the travel time accounting for current traffic.
 As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
 In a real world application, values from $w_q$ could be updated between queries.
@@ -1093,12 +1093,12 @@ For this reason, we cannot make a hard switch at $\tau_{\mathrm{soon}}$.
 Our modified travel time function linearly approaches the predicted travel time. % with a bounded slope.
 %
 Formally, we set $w_q(e,\tau)$ to $w_c(e)$, if $\tau \leq \tau_{\mathrm{soon}}$.
-Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$ is true.
+Otherwise, we check whether $w_p(e,\tau_{\mathrm{soon}}) < w_c(e)$.
 If it is the case, we set $w_q(e,\tau)$ to $\max\{w_c(e)+(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 Otherwise, we set $w_q(e,\tau)$ to $\min\{w_c(e)-(\tau_{\mathrm{soon}}-\tau), w_p(e,\tau)\}$.
 % We then run the algorithm of Section~\ref{sec:predicted-traffic} with $w_q$ as query weight.
 In our implementation, we do not modify the representation of $w_p$ but evaluate the formulas above at each travel time evaluation.
-We set $w_\ell$ to the freeflow travel time.
+We set $w_\ell$ to the free-flow travel time.
 
 With this setup, CH-Potentials supports a combination of live and predicted traffic.
 We did not make any modification, that would hinder a combination with other extensions.
@@ -1197,7 +1197,7 @@ The graph has 16M vertices and 35M edges.
 For this instance, we have proprietary traffic data provided by Mapbox.\footnote{\url{https://mapbox.com}}
 The data includes a live traffic snapshot from Friday 2019/08/02 afternoon and comes in the form of 320K OSM node pairs and live speeds for the edge between the vertices.
 It also includes traffic predictions for 38\% of the edges as predicted speeds for all five minute periods over the course of a week.
-We exclude speed values which are faster than the freeflow speed computed by RoutingKit.
+We exclude speed values which are faster than the free-flow speed computed by RoutingKit.
 We also perform experiments on the Europe instance provided by PTV\footnote{\url{https://ptvgroup.com}} for the 9th DIMACS implementation challenge~\cite{DemetrescuGJ09}.
 Additionally, we have three graphs with proprietary traffic predictions also provided by PTV.
 The PTV instances are not OSM-based.
@@ -1349,7 +1349,7 @@ The performance of A* depends on the tightness of the heuristic and the overhead
 CH-Potentials computes optimal distance estimates with respect to $w_\ell$.
 However, for most applications, there will be a gap between $w_q$ and $w_\ell$ (otherwise one could use CH without A*).
 We evaluate the impact of the difference between $w_q$ and $w_\ell$ on the performance of A*.
-The lower bound $w_\ell$ is set to the freeflow travel time.
+The lower bound $w_\ell$ is set to the free-flow travel time.
 The query weights $w_q$ are set to $\alpha \cdot w_\ell$, where $\alpha\ge 1$.
 % When $\alpha = 1$, the heuristic is tight.
 Increasing $\alpha$ degrades the heuristic's quality.
