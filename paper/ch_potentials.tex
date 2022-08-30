@@ -406,8 +406,8 @@ Make $Q$ only contain $t$ with tentative distance $0$\;
 \While{$Q$ not empty}{
   $u\gets$ pop minimum element from $Q$\;
   \For{all reversed downward edges $uv \in \rechd$}{
-    \If{$D^{\downarrow}[u] + \overleftarrow{w}(uv) < D^{\downarrow}[v]$}{
-      $D^{\downarrow}[v] \gets D^{\downarrow}[u] + \overleftarrow{w}(uv)$\;
+    \If{$D^{\downarrow}[u] + \overleftarrow{w}^+(uv) < D^{\downarrow}[v]$}{
+      $D^{\downarrow}[v] \gets D^{\downarrow}[u] + \overleftarrow{w}^+(uv)$\;
       Add $v$ or decrease $v$'s key in $Q$ to $D^{\downarrow}[v]$\;
     }
   }
@@ -428,7 +428,7 @@ Therefore, an edge where the tail has a lower rank than the head is an \emph{upw
 Analogously, when the head vertex has the lower rank, the edge is said to go \emph{downward}.
 Once such an importance order was obtained, all vertices are contracted successively by ascending importance.
 To \emph{contract} a vertex means temporarily removing it from the graph while inserting \emph{shortcut edges} between more important neighbours to preserve shortest distances among them.
-The result is an \emph{augmented graph} $G^+$ with original edges and shortcuts.
+The result is an \emph{augmented graph} $G^+$ of original edges and shortcuts with weights $w^+$.
 We often refer to the augmented graph split into an upward graph $\gchu = (V, \echu)$ containing only upward edges and a downward graph $\gchd = (V, \echu)$ containing only downward edges.
 
 The augmented graph has the property that for any two vertices $s$ and $t$, there always exists an \emph{up-down} $st$-path, i.e.\ a path which first uses only edges from $\echu$ and then only edges from $\echd$, with the same length as a shortest path in $G$.
@@ -489,8 +489,8 @@ Thus, the elimination tree query can not be used with classical CH.
 Execute Algorithm~\ref{algo:ch-backward}, filling $D$\;
 \For{all CH levels $L$ from most to least important}{
 	\For{all up-edges $uv \in \echu$ with $u$ in $L$}{
-		\If{$D[u] > D[v] + w(uv)$}{
-			$D[u] \leftarrow D[v] + w(uv)$\;
+		\If{$D[u] > D[v] + w^+(uv)$}{
+			$D[u] \leftarrow D[v] + w^+(uv)$\;
 		}
 	}
 }
@@ -569,7 +569,7 @@ $D[v] \gets \bot$ for all $v \in V$\;
 	\If{$D[u] = \bot$}{
 		$D[u]\leftarrow D^{\downarrow}[u]$\;
 		\For{all up-edges $uv \in \echu$}{
-      $D[u]\leftarrow\min(D[u],w(uv)+\Dist(v))$\;
+      $D[u]\leftarrow\min(D[u],w^+(uv)+\Dist(v))$\;
 		}
 	}
 	\Return{$D[u]$}\;
@@ -639,8 +639,8 @@ $D[v] \gets \bot$ for all $v \in V$\;
   \While{$S$ not empty}{
     $v\leftarrow$ pop top element from $S$\;
 		$D[v]\gets D^{\downarrow}[v]$\;
-		\For{all up-edges $vw \in \echu$}{
-      $D[v]\gets\min(D[v],w(vw)+D[w])$\;
+		\For{all up-edges $vx \in \echu$}{
+      $D[v]\gets\min(D[v],w^+(vx)+D[x])$\;
 		}
 	}
 	\Return{$D[u]$}\;
