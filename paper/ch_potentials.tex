@@ -111,17 +111,17 @@ However, for many real-world applications, this basic model is too simplistic.
 For realistic routing, many additional features need to be considered.
 This includes turn costs and restrictions, live traffic, user preferences, and traffic predictions.
 Some applications may have additional application-specific requirements.
-Further, it is insufficient to support each of these features independently.
-Instead, we need to support their combination.
+Further, it is insufficient to handle each of these features independently.
+Instead, all requirements must be supported in combination.
 
 Extending Dijkstra's algorithm to support these features is comparatively easy.
 In contrast, extending speedup techniques is vastly more complex.
-The results on extending specific speedup techniques to specific extended problem fill many research papers~\cite{gv-errnt-11,dgpw-crprn-13,dsw-cch-15,bwzz-cchtc-20,bgsv-mtdtt-13,swz-sfert-21} and sometimes entire dissertations~\cite{Delling2009_1000011046,b-tdrpc-14,Baum2018_1000082225}.
+The results on adopting specific speedup techniques to specific extended problem fill many research papers~\cite{gv-errnt-11,dgpw-crprn-13,dsw-cch-15,bwzz-cchtc-20,bgsv-mtdtt-13,swz-sfert-21} and sometimes entire dissertations~\cite{Delling2009_1000011046,b-tdrpc-14,Baum2018_1000082225}.
 We will present a brief overview in Section~\ref{sec:related_work}.
 While techniques achieving fast query times have been successfully developed for many extended scenarios, we observe two problems:
 The resulting techniques are complex to implement and hard to extend further.
 For example, while there exist speedup techniques achieving fast queries for each of the features mentioned above, we are unaware of any work supporting the combination of these features.
-We believe that a different trade-off between running time and extensibility is necessary for practical applications.
+We believe a different trade-off between running time and extensibility is necessary for practical applications.
 Therefore, we prioritize a simple and extensible approach over the fastest possible query times in this work.
 
 % In this article, we describe an algorithmic building block, that allows handling the combination of all above-mentioned features.
@@ -195,8 +195,8 @@ With HL, query times in less than a microsecond are possible.
 This is only a few times as much as an uncached memory access.
 This speed comes at the cost of an expensive preprocessing phase and a tremendous memory footprint, more than an order of magnitude larger than the input graph.
 Despite the extremely fast query times, it appears that the trade-off offered by HL is, in practice, often not very attractive.
-Simpler techniques like CH already offer queries fast enough to completely disappear behind other parts of practical applications (such as the network latency).
-Also, we are not aware of any works extending HL to extended problem models.
+We are not aware of any works adapting HL to extended problem models.
+Also, simpler techniques like CH already offer queries fast enough to completely disappear behind other parts of practical applications (such as the network latency).
 
 % extended application
 \paragraph{Speedup Technique Adaptions for Extended Problems}
@@ -1215,13 +1215,15 @@ Table~\ref{tab:graphs} contains an overview over the instances.
 In this table, we further report the sequential preprocessing running time to construct the augmented graphs and the space consumption.
 We use the CH preprocessing from RoutingKit.\footnote{\url{https://github.com/RoutingKit/RoutingKit}}
 For CCH, we use our own implementation with nested dissection orders obtained by InertialFlowCutter~\cite{GottesburenHUW19}.
-We report preprocessing running times as averages over ten runs.
+We report sequential preprocessing running times as averages over ten runs.
+Note that CCH preprocessing can be parallelized efficiently.
+Thus, practical running times can be even faster.
 To evaluate point-to-point queries, we generate 10\,000 queries where both source and target are vertices drawn uniformly at random and report average results.
 
 \begin{table}
 \centering
 \caption{
-Instances used in the evaluation with preprocessing running times to construct (C)CH-Potentials.
+Instances used in the evaluation with sequential preprocessing running times to construct (C)CH-Potentials.
 With CCH-Potentials, $w_{\ell}$ can be updated by rerunning Phase 2.
 }\label{tab:graphs}
 \input{table/graphs.tex}
