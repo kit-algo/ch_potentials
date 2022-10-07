@@ -429,7 +429,7 @@ Analogously, when the head vertex has the lower rank, the edge is said to go \em
 Once such an importance order was obtained, all vertices are contracted successively by ascending importance.
 To \emph{contract} a vertex means temporarily removing it from the graph while inserting \emph{shortcut edges} between more important neighbours to preserve shortest distances among them.
 The result is an \emph{augmented graph} $G^+$ of original edges and shortcuts with weights $w^+$.
-We often refer to the augmented graph split into an upward graph $\gchu = (V, \echu)$ containing only upward edges and a downward graph $\gchd = (V, \echu)$ containing only downward edges.
+We often refer to the augmented graph split into an upward graph $\gchu = (V, \echu)$ containing only upward edges and a downward graph $\gchd = (V, \echd)$ containing only downward edges.
 
 The augmented graph has the property that for any two vertices $s$ and $t$, there always exists an \emph{up-down} $st$-path, i.e.\ a path which first uses only edges from $\echu$ and then only edges from $\echd$, with the same length as a shortest path in $G$.
 See Figure~\ref{fig:ch} for an illustration.
@@ -1299,7 +1299,7 @@ The difference is that with RPHAST, one can efficiently compute distances from a
 
 When looking at total running times for a single many-to-one query, including selection times, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}.
 For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACS Europe.
-Lazy RPHAST (on a CH) takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
+Lazy RPHAST on CH takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
 The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
 While the numbers are not perfectly comparable due to different benchmark machines,\footnote{
 According to the comparison methodology from~\cite{bdgmpsww-rptn-16} (see \url{https://i11www.iti.kit.edu/~pajor/survey/}), the machine used in~\cite{delling_et_al:OASIcs:2011:3266} (SPA-2) is about 30\% slower than ours (we obtained a score of 33\,159\,ms).
