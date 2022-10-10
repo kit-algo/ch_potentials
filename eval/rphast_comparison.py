@@ -70,7 +70,7 @@ g = sns.lineplot(data=queries
                  .loc[lambda x: x['algo'] != 'lazy_rphast_many_to_many']
                  .loc[lambda x: x['target_set_size_exp'] == 14]
                  .groupby(['ball_size_exp', 'graph', 'algo'])['running_time_ms'].mean()
-                 .reset_index(), x='ball_size_exp', y='running_time_ms', hue='graph', style='algo', markers=True, ci='sd', hue_order=['OSM Germany', 'DIMACS Europe'], style_order=['lazy_rphast_many_to_one', 'lazy_rphast_cch_many_to_one'])
+                 .reset_index(), x='ball_size_exp', y='running_time_ms', hue='graph', style='algo', markers=True, ci='sd', hue_order=['OSM Germany', 'DIMACS Europe'], style_order=['lazy_rphast_many_to_one', 'lazy_rphast_cch_many_to_one', 'rphast_query'])
 g.set_xlabel('Ball Size $|B|$')
 g.set_ylabel('Running Time [ms]')
 g.set_yscale('log')
@@ -79,6 +79,6 @@ g.xaxis.set_major_locator(mpl.ticker.MaxNLocator(11))
 g.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda val, pos: f"$2^{{{int(val)}}}$"))
 plt.grid(True, which="minor", linewidth=0.6)
 handles, labels = g.get_legend_handles_labels()
-g.legend(handles[1:3] + handles[4:6], labels[1:3] + ['CH', 'CCH'])
+g.legend(handles[1:3] + handles[4:7], labels[1:3] + ['Lazy RPHAST CH', 'Lazy RPHAST CCH', 'RPHAST CH'])
 plt.tight_layout()
 g.get_figure().savefig('paper/fig/lazy_rphast_many_to_one_both.pdf')
