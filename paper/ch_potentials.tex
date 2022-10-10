@@ -259,17 +259,20 @@ and routing for trucks~\cite{kswz-erptd-p-20}.
 
 Clearly, there is an enormous amount of efficient speedup techniques for routing in road networks.
 Further, for many extended problems, there are dedicated research results on extensions of specific techniques.
-While many problems can be solved quite efficiently, we still believe this situation is unsatisfactory.
+While many problems can be solved efficiently, we still believe this situation is unsatisfactory.
 For practical applications, a unified and extensible approach with manageable implementation complexity is often more important than the fastest query performance.
 Therefore, we revisit the A* algorithm and propose a flexible, unified framework for many routing problems.
 It can be applied to any extended routing problem where tight lower bounds are available at preprocessing time.
 The core of our approach is a new CH-based A* heuristic.
-It allows for much tighter estimates than previous A* heuristics and thus significantly faster queries.
-While the query running times of our approach are not competitive with approaches tailored to specific problems, they are still sufficient for practical applications.
+It allows for much tighter estimates than previous A* heuristics and, thus, significantly faster queries.
+While the query running times of our technique are not competitive with approaches tailored to specific problems, i.e. typically an order of magnitude slower, they are often sufficient for practical applications.
+Further, our approach only requires the classical CH preprocessing regardless of the specific extended routing problem.
+Therefore, preprocessing time and memory consumption are typically significantly better than approaches aiming for competitive query times in specific problems.
 
 The remainder of this work is organized as follows:
 We discuss notation and fundamental algorithms in Section~\ref{sec:preliminaries}.
 In Section~\ref{sec:lazy-rphast}, we introduce Lazy RPHAST, a simple and efficient CH-based algorithm for the incremental many-to-one shortest path problem.
+It is the first algorithm to efficiently support accelerated shortest path computations from \emph{dynamic} source sets to a fixed target.
 Section~\ref{sec:astar_opts} contains several optimizations for A* in road networks accelerating the processing of low-degree vertices (Section~\ref{sec:low-deg-improvment}) and an improved variant of bidirectional A* (Section~\ref{sec:bidir_astar}).
 Our main contribution, the CH-Potentials framework, is presented in Section~\ref{sec:framework}.
 We first show how to use Lazy RPHAST to build a fast and tight heuristic for A* in road networks.
@@ -602,17 +605,6 @@ Concatenated with the down paths obtained by the backward search, this yields op
 
 \subsection{Lazy RPHAST on Customizable Contraction Hierarchies}
 
-Algorithm~\ref{algo:lazy_rphast_ch} can be applied to CCH without any modifications.
-However, we can also utilize the elimination tree in the Lazy RPHAST algorithm.
-To compute the distance $D[v]$ of a vertex $v$, the distances of all upward neighbours must be final.
-In Algorithm~\ref{algo:lazy_rphast_ch}, these upward neighbour distances are computed recursively.
-Thus, the search space is explored in a DFS-like fashion and distances are finalized in DFS post order.
-However, the path from a vertex to the root in the elimination tree also is a topological order for the upward search space.
-This is because the ancestors in the elimination tree contain the entire upward search space~\cite{bcrw-s-16}.
-Therefore, iterating over the vertices on the elimination tree path from the root to $v$ while relaxing outgoing upward edges of each vertex also yields shortest distances.
-Further, with this approach, when a vertex $v$ already has a distance $D[v] \neq \bot$, all ancestors of $v$ must already have their final distance.
-Thus, as soon as the algorithm encounters a vertex with a final distance, the remaining search space is known to have final distances.
-
 \begin{algorithm2e}[tb]
 \KwData{$D^{\downarrow}[v]$: tentative distance from any vertex $v \in V$ to $t$ as computed by Algorithm~\ref{algo:ch-backward}}
 \KwData{$D[v]$: memoized distance from any vertex $v \in V$ to $t$, shared between invocations, initialized to $\bot$ during the selection}
@@ -648,6 +640,17 @@ $D[v] \gets \bot$ for all $v \in V$\;
 \caption{Elimination tree-based Lazy RPHAST algorithm.}
 \label{algo:cch_pot}
 \end{algorithm2e}
+
+Algorithm~\ref{algo:lazy_rphast_ch} can be applied to CCH without any modifications.
+However, we can also utilize the elimination tree in the Lazy RPHAST algorithm.
+To compute the distance $D[v]$ of a vertex $v$, the distances of all upward neighbours must be final.
+In Algorithm~\ref{algo:lazy_rphast_ch}, these upward neighbour distances are computed recursively.
+Thus, the search space is explored in a DFS-like fashion and distances are finalized in DFS post order.
+However, the path from a vertex to the root in the elimination tree also is a topological order for the upward search space.
+This is because the ancestors in the elimination tree contain the entire upward search space~\cite{bcrw-s-16}.
+Therefore, iterating over the vertices on the elimination tree path from the root to $v$ while relaxing outgoing upward edges of each vertex also yields shortest distances.
+Further, with this approach, when a vertex $v$ already has a distance $D[v] \neq \bot$, all ancestors of $v$ must already have their final distance.
+Thus, as soon as the algorithm encounters a vertex with a final distance, the remaining search space is known to have final distances.
 
 We obtain the procedure described Algorithm~\ref{algo:cch_pot}, which utilizes the elimination tree.
 For any vertex which already has a memoized distance $D[v] \neq \bot$, the algorithm immediately returns this distance.
@@ -798,7 +801,7 @@ The techniques discussed here are essentially a lazy variant of the ideas used i
 % Analogously to A*, our algorithm stores for every vertex $v$ a tentative distance $D[v]$ and maintains a minimum priority queue.
 % Diverging from A*, not all vertices need be pushed into the priority queue even though every vertex has a tentative distance.
 
-\subsubsection{Skip Degree-Two Vertices}
+\subsubsection{Skip Degree-Two Vertices}\label{sec:deg2}
 
 Recall that $|N(u)|$ is the number of neighbours $v$ such that $vu \in E$ or $uv \in E$.
 Our algorithm differs from classical A* when removing a vertex $u$ from the queue.
@@ -815,7 +818,7 @@ If $D[w]$ is modified and $|N(w)|>2$, $w$'s weight in the queue is set to $D[w]+
 As the target vertex $t$ might have degree two, our algorithm cannot rely on stopping when $t$ is removed from the queue.
 Instead, our algorithm stops as soon as $D[t]$ is less than the minimum weight in the queue.
 
-\subsubsection{Skip Degree-Three Vertices}
+\subsubsection{Skip Degree-Three Vertices}\label{sec:deg3}
 
 We can also skip some degree-three vertices.
 Denote by $u, v_1,\ldots, v_k, w$ a degree two chain as described in the previous section.
@@ -1229,7 +1232,7 @@ With CCH-Potentials, $w_{\ell}$ can be updated by rerunning Phase 2.
 \input{table/graphs.tex}
 \end{table}
 
-Lazy RPHAST is evaluated with many-to-one queries where each query consists of $2^{14}$ sources and one target vertex.
+Lazy RPHAST is evaluated with many-to-one queries where each query consists of a source set $S$ with $2^{14}$ sources and one target vertex $t$.
 However, instead of picking sources and targets from the full vertex set $V$, we draw them from local subsets of vertices $B$ of varying size $|B|$ called \emph{balls}.
 A ball $B$ is generated by picking a centre uniformly at random and running Dijkstra's algorithm from it until the desired number of vertices $|B|$ is settled.
 This allows us to evaluate the performance depending on the distribution of the vertices.
@@ -1278,36 +1281,39 @@ Therefore, it depends on the ball size which variant is faster in terms of total
 \centering
 \includegraphics[width=\linewidth]{fig/lazy_rphast_many_to_one_both.pdf}
 \caption{
-Running times of (C)CH-based Lazy RPHAST for many-to-one queries with $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$.
+Running times of (C)CH-based Lazy RPHAST and CH-based RPHAST for many-to-one queries with $|S| = 2^{14}$ sources picked from a ball of varying size $|B|$.
 The running time includes the selection and the time to compute all distances.
 }\label{fig:many_to_one}
 \Description{
-A double logarithmic line plot with four lines with similar shapes and absolute values.
-Running times for both algorithms and graphs with a ball size of 16384 is around 1ms.
-For a ball size of 2 to the 20 CH based variants need 10ms and CCH based variants slightly more.
-For a ball size of 2 to the 24 CH based variants are at 30ms and CCH based variants slightly above 40ms.
+A double logarithmic line plot with six lines with similar shapes and absolute values.
+Running times for both Lazy RPHAST variants on both graphs graphs with a ball size of 16384 is around 1ms.
+Classical RPHAST takes up to 2ms.
+For a ball size of 2 to the 20 CH-based Lazy RPHAST variants need 10ms and CCH based variants slightly more.
+For a ball size of 2 to the 24 CH-based Lazy RPHAST variants are at 30ms and CCH based variants slightly above 40ms.
 }
 \end{figure}
 
 Despite laziness being the distinguishing feature in Lazy RPHAST, the algorithm can still be used for non-incremental many-to-one queries.
-Figure~\ref{fig:many_to_one} depicts average running times to compute distances between one target vertex and $2^{14}$ sources for different ball sizes.
+Figure~\ref{fig:many_to_one} depicts average running times to compute distances between one target vertex and $2^{14}$ sources for different ball sizes for Lazy RPHAST and our own implementation of RPHAST~\cite{delling_et_al:OASIcs:2011:3266}.
 The query generation methodology is the same as in the previous experiment.
-As this is the same methodology also used in~\cite{delling_et_al:OASIcs:2011:3266}, we can relate our results to the performance of other one-to-many algorithms.
+As this is the same methodology also used in~\cite{delling_et_al:OASIcs:2011:3266}, we can also roughly relate our results to the performance of other one-to-many algorithms.
 Keep in mind that algorithms like RPHAST optimize for a different setting than we do.
 We can compare the performance for fixed $S$-$t$ terminal sets.
 The difference is that with RPHAST, one can efficiently compute distances from a different $t'$ to the same $S$ set, while with Lazy RPHAST, one can efficiently extend $S$ while $t$ stays the same.
 
-When looking at total running times for a single many-to-one query, including selection times, Lazy RPHAST delivers very competitive performance and is as fast if not faster than all algorithms evaluated in~\cite{delling_et_al:OASIcs:2011:3266}.
-For example, Delling et al. report an average RPHAST running time of 1.97\,ms for selection and query combined for $|B| = 2^{14}$ and 28.52\,ms for $|B| = 2^{20}$ on DIMACS Europe.
-Lazy RPHAST on CH takes 0.96\,ms and 10.76\,ms respectively, to compute the same distances.
-The CCH variant is slightly slower (1.00\,ms and 14.41\,ms) but still significantly faster than RPHAST.
-While the numbers are not perfectly comparable due to different benchmark machines,\footnote{
-According to the comparison methodology from~\cite{bdgmpsww-rptn-16} (see \url{https://i11www.iti.kit.edu/~pajor/survey/}), the machine used in~\cite{delling_et_al:OASIcs:2011:3266} (SPA-2) is about 30\% slower than ours (we obtained a score of 33\,159\,ms).
-However, these scaling factors have to be interpreted very carefully.
-They are obtained from one-to-all Dijkstra searches on continental-sized road networks.
-This experiment heavily emphasizes memory bandwidth while neglecting other critical factors such as CPU frequency and cache size and speed, which are likely much more critical for algorithms carefully tuned to exploit data locality.
-} we can still conclude that Lazy RPHAST is a valuable extension to RPHAST.
-It allows for efficiently handling dynamic source sets and is competitive in the setting where both the target and the source set change between queries.
+When looking at total running times for a single many-to-one query, including selection times, Lazy RPHAST yields performance competitive to RPHAST.
+The CH-based variant is consistently faster than RPHAST.
+Further, even the Lazy RPHAST CCH-based variant is faster than CH-based RPHAST on ball sizes up to $|B| = 2^{19}$ despite the larger search space.
+Unsurprisingly, the absolute running times of RPHAST and Lazy RPHAST are similar overall:
+Both algorithms run on the same CH search space.
+% On the one hand, Lazy RPHAST needs to do slightly less work and looks at each edge in the CH search space only once.
+% On the other, RPHAST looks at edges in the search space both during the selection and the query but has a more pipeline and cache-friendly organization.
+Our RPHAST running times roughly reproduce the results reported in~\cite{delling_et_al:OASIcs:2011:3266}: Our running times are between 20\% (on small ball sizes) and 60\% (on larger ball sizes) faster, which is likely due to differences in benchmark machine performance.
+% We can, therefore, even expect competitive performance compared to other many-to-one algorithms.
+We conclude that Lazy RPHAST is a very valuable extension of RPHAST.
+% It is the first algorithm to efficiently support accelerated shortest path computations with dynamic source sets.
+% Further, it even features competitive running times in the setting where both the target and the source set change between queries.
+It allows for efficiently handling dynamic source sets and is even competitive in the setting where both the target and the source set change between queries.
 % This is of course not a fair comparison since the approaches in~\cite{delling_et_al:OASIcs:2011:3266} are geared towards having one expensive selection phase and than many faster queries.
 % When computing distances from different sources towards the same target set, RPHAST will outperform Lazy RPHAST.
 % However, whenever the target set may change between queries, Lazy RPHAST offers a simple and fast alternative.
@@ -1382,8 +1388,8 @@ As the density varies, the running times vary.
 \begin{table}
 \centering
 \caption{
-Average query running times and number of queue pushes with different heuristics and optimizations on OSM Ger with $w_q = 1.05 \cdot w_\ell$.
-The BCC, Deg2 and Deg3 columns indicate which optimizations from Section~\ref{sec:low-deg-improvment} were used.
+Average query running times and number of queue pushes with different heuristics and low-degree optimizations on OSM Ger with $w_q = 1.05 \cdot w_\ell$.
+The BCC column indicates if the search stays within the largest biconnected component (see Section~\ref{sec:largested-biconnected-component}), Deg2 if vertices of degree two are skipped (Section~\ref{sec:deg2}) and Deg3 if vertices of degree three are skipped (Section~\ref{sec:deg3}).
 }\label{tab:building_blocks}
 \input{table/building_blocks.tex}
 \end{table}
@@ -1544,8 +1550,7 @@ Live traffic and arbitrary weight functions can be handled with CCH resulting in
 CCH can also be adjusted to turn costs.
 With some algorithmic adjustments to the preprocessing~\cite{bwzz-cchtc-20}, query times around an order of magnitude faster than CCH-Potentials are possible (0.3\,ms compared to 2.1\,ms with CCH-Potentials).
 For time-dependent routing, CATCHUp~\cite{swz-sfert-21} achieves query times more than an order of magnitude faster than CH-Potentials (6.3\,ms compared to our 97.7\,ms).
-Again, these numbers are not perfectly comparable due to different benchmark machines.
-Nevertheless, the overall picture is clear enough.
+These numbers are not perfectly comparable due to different benchmark machines but the overall picture is clear enough.
 However, the advantage of the CH-Potentials framework over these fine-tuned techniques is that it is a unified and flexible approach which can handle all these applications without any adjustments to the preprocessing.
 Further, CH-Potentials preprocessing times are at least an order of magnitude faster than approaches like CATCHUp (sequentially more than four hours on TDEur20 compared to five minutes with CH-Potentials) and require significantly less memory (Hub Labels, for example, needs 20\,GiB on DIMACS Europe, compared to around 750\,MiB with CH-Potentials, see Table~\ref{tab:graphs}).
 Finally, to the best of our knowledge, for problem settings such as the combination of predicted and live traffic, there does not exist any exact technique to handle this setting, let alone to integrate turn costs additionally.
