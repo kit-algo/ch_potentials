@@ -261,6 +261,7 @@ namespace "exp" do
     Dir.chdir "code/rust_road_router" do
       static_graphs.each do |graph|
         sh "cargo run --release --bin lazy_rphast -- #{graph} > #{exp_dir}/rphast/$(date --iso-8601=seconds).json"
+        sh "cargo run --release --bin rphast -- #{graph} > #{exp_dir}/rphast/$(date --iso-8601=seconds).json"
       end
     end
   end
