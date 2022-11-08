@@ -599,8 +599,12 @@ The algorithm is invoked recursively to obtain the shortest distance from a neig
 \paragraph{Correctness}
 Due to~\cite{gssv-erlrn-12}, an up-down path of shortest distance must exist in $G^+$.
 Further, $G^+$ can be decomposed into two directed acyclic graphs (DAG) $\gchu$ and $\gchd$ and the up path can be found in $\gchu$ and the down path in $\gchd$.
-Observe that the second part of Lazy RPHAST is, in fact, a recursive depth-first search (DFS) on $\gchu$, which relaxes edges $uv$ in reverse topological order of the tail vertices $u$.
-Since DFS can be used to find shortest paths on DAGs, the search will find shortest up paths on $\gchu$.
+The Lazy RPHAST selection finds the shortest down path in $\gchd$.
+Now observe that the \textsf{ComputeAndMemoizeDist} function is, in fact, a recursive depth-first search (DFS) on $\gchu$.
+Edges $uv$ are relaxed once all upward neighbors of $u$ have been processed, i.e.\ in DFS-post order.
+A DFS-post order also is a reverse topological order for $\gchu$.
+Therefore, the algorithm relaxes edges $uv$ in reverse topological order of the tail vertices $u$.
+Since $\gchu$ is a DAG, this yields shortest up distances in $\gchu$.
 Concatenated with the down paths obtained by the backward search, this yields optimal shortest distances.
 
 \subsection{Lazy RPHAST on Customizable Contraction Hierarchies}
@@ -654,11 +658,11 @@ Thus, as soon as the algorithm encounters a vertex with a final distance, the re
 
 We obtain the procedure described Algorithm~\ref{algo:cch_pot}, which utilizes the elimination tree.
 For any vertex which already has a memoized distance $D[v] \neq \bot$, the algorithm immediately returns this distance.
-Otherwise, the algorithm follows the elimination tree upward until a node with a finalized distance is encountered.
+Otherwise, the algorithm follows the elimination tree upward until a vertex with a finalized distance is encountered.
 The elimination tree is represented as parent pointer array $P$.
-The visited nodes are pushed onto a stack $S$.
+The visited vertices are pushed onto a stack $S$.
 This enables the algorithm to enumerate the vertices in reversed order by popping them from the stack.
-While popping the nodes, all outgoing upward edges are relaxed.
+While popping the vertices, all outgoing upward edges are relaxed.
 This finalizes the shortest distances for all vertices on the elimination tree path, including the desired query vertex $v$.
 
 % \subsection{Many-to-Many with Lazy RPHAST}
@@ -827,7 +831,7 @@ Otherwise, there exist up to two degree chains $w, x_1,\ldots,x_p, y$ and $w,a_1
 Our algorithm iteratively tries to reduce all $D[x_i]$ and $D[a_i]$.
 If it reaches $b$, $b$'s weight in the queue is set to $D[b]+h_t(b)$.
 Analogously, if $y$ is reached, $y$'s weight is set to $D[y]+h_t(y)$.
-If neither $y$ nor $b$ are not reached, no queue operation is performed.
+If neither $y$ nor $b$ are reached, no queue operation is performed.
 Using this method, we avoid pushing every other degree-three vertex into the queue.
 
 \subsubsection{Stay in Largest Biconnected Component}\label{sec:largested-biconnected-component}
@@ -840,16 +844,17 @@ $G_C$ is induced by the largest biconnected component of the undirected graph un
 We compute the core using Tarjan's algorithm \cite{t-dfslg2-72}.
 For every vertex $v$ in the input graph $G$, we store an \emph{attachment vertex} $a_v$ to the core.
 For vertices in the core, $a_v=v$.
-For every vertex $v$ outside of the core, the attachment vertex $a_v$ is the cut vertex in the core that separates $v$'s component from the core.
+For every vertex $v$ outside of the core, the attachment vertex $a_v$ is the cut vertex in the core that separates $v$'s component from the core (or a sentinel value $\bot$ for vertices in components not connected to the core).
 
 The query phase is divided into two steps.
-In the first step, we run A* on the subgraph induced by the core and $s$'s component.
-Formulated differently, we only consider nodes which are in the core or have the same attachment vertex as $s$.
-This can be achieved implicitly by not following edges to nodes without this property.
+First, we run A* on the subgraph induced by the core and $s$'s component.
+Formulated differently, we only consider vertices which are in the core or have the same attachment vertex as $s$.
+We achieve this implicitly by not following edges to vertices without this property.
 If $t$ is part of $G_C$ or in the same component as $s$, this A* search finds it.
 Otherwise, we find $a_t$.
 In that case, we continue by searching a path from $a_t$ towards $t$ restricted to $t$'s biconnected component.
 The final result is the concatenation of both paths.
+When $t$ is not connected to the core ($a_t = \bot$) but $s$ is ($a_s \neq \bot$), we immediately return a distance of $\infty$.
 
 \subsection{Bidirectional A*}\label{sec:bidir_astar}
 
@@ -1410,14 +1415,13 @@ Comparing against Oracle-A* allows us to measure this overhead.
 No other heuristic, which only has access to the preprocessing weights, can be faster than Oracle-A*.
 
 We observe that the number of queue pushes roughly correlates with running time.
-As (C)CH-Potentials and Oracle-A* have the same heuristic values, the number of queue pushes are by construction equal.
 Each optimization reduces both queue pushes and running times.
 All optimizations yield a combined speedup of around 3.
 % Skipping degree three vertices has the smallest impact.
 (C)CH-Potentials outperforms ALT by a factor of between six and seven and settle correspondingly fewer vertices.
 This is not surprising since ALT computes worse distance estimates.
 In contrast, CH-Potentials already computes exact distances with respect to $w_\ell$.
-The number of popped vertices is the same for CH-Potentials, CCH-Potentials and Oracle-A*.
+As (C)CH-Potentials and Oracle-A* have the same heuristic values, the number of queue pushes are by construction equal.
 The only difference between (C)CH-Potentials and Oracle-A* is the overhead of the heuristic evaluation.
 This overhead leads to a slowdown of around 1.6.
 Thus, CH-Potentials is already very close to the best possible heuristic in this model.
