@@ -1,5 +1,5 @@
 % \documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate]{lipics-v2021}
-\documentclass[manuscript,review]{acmart}
+\documentclass[manuscript]{acmart}
 
 \usepackage[utf8]{inputenc}
 
@@ -8,11 +8,9 @@
 \newcommand{\cmark}{$\bullet$}
 \newcommand{\xmark}{$\circ$}
 
-\usepackage{todonotes}
 % \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage[algo2e,vlined]{algorithm2e}
-\usepackage{todonotes}
 
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,positioning,calc}
@@ -75,7 +73,8 @@ Therefore, such algorithms must be flexible and able to support a variety of pro
 % There exists a lot of research focused on techniques to achieve the fastest possible query times.
 % Further, there are a lot of results on extending certain techniques to specific scenarios and achieving fast queries in that specific extended problem.
 % However, there is little research focused on designing extensible algorithms which can be adapted to new problem variants with minimal effort.
-In this work, we revisit the A* algorithm to build a simple, extensible and unified algorithmic framework applicable to many route planning problems. % without adjustments to the preprocessing.
+In this work, we revisit the A* algorithm to build a simple, extensible and unified algorithmic framework applicable to many route planning problems.
+% without adjustments to the preprocessing.
 A* has been previously used for routing in road networks.
 However, its performance was not competitive because no sufficiently fast and tight distance estimation function was available.
 We present a novel, efficient and accurate A* heuristic using Contraction Hierarchies (CH), another popular speedup technique.
@@ -341,7 +340,7 @@ In this article, we limit our discussion to feasible heuristics.
 \begin{figure}
 \centering
 \includegraphics[width=.6\columnwidth]{fig/searchspace_st.png}
-\caption{Vertices explored by A*. The color indicates the vertex removal order from the queue. Blue was removed first. Next is green. Red was removed last.}
+\caption{Vertices explored by A*. The color indicates the vertex removal order from the queue. Blue was removed first. Next is green. Red was removed last. Background by \href{https://www.openstreetmap.org/copyright}{OpenStreeMap}.}
 \label{img:search-space}
 \Description[A map where vertices visited by A* are marked.]{
 A map of Karlsruhe where vertices visited by A* are marked.
@@ -389,7 +388,7 @@ in (\tikztostart.\n2) -- (\tikztotarget.\n3) \tikztonodes}}}
 \draw[dashed] (6) -- (8);
 \end{tikzpicture}
 \caption{
-Solid lines are edges in $G$. Dotted lines are shortcuts. Red is a shortest $st$-path in $G$. Blue is equally long up-down $st$-path in $G^+$.
+Solid lines are edges in $G$. Dotted lines are shortcuts. Red is a shortest $st$-path in $G$. Blue is equally long up-down path in $G^+$.
 }
 \label{fig:ch}
 \Description[Vertices and edges of a shortest path in the original graph and the corresponding path in the augmented graph.]{
@@ -421,7 +420,7 @@ Make $Q$ only contain $t$ with tentative distance $0$\;
 
 \emph{Contraction Hierarchies} (CH) is a two-phase speedup technique to accelerate shortest path computations on road networks through precomputation.
 For a detailed discussion we refer to~\cite{gssv-erlrn-12}.
-Here, we only briefly introduce the necessary notation and algorithms used in this paper.
+% Here, we only briefly introduce the necessary notation and algorithms used in this paper.
 In a preprocessing phase, vertices are ordered totally by ``importance'' where more important vertices should lie on more shortest paths.
 Intuitively, vertices on highways are more important than vertices on rural streets.
 For CH, such an ordering is obtained heuristically.
@@ -927,7 +926,7 @@ However, pruning is only possible once the searches have met, i.e. $\mu < \infty
 Before that, each direction only has to evaluate its own heuristic.
 Thus, our pruning improves on both downsides of the average potential.
 
-Unless stated differently, for all bidirectional A* variants, we always alternate between removing a vertex from the forward and the backward queues.
+Unless stated differently, for bidirectional A*, we always alternate between removing a vertex from the forward and the backward queues.
 We also evaluate expanding the search with the smaller minimum queue key in our experiments.
 While this may sound sensible, our experiments show in Table~\ref{tab:bidir_switching} that it is never beneficial in terms of running time.
 
@@ -957,7 +956,7 @@ The challenge in this scenario is that values of $w_q$ might change between quer
 However, $w_q$ can also represent something more complex than scalar numbers.
 It can be any function that computes a weight for an edge.
 This function can also take additional parameters from the state of the search.
-In the case of traffic predictions, $w_q$ is a function which maps the edge entry time to the traversal time, and the query takes an additional departure time parameter.
+In the case of traffic predictions, $w_q$ is a function mapping the edge entry time to the traversal time, and the query takes an additional departure time parameter.
 
 To enable quick shortest path computations, we consider a two-phase setup with an additional offline preprocessing phase before the online query phase.
 The input to the preprocessing phase is a lower bound graph $G_\ell = (V_{\ell}, E_{\ell})$ with lower bound weights $w_\ell$ where $w_\ell(e)$ must be a scalar value for every edge $e$ of $G_\ell$.
@@ -1095,7 +1094,7 @@ In this section, we first describe a setup with only live traffic and then combi
 
 To support only live traffic, we set $w_\ell$ to the free-flow travel time.
 $w_q$ is set to the travel time accounting for current traffic.
-As traffic only increases the travel time along an edge, $w_\ell$ is a valid lower bound for $w_q$.
+As traffic only increases travel times, $w_\ell$ is a valid lower bound for $w_q$.
 In a real-world application, values from $w_q$ could be updated between queries.
 This is all that is necessary to apply CH-Potentials in a live traffic scenario.
 
@@ -1130,7 +1129,7 @@ This setup provides an alternative way of integrating live traffic compared to t
 In contrast, with CCH-Potentials, changes to the live traffic situation are handled by changing $w_\ell$ via customization.
 Additional features, such as turn restrictions, can be implemented by adjusting $w_q$.
 For severe traffic events, the three-phase approach will have significantly faster query running times than the one described in Section~\ref{sec:live-predicted-traffic}.
-However, it comes at the expense of a more complex setup and updating $w_\ell$ takes a few seconds.
+However, it leads to a more complex setup and updating $w_\ell$ takes a few seconds.
 % Also, the customization is not fast enough to rerun it for every query.
 % Further, when integrating predicted traffic, CCH-Potentials will not have much advantage over CH-Potentials because the heuristic must be a lower bound for the entire time considered and not only the current situation.
 

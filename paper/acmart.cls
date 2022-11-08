@@ -35,9 +35,10 @@
 %%   Right bracket \]     Circumflex    \^     Underscore    \_
 %%   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %%   Right brace   \}     Tilde         \~}
+
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2021/09/24 v1.80 Typesetting articles for the Association for Computing Machinery]
+[2022/10/18 v1.87 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -48,7 +49,7 @@
 \RequirePackage{iftex}
 \define@choicekey*+{acmart.cls}{format}[\ACM@format\ACM@format@nr]{%
   manuscript, acmsmall, acmlarge, acmtog, sigconf, siggraph,
-  sigplan, sigchi, sigchi-a}[manuscript]{}{%
+  sigplan, sigchi, sigchi-a, acmengage, acmcp}[manuscript]{}{%
   \ClassError{\@classname}{The option format must be manuscript,
     acmsmall, acmlarge, acmtog, sigconf, siggraph,
     sigplan, sigchi or sigchi-a}}
@@ -62,6 +63,8 @@
 \@DeclareACMFormat{sigplan}
 \@DeclareACMFormat{sigchi}
 \@DeclareACMFormat{sigchi-a}
+\@DeclareACMFormat{acmengage}
+\@DeclareACMFormat{acmcp}
 \ExecuteOptionsX{format}
 \define@boolkey+{acmart.cls}[@ACM@]{screen}[true]{%
   \if@ACM@screen
@@ -159,10 +162,16 @@
     false}}
 \ExecuteOptionsX{authordraft=false}
 \def\ACM@fontsize{}
+\DeclareOptionX{8pt}{\edef\ACM@fontsize{\CurrentOption}}
 \DeclareOptionX{9pt}{\edef\ACM@fontsize{\CurrentOption}}
 \DeclareOptionX{10pt}{\edef\ACM@fontsize{\CurrentOption}}
 \DeclareOptionX{11pt}{\edef\ACM@fontsize{\CurrentOption}}
 \DeclareOptionX{12pt}{\edef\ACM@fontsize{\CurrentOption}}
+\def\ACM@languages{}
+\DeclareOptionX{language}{%
+  \ifx\ACM@languages\@empty
+  \gdef\ACM@languages{english}\fi
+  \g@addto@macro\ACM@languages{, #1}}
 \DeclareOptionX{draft}{\PassOptionsToClass{\CurrentOption}{amsart}}
 \DeclareOptionX{*}{\PassOptionsToClass{\CurrentOption}{amsart}}
 \ProcessOptionsX
@@ -171,6 +180,10 @@
 \newif\if@ACM@journal
 \newif\if@ACM@journal@bibstrip
 \newif\if@ACM@sigchiamode
+\newif\if@ACM@engage
+\@ACM@engagefalse
+\newif\if@ACM@acmcp
+\@ACM@acmcpfalse
 \ifnum\ACM@format@nr=5\relax % siggraph
 \ClassWarning{\@classname}{%
   The format siggraph is now obsolete.\MessageBreak
@@ -222,6 +235,13 @@
 \or % sigchi-a
   \@ACM@journalfalse
   \@ACM@sigchiamodetrue
+\or % acmengage
+  \@ACM@journalfalse
+  \@ACM@engagetrue
+\or % acmcp
+  \@ACM@journaltrue
+  \@ACM@acmcptrue
+  \AtBeginDocument{\@ACM@printacmreffalse}%
 \fi
 \if@ACM@journal
  \@ACM@journal@bibstriptrue
@@ -248,6 +268,10 @@
     \def\ACM@fontsize{9pt}%
   \or % sigchi-a
     \def\ACM@fontsize{10pt}%
+  \or % acmengage
+    \def\ACM@fontsize{10pt}%
+  \or % acmcp
+    \def\ACM@fontsize{9pt}%
   \fi
 \fi
 \ClassInfo{\@classname}{Using fontsize \ACM@fontsize}
@@ -263,6 +287,9 @@
 \onehalfspacing
 \fi
 \RequirePackage{textcase}
+\if@ACM@acmcp
+\RequirePackage{framed}
+\fi
 \if@ACM@natbib
   \RequirePackage{natbib}
   \renewcommand{\bibsection}{%
@@ -357,6 +384,83 @@
 \if@ACM@natbib
 \citestyle{acmnumeric}
 \fi
+\if@ACM@journal
+  \renewcommand\keywordsname{Additional Key Words and Phrases}%
+\else
+  \renewcommand\keywordsname{Keywords}%
+\fi
+\if@ACM@engage
+   \renewcommand\abstractname{Synopsis}%
+\fi
+\ifx\ACM@languages\@empty
+\else
+  \RequirePackage[\ACM@languages]{babel}%
+  \addto\captionsenglish{%
+      \if@ACM@journal
+        \renewcommand\keywordsname{Additional Key Words and Phrases}%
+      \else
+        \renewcommand\keywordsname{Keywords}%
+      \fi
+      \renewcommand\acksname{Acknowledgements}%
+      \if@ACM@engage
+         \renewcommand\abstractname{Synopsis}%
+      \fi
+  }%
+  \addto\captionsfrench{%
+      \if@ACM@journal
+        \renewcommand\keywordsname{Mots Clés et Phrases Supplémentaires}%
+      \else
+        \renewcommand\keywordsname{Mots clés}%
+      \fi
+      \renewcommand\acksname{Remerciements}%
+  }%
+  \addto\captionsgerman{%
+      \if@ACM@journal
+        \renewcommand\keywordsname{Zusätzliche Schlagwörter und Phrasen}%
+      \else
+        \renewcommand\keywordsname{Schlagwörter}%
+      \fi
+      \renewcommand\acksname{Danksagungen}%
+  }%
+  \addto\captionsspanish{%
+      \if@ACM@journal
+        \renewcommand\keywordsname{Palabras y Frases Claves Adicionales}%
+      \else
+        \renewcommand\keywordsname{Palabras claves}%
+      \fi
+      \renewcommand\acksname{Expresiones de gratitud}%
+  }%
+\fi
+\newcommand\ACM@lang@check[1]{%
+  \ifx\ACM@languages\@empty\relax
+  \ClassError{\@classname}{%
+    Command \string#1 \MessageBreak is used in monlingual document}{%
+    You used a command (\string#1) \MessageBreak
+    that does not have a meaning \MessageBreak
+    unless are languages are defined. \MessageBreak
+    Please choose the languages in \string\documentclass
+    \MessageBreak
+    (e.g. \string\documentclass[languages={french, english}]{acmart}),
+    \MessageBreak
+    or delete the command.}%
+  \fi}
+\def\@translatedtitle{}
+\newcommand\translatedtitle[2]{\ACM@lang@check{\translatedtitle}%
+\g@addto@macro\@translatedtitle{\par\foreignlanguage{#1}{#2}}}
+\def\@translatedsubtitle{}
+\newcommand\translatedsubtitle[2]{\ACM@lang@check{\translatedsubtitle}%
+\g@addto@macro\@translatedsubtitle{\par\foreignlanguage{#1}{#2}}}
+\def\@translatedkeywords{}
+\newcommand\translatedkeywords[2]{\ACM@lang@check{\translatedkeywords}%
+\g@addto@macro\@translatedkeywords{\@mktranslatedkeywords{#1}{#2}}}
+\def\@translatedabstracts{}
+\newenvironment{translatedabstract}[1]{\Collect@Body
+  \@savetranslatedabstract\@mktranslatedabstract{#1}}{}
+\long\def\@savetranslatedabstract#1{\if@ACM@maketitle@typeset
+  \ClassError{\@classname}{Abstract must be defined before maketitle
+    command. Please move it!}\fi
+  \ACM@lang@check{translatedabstract}%
+  \g@addto@macro\@translatedabstracts{\bgroup#1\egroup}}
 \def\@startsection#1#2#3#4#5#6{%
   \if@noskipsec \leavevmode \fi
   \par
@@ -515,6 +619,8 @@
 \or % sigchi
 \or % sigchi-a
   \urlstyle{sf}
+\or % acmengage
+\or % acmcp
 \fi
 \AtEndPreamble{%
   \if@ACM@urlbreakonhyphens
@@ -648,6 +754,20 @@
      }%
      \@mparswitchfalse
      \reversemarginpar
+\or % acmengage
+   \geometry{twoside=true, head=13pt,
+     paperwidth=8.5in, paperheight=11in,
+     includeheadfoot, columnsep=2pc,
+     top=57pt, bottom=73pt, inner=54pt, outer=54pt,
+     marginparwidth=2pc,heightrounded
+     }%
+\or % acmcp
+   \geometry{twoside=true,
+     includeheadfoot, head=13pt, foot=2pc,
+     paperwidth=6.75in, paperheight=10in,
+     top=58pt, bottom=44pt, inner=46pt, outer=46pt,
+     marginparwidth=2pc,heightrounded
+   }%
 \fi
 \setlength\parindent{10\p@}
 \setlength\parskip{\z@}
@@ -662,6 +782,8 @@
 \or % sigplan
 \or % sigchi
 \or % sigchi-a
+\or % acmengage
+\or % acmcp
 \fi
 \setlength\normalparindent{\parindent}
 \def\copyrightpermissionfootnoterule{\kern-3\p@
@@ -702,6 +824,10 @@
 \or % sigchi
   \flushbottom
 \or % sigchi-a
+\or % acmengage
+  \flushbottom
+\or % acmcp
+  \flushbottom
 \fi
 \ifPDFTeX
 \input{glyphtounicode}
@@ -824,6 +950,8 @@
       textfont={bf, small}}
     \captionsetup[table]{labelfont={bf, small},
       textfont={bf, small}}
+  \or % acmengage
+  \or % acmcp
   \fi
 \fi
 \newfloat{sidebar}{}{sbar}
@@ -884,6 +1012,8 @@
 \def\labelenumiv{\theenumiv.}
 \or % sigchi
 \or % sigchi-a
+\or % acmengage
+\or % acmcp
 \fi
 \newdimen\@ACM@labelwidth
 \AtBeginDocument{%
@@ -936,20 +1066,25 @@
 \newif\if@ACM@maketitle@typeset
 \@ACM@maketitle@typesetfalse
 \define@choicekey*+{ACM}{acmJournal}[\@journalCode\@journalCode@nr]{%
+  ACMJCSS,%
   CIE,%
   CSUR,%
   DGOV,%
   DLT,%
   DTRAP,%
   FAC,%
+  GAMES,%
   HEALTH,%
   IMWUT,%
   JACM,%
+  JATS,%
   JDIQ,%
+  JDS,%
   JEA,%
   JERIC,%
   JETC,%
   JOCCH,%
+  JRC,%
   PACMCGIT,%
   PACMHCI,%
   PACMPL,%
@@ -989,6 +1124,7 @@
   TOPC,%
   TOPS,%
   TOPLAS,%
+  TORS,%
   TOS,%
   TOSEM,%
   TOSN,%
@@ -1001,7 +1137,11 @@
   FACMP%
 }{%
 \ifcase\@journalCode@nr
-\relax % CIE
+\relax % ACMJCSS
+  \def\@journalName{ACM Journal on Computing and Sustainable Societies}%
+  \def\@journalNameShort{ACM J. Comput. Sustain. Soc.}%
+  \def\@permissionCodeOne{}%
+\or % CIE
   \def\@journalName{ACM Computers in Entertainment}%
   \def\@journalNameShort{ACM Comput. Entertain.}%
   \def\@permissionCodeOne{1544-3574}%
@@ -1025,6 +1165,10 @@
   \def\@journalName{Formal Aspects of Computing}%
   \def\@journalNameShort{Form. Asp. Comput.}%
   \def\@permissionCodeOne{0934-5043}%
+  \def\@permissionCodeTwo{1433-299X}%
+\or % GAMES
+  \def\@journalName{ACM Games: Research and Practice}%
+  \def\@journalNameShort{ACM Games}%
 \or % HEALTH
   \def\@journalName{ACM Transactions on Computing for Healthcare}%
   \def\@journalNameShort{ACM Trans. Comput. Healthcare}%
@@ -1040,10 +1184,19 @@
   \def\@journalName{Journal of the ACM}%
   \def\@journalNameShort{J. ACM}%
   \def\@permissionCodeOne{0004-5411}%
+\or % JATS
+  \def\@journalName{Journal on Autonomous Transportation Systems}%
+  \def\@journalNameShort{ACM J. Auton. Transport. Syst.}%
+  \def\@permissionCodeOne{2833-0528}%
 \or % JDIQ
   \def\@journalName{ACM Journal of Data and Information Quality}%
   \def\@journalNameShort{ACM J. Data Inform. Quality}%
   \def\@permissionCodeOne{1936-1955}%
+\or % JDS
+  \def\@journalName{ACM/JMS Journal of Data Science}%
+  \def\@journalNameShort{ACM/IMS J. Data Sci.}%
+  \def\@permissionCodeOne{2831-3194}%
+  \def\@permissionCodeTwo{2831-3194}%
 \or % JEA
   \def\@journalName{ACM Journal of Experimental Algorithmics}%
   \def\@journalNameShort{ACM J. Exp. Algor.}%
@@ -1059,6 +1212,12 @@
 \or % JOCCH
   \def\@journalName{ACM Journal on Computing and Cultural Heritage}%
   \def\@journalNameShort{ACM J. Comput. Cult. Herit.}%
+  \def\@permissionCodeOne{1556-4673}%
+  \def\@permissionCodeTwo{1556-4711}%
+\or % JRC
+  \def\@journalName{ACM Journal on Responsible Computing}%
+  \def\@journalNameShort{ACM J. Responsib. Comput.}%
+  \def\@permissionCodeOne{2832-0565}%
 \or % PACMCGIT
   \def\@journalName{Proceedings of the ACM on Computer Graphics and Interactive Techniques}%
   \def\@journalNameShort{Proc. ACM Comput. Graph. Interact. Tech.}%
@@ -1094,6 +1253,8 @@
 \or % TACO
   \def\@journalName{ACM Transactions on Architecture and Code Optimization}%
   \def\@journalNameShort{ACM Trans. Arch. Code Optim.}%
+  \def\@permissionCodeOne{1544-3566}%
+  \def\@permissionCodeTwo{1544-3973}%
 \or % TALG
   \def\@journalName{ACM Transactions on Algorithms}%
   \def\@journalNameShort{ACM Trans. Algor.}%
@@ -1188,6 +1349,7 @@
   \def\@permissionCodeOne{0730-0301}
 \or % TOIS
   \def\@journalName{ACM Transactions on Information Systems}%
+  \def\@journalNameShort{ACM Trans. Inf. Syst.}%
   \def\@permissionCodeOne{1046-8188}%
 \or % TOIT
   \def\@journalName{ACM Transactions on Internet Technology}%
@@ -1196,11 +1358,13 @@
 \or % TOMACS
   \def\@journalName{ACM Transactions on Modeling and Computer Simulation}%
   \def\@journalNameShort{ACM Trans. Model. Comput. Simul.}%
+  \def\@permissionCodeOne{1049-3301}%
+  \def\@permissionCodeTwo{1558-1195}%
 \or % TOMM
   \def\@journalName{ACM Transactions on Multimedia Computing, Communications and Applications}%
   \def\@journalNameShort{ACM Trans. Multimedia Comput. Commun. Appl.}%
   \def\@permissionCodeOne{1551-6857}%
-  \def\@permissionCodeTwo{0100}%
+  \def\@permissionCodeTwo{1551-6865}%
 \or % TOMPECS
   \def\@journalName{ACM Transactions on Modeling and Performance Evaluation of Computing Systems}%
   \def\@journalNameShort{ACM Trans. Model. Perform. Eval. Comput. Syst.}%
@@ -1212,7 +1376,8 @@
 \or % TOPC
   \def\@journalName{ACM Transactions on Parallel Computing}%
   \def\@journalNameShort{ACM Trans. Parallel Comput.}%
-  \def\@permissionCodeOne{1539-9087}%
+  \def\@permissionCodeOne{2329-4949}%
+  \def\@permissionCodeTwo{2329-4957}%
 \or % TOPS
   \def\@journalName{ACM Transactions on Privacy and Security}%
   \def\@journalNameShort{ACM Trans. Priv. Sec.}%
@@ -1221,6 +1386,10 @@
   \def\@journalName{ACM Transactions on Programming Languages and Systems}%
   \def\@journalNameShort{ACM Trans. Program. Lang. Syst.}%
   \def\@permissionCodeOne{0164-0925}%
+\or % TORS
+  \def\@journalName{ACM Transactions on Recommender Systems}%
+  \def\@journalNameShort{ACM Trans. Recomm. Syst.}%
+  \def\@permissionCodeOne{2770-6699}%
 \or % TOS
   \def\@journalName{ACM Transactions on Storage}%
   \def\@journalNameShort{ACM Trans. Storage}%
@@ -1258,8 +1427,8 @@
   \def\@journalNameShort{ACM Trans. Web}%
   \def\@permissionCodeOne{1559-1131}%
 \else % FACMP, a dummy journal
-  \def\@journalName{Forthcoming ACM Publication}%
-  \def\@journalNameShort{ACM Forthcoming}%
+  \def\@journalName{ACM Just Accepted}%
+  \def\@journalNameShort{ACM Accepted}%
   \def\@permissionCodeOne{XXXX-XXXX}%
 \fi
 \ClassInfo{\@classname}{Using journal code \@journalCode}%
@@ -1395,6 +1564,10 @@
           \href{https://orcid.org/#1}{##1}}}}
 \def\authorsaddresses#1{\def\@authorsaddresses{#1}}
 \authorsaddresses{\@mkauthorsaddresses}
+\newcommand\@mktranslatedkeywords[2]{\bgroup
+  \selectlanguage{#1}%
+  {\@specialsection{\keywordsname}%
+    \noindent#2\par}\egroup}
 \def\@titlenotes{}
 \def\titlenote#1{%
   \g@addto@macro\@title{\footnotemark}%
@@ -1547,6 +1720,39 @@
   \ifx\@received\@empty\else
     \par\bigskip\noindent\small\normalfont\@received\par
   \fi}
+\define@choicekey+{ACM}{articletype}[\ACM@ArticleType\ACM@ArticleType@nr]{%
+  Research,Review,Discussion,Invited,Position}[Review]{%
+  \ifcase\ACM@ArticleType@nr
+  \relax % Research
+     \colorlet{@ACM@Article@color}{ACMBlue}%
+  \or % Review
+     \colorlet{@ACM@Article@color}{ACMOrange}%
+  \or % Discussion
+     \colorlet{@ACM@Article@color}{ACMGreen}%
+  \or % Invited
+     \colorlet{@ACM@Article@color}{ACMPurple}%
+  \or % Position
+     \colorlet{@ACM@Article@color}{ACMRed}%
+  \fi
+}{%
+ \ClassError{\@classname}{Article Type must be Research, Review,\MessageBreak
+   Discussion, Invited, or Position}}
+\def\acmArticleType#1{\setkeys{ACM}{articletype=#1}}
+\newenvironment{@ACM@color@frame}{%
+  \def\FrameCommand{\hspace*{-6.5pc}%
+    \colorbox{@ACM@Article@color!10!white}}%
+  \MakeFramed {\advance\hsize -6.5pc\relax\FrameRestore}}{\endMakeFramed}
+\if@ACM@acmcp
+\acmArticleType{Research}%
+\fi
+\def\acmCodeLink#1{%
+  \ifx\@acmCodeDataLink\@empty
+     \gdef\@acmCodeDataLink{\url{#1}}%
+  \else
+     \g@addto@macro{\@acmCodeDataLink}{\\ \url{#1}}%
+  \fi}
+\def\@acmCodeDataLink{}
+\let\acmDataLink\acmCodeLink
 \RequirePackage{comment}
 \excludecomment{CCSXML}
 \let\@concepts\@empty
@@ -1592,7 +1798,7 @@
     acmcopyright,acmlicensed,rightsretained,%
     usgov,usgovmixed,cagov,cagovmixed,licensedusgovmixed,%
     licensedcagov,licensedcagovmixed,othergov,licensedothergov,%
-    iw3c2w3,iw3c2w3g}{%
+    iw3c2w3,iw3c2w3g,cc}{%
   \@printpermissiontrue
   \@printcopyrighttrue
   \@acmownedtrue
@@ -1639,9 +1845,17 @@
   \ifnum\acm@copyrightmode=14\relax % iw3c2w3g
    \@acmownedfalse
    \AtBeginDocument{\acmPrice{}}%
+  \fi
+  \ifnum\acm@copyrightmode=15\relax % cc
+   \@acmownedfalse
+   \AtBeginDocument{\acmPrice{}}%
   \fi}
 \def\setcopyright#1{\setkeys{ACM@}{acmcopyrightmode=#1}}
 \setcopyright{acmcopyright}
+\newcommand\setcctype[2][4.0]{%
+  \def\ACM@cc@version{#1}%
+  \def\ACM@cc@type{#2}}
+\setcctype{by}
 \def\@copyrightowner{%
   \ifcase\acm@copyrightmode\relax % none
   \or % acmcopyright
@@ -1678,8 +1892,26 @@
   \or % ic2w3wwwgoogle
   IW3C2 (International World Wide Web Conference Committee), published
   under Creative Commons CC-BY-NC-ND~4.0 License.
+  \or % cc
+  Copyright held by the owner/author(s).
   \fi}
 \def\@formatdoi#1{\url{https://doi.org/#1}}
+\def\@ACM@copyright@check@cc{%
+  \if@ACM@nonacm
+     \ClassInfo{\@classname}{Using CC license with a non-acm
+       material}%
+  \else
+     \if@ACM@engage
+        \ClassInfo{\@classname}{Using CC license with ACM Enage
+          material}%
+      \else
+      \ClassError{\@classname}{%
+        Sorry, Creative Commons licenses are\MessageBreak
+        currently not used with ACM publications\MessageBreak
+        typeset by the authors}{Please use nonacm
+           option or ACM Engage class to enable CC licenses}%
+      \fi
+  \fi}
 \def\@copyrightpermission{%
   \ifcase\acm@copyrightmode\relax % none
   \or % acmcopyright
@@ -1802,6 +2034,24 @@
    (CC-BY-NC-ND~4.0) license. Authors reserve their rights to
    disseminate the work on their personal and corporate Web sites with
    the appropriate attribution.
+ \or % CC
+   \@ACM@copyright@check@cc
+   \IfEq{\ACM@cc@type}{zero}{%
+     \def\ACM@CC@Url{https://creativecommons.org/publicdomain/zero/1.0/legalcode}}{%
+  \edef\ACM@CC@Url{https://creativecommons.org/licenses/\ACM@cc@type/\ACM@cc@version/legalcode}}%
+   \href{\ACM@CC@Url}{\includegraphics[height=5ex]{doclicense-CC-\ACM@cc@type-88x31}}\\
+   \href{\ACM@CC@Url}{%
+   This work is licensed under a Creative Commons
+   \IfEq{\ACM@cc@type}{zero}{CC0 1.0 Universal}{%
+     \IfEq{\ACM@cc@type}{by}{Attribution}{}%
+     \IfEq{\ACM@cc@type}{by-sa}{Attribution-ShareAlike}{}%
+     \IfEq{\ACM@cc@type}{by-nd}{Attribution-NoDerivatives}{}%
+     \IfEq{\ACM@cc@type}{by-nc}{Attribution-NonCommercial}{}%
+     \IfEq{\ACM@cc@type}{by-nc-sa}{Attribution-NonCommercial-ShareAlike}{}%
+     \IfEq{\ACM@cc@type}{by-nc-nd}{Attribution-NonCommercial-NoDerivatives}{}%
+     ~\IfEq{\ACM@cc@version}{4.0}{4.0 International}{3.0 Unported}%
+   }
+   License.}%
  \fi}
 \def\copyrightyear#1{\def\@copyrightyear{#1}}
 \copyrightyear{\@acmYear}
@@ -1815,10 +2065,20 @@
    \else
     \g@addto@macro\thankses{\thanks{#1}}%
    \fi}}
+\newcommand{\anon}[2][ANONYMIZED]{%
+  \if@ACM@anonymous%
+    {\color{ACMOrange}#1}%
+  \else%
+    #2%
+  \fi}
 \ifx\@beginmaketitlehook\@undefined
   \let\@beginmaketitlehook\@empty
 \fi
 \def\AtBeginMaketitle{\g@addto@macro\@beginmaketitlehook}
+\def\@acmengagemetadata{}
+\def\setengagemetadata#1#2{%
+  \g@addto@macro{\@acmengagemetadata}{%
+    \@setengagemetadata{#1}{#2}}}
 \newbox\mktitle@bx
 \def\maketitle{\@beginmaketitlehook
   \@ACM@maketitle@typesettrue
@@ -1849,15 +2109,23 @@
     \footnotetextauthorsaddresses{%
       \def\par{\let\par\@par}\parindent\z@\@setthanks}%
   \fi
-  \ifx\@empty\@authorsaddresses\else
-     \if@ACM@anonymous\else
-       \if@ACM@journal@bibstrip
-         \footnotetextauthorsaddresses{%
-           \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
+  \if@ACM@acmcp\else
+    \ifx\@empty\@authorsaddresses\else
+       \if@ACM@anonymous\else
+         \if@ACM@journal@bibstrip
+           \footnotetextauthorsaddresses{%
+             \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
+         \fi
        \fi
-     \fi
+    \fi
   \fi
-  \if@ACM@nonacm\else\footnotetextcopyrightpermission{%
+  \if@ACM@nonacm
+    \ifnum\acm@copyrightmode=15\relax % cc
+       \footnotetextcopyrightpermission{\@copyrightpermission}%
+    \fi
+  \else
+    \if@ACM@acmcp\else
+    \footnotetextcopyrightpermission{%
     \if@ACM@authordraft
         \raisebox{-2ex}[\z@][\z@]{\makebox[0pt][l]{\large\bfseries
             Unpublished working draft. Not for distribution.}}%
@@ -1869,7 +2137,11 @@
     \fi
     \if@ACM@manuscript\else
        \if@ACM@journal@bibstrip\else % Print the conference information
+         \if@ACM@engage
+            {\itshape \@acmBooktitle, \@acmYear.}\par
+         \else
          {\itshape \acmConference@shortname, \acmConference@date, \acmConference@venue}\par
+         \fi
        \fi
     \fi
     \if@printcopyright
@@ -1907,25 +2179,30 @@
             \fi
           \fi
         \fi
-      \fi}
+      \fi}%
+    \fi
     \fi
   \endgroup
+  \if@ACM@engage\@typesetengagemetadata\fi
   \setcounter{footnote}{0}%
   \@mkabstract
+  \ifx\@translatedabstracts\@empty\else
+  \@translatedabstracts\fi
   \if@ACM@printccs
   \ifx\@concepts\@empty\else\bgroup
       {\@specialsection{CCS Concepts}%
          \noindent\@concepts\par}\egroup
      \fi
    \fi
-   \ifx\@keywords\@empty\else\bgroup
-      {\if@ACM@journal
-         \@specialsection{Additional Key Words and Phrases}%
-       \else
-         \@specialsection{Keywords}%
-       \fi
-         \noindent\@keywords\par}\egroup
-   \fi
+   \if@ACM@acmcp\else
+     \ifx\@keywords\@empty\else\bgroup
+        {\@specialsection{\keywordsname}%
+           \noindent\@keywords\par}\egroup
+     \fi
+    \ifx\@translatedkeywords\@empty\else
+       \@translatedkeywords
+    \fi
+  \fi
   \let\metadata@authors=\authors
   \nxandlist{, }{, }{, }\metadata@authors
   \def\@ACM@checkaffil{}%
@@ -1951,7 +2228,30 @@
   \@printendtopmatter
   \@afterindentfalse
   \@afterheading
+  \if@ACM@acmcp
+    \set@ACM@acmcpbox
+    \AtEndDocument{\end@ACM@color@frame}%
+    \@ACM@color@frame
+  \fi
 }
+\newbox\@ACM@acmcpbox
+\def\set@ACM@acmcpbox{%
+  \bgroup
+  \hsize=5pc
+  \global\setbox\@ACM@acmcpbox=\vtop to \textheight{%
+    \setlength{\parindent}{\z@}%
+    {\Large LOGO\par}%
+    \scriptsize
+    \vfill
+    \ifx\@acmCodeDataLink\@empty\else
+    Code and data links:\\ \@acmCodeDataLink\par\vfill
+    \fi
+    \ifx\@keywords\@empty\else Keywords:
+    \@keywords\par\vfill
+    \fi
+    \ifx\@empty\@authorsaddresses\else\@setauthorsaddresses\vfill\fi
+  }
+\egroup}
 \def\@specialsection#1{%
   \let\@vspace\@vspace@orig
   \let\@vspacer\@vspacer@orig
@@ -1973,6 +2273,10 @@
   \or % sigchi
     \section*{#1}%
   \or % sigchi-a
+    \section*{#1}%
+  \or % acmengage
+    \section*{#1}%
+  \or % acmcp
     \section*{#1}%
     \fi
   \let\@vspace\@vspace@acm
@@ -2029,6 +2333,10 @@
              \includegraphics[width=\@ACM@badge@width]{\@acmBadgeR@image}}%
           \fi}%
     \fi
+  \or % acmengage
+    \twocolumn[\box\mktitle@bx]%
+  \or % acmcp
+     \box\mktitle@bx\par
   \fi
 }
 \def\@mktitle{%
@@ -2051,6 +2359,10 @@
     \@mktitle@iii
   \or % sigchi-a
     \@mktitle@iv
+  \or % acmengage
+    \@mktitle@iii
+  \or % acmcp
+    \@mktitle@i
   \fi
 }
 \def\@titlefont{%
@@ -2073,6 +2385,10 @@
     \Huge\sffamily\bfseries
   \or % sigchi-a
      \Huge\bfseries
+  \or % acmengage
+    \Huge\sffamily\bfseries
+  \or % acmcp
+    \LARGE\sffamily\bfseries
   \fi}
 \def\@subtitlefont{\normalsize
   \ifcase\ACM@format@nr
@@ -2094,8 +2410,15 @@
      \LARGE\mdseries
   \or % sigchi-a
      \mdseries
+  \or % acmengage
+     \LARGE\mdseries
+  \or % acmcp
+    \mdseries
   \fi}
 \def\@mktitle@i{\hsize=\textwidth
+  \if@ACM@acmcp
+    \advance\hsize by -6pc%
+  \fi
   \@ACM@title@width=\hsize
   \ifx\@acmBadgeL@image\@empty\else
     \advance\@ACM@title@width by -\@ACM@badge@width
@@ -2113,9 +2436,9 @@
     \fi
     \parbox[t]{\@ACM@title@width}{\raggedright
       \@titlefont\noindent
-      \@title
+      \@title\@translatedtitle%
   \ifx\@subtitle\@empty\else
-    \par\noindent{\@subtitlefont\@subtitle}
+    \par\noindent{\@subtitlefont\@subtitle\@translatedsubtitle}%
   \fi}%
   \ifx\@acmBadgeR@image\@empty\else
     \hskip\@ACM@badge@skip
@@ -2137,9 +2460,9 @@
         \hskip\@ACM@badge@skip
       \fi
       \parbox[t]{\@ACM@title@width}{\centering\@titlefont
-        \@title
+        \@title\@translatedtitle%
         \ifx\@subtitle\@empty\else
-          \par\noindent{\@subtitlefont\@subtitle}
+          \par\noindent{\@subtitlefont\@subtitle\@translatedsubtitle}
         \fi
       }%
       \if@ACM@badge
@@ -2154,9 +2477,9 @@
 \def\@mktitle@iv{\hsize=\textwidth
     \setbox\mktitle@bx=\vbox{\raggedright\leftskip5pc\@titlefont
       \noindent\leavevmode\leaders\hrule height 2pt\hfill\kern0pt\par
-      \noindent\@title
+      \noindent\@title\@translatedtitle%
      \ifx\@subtitle\@empty\else
-       \par\noindent\@subtitlefont\@subtitle
+       \par\noindent\@subtitlefont\@subtitle\@translatedsubtitle%
      \fi
      \par\bigskip}}%
 \newbox\@ACM@commabox
@@ -2176,7 +2499,9 @@
   \def\city#1{\global\@ACM@citypresenttrue\unskip\ignorespaces}
   \def\state#1{\unskip\ignorespaces}
   \newcommand\department[2][0]{\unskip\ignorespaces}
-  \def\country#1{\global\@ACM@countrypresenttrue
+  \def\country#1{\StrDel{#1}{ }[\@tempa]%
+    \ifx\@tempa\@empty\else
+    \global\@ACM@countrypresenttrue\fi
     \if@ACM@affiliation@obeypunctuation\else, \fi#1\ignorespaces}
 \else
   \def\position#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
@@ -2209,6 +2534,10 @@
     \@mkauthors@iii
   \or % sigchi-a
     \@mkauthors@iv
+  \or % acmengage
+    \@mkauthors@iii
+  \or % acmcp
+    \@mkauthors@i
   \fi
   \endgroup
 }
@@ -2238,6 +2567,12 @@
 \or % sigchi-a
   \def\@authorfont{\bfseries}
   \def\@affiliationfont{\mdseries}
+\or % acmengage
+  \def\@authorfont{\LARGE}
+  \def\@affiliationfont{\large}
+\or % acmcp
+  \def\@authorfont{\large\sffamily}
+  \def\@affiliationfont{\small\normalfont}
 \fi
 \def\@typeset@author@line{%
   \andify\@currentauthors\par\noindent
@@ -2298,6 +2633,9 @@
       \fi
     \fi
      \global\let\and\@typeset@author@line}%
+  \if@ACM@acmcp
+    \advance\hsize by -6pc%
+  \fi
   \global\setbox\mktitle@bx=\vbox{\noindent\unvbox\mktitle@bx\par\medskip
     \noindent\addresses\@typeset@author@line
    \par\medskip}%
@@ -2452,7 +2790,7 @@
   \fi}
 \def\@mkabstract{\bgroup
   \ifx\@abstract\@lempty\else
-  {\phantomsection\addcontentsline{toc}{section}{Abstract}%
+  {\phantomsection\addcontentsline{toc}{section}{\abstractname}%
     \if@ACM@journal
        \everypar{\setbox\z@\lastbox\everypar{}}\small
     \else
@@ -2460,6 +2798,13 @@
     \fi
    \ignorespaces\@abstract\par}%
   \fi\egroup}
+\def\@mktranslatedabstract#1{\selectlanguage{#1}%
+    \if@ACM@journal
+       \everypar{\setbox\z@\lastbox\everypar{}}\small
+    \else
+       \section*{\abstractname}%
+    \fi
+   \ignorespaces}
 \def\@mkbibcitation{\bgroup
   \let\@vspace\@vspace@orig
   \let\@vspacer\@vspacer@orig
@@ -2504,6 +2849,9 @@
   }
 \def\@setthanks{\long\def\thanks##1{\par##1\@addpunct.}\thankses}
 \def\@setauthorsaddresses{\@authorsaddresses\unskip\@addpunct.}
+\def\@typesetengagemetadata{%
+  \def\@setengagemetadata##1##2{\par\noindent\textbf{##1} ##2\par}%
+  \@acmengagemetadata}
 \RequirePackage{fancyhdr}
 \let\ACM@ps@plain\ps@plain
 \let\ACM@ps@myheadings\ps@myheadings
@@ -2557,6 +2905,10 @@
           \ACM@mk@linecount
        \or % sigchi-a
           \ACM@mk@linecount
+       \or % acmengage
+          \ACM@mk@linecount
+       \or % acmcp
+         \relax
     \fi
     \begin{picture}(0,0)%
       \put(20,-22){\usebox{\ACM@linecount@bx}}%
@@ -2645,12 +2997,20 @@
         \fancyhead[LE]{\ACM@linecountL}%
         \fancyhead[RO]{\ACM@linecountR}%
       \else%
-        \fancyhead[LE]{\ACM@linecountL\@headfootfont\footnotesize
-          \acmConference@shortname,
-          \acmConference@date, \acmConference@venue}%
-        \fancyhead[RO]{\@headfootfont
-          \acmConference@shortname,
-          \acmConference@date, \acmConference@venue\ACM@linecountR}%
+        \if@ACM@engage
+          \fancyhead[LE]{\ACM@linecountL\@headfootfont\footnotesize
+            EngageCSEdu. \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi}%
+          \fancyhead[RO]{\@headfootfont
+            EngageCSEdu. \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi
+            \ACM@linecountR}%
+        \else
+          \fancyhead[LE]{\ACM@linecountL\@headfootfont\footnotesize
+            \acmConference@shortname,
+            \acmConference@date, \acmConference@venue}%
+          \fancyhead[RO]{\@headfootfont
+            \acmConference@shortname,
+            \acmConference@date, \acmConference@venue\ACM@linecountR}%
+         \fi
       \fi
     \fi
   \else % Proceedings
@@ -2661,12 +3021,20 @@
       \fancyhead[LE]{\ACM@linecountL}%
       \fancyhead[RO]{\ACM@linecountR}%
     \else%
-      \fancyhead[LE]{\ACM@linecountL\@headfootfont
-        \acmConference@shortname,
-        \acmConference@date, \acmConference@venue}%
-      \fancyhead[RO]{\@headfootfont
-        \acmConference@shortname,
-        \acmConference@date, \acmConference@venue\ACM@linecountR}%
+      \if@ACM@engage
+        \fancyhead[LE]{\ACM@linecountL\@headfootfont
+          EngageCSEdu. \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi}%
+        \fancyhead[RO]{\@headfootfont
+          EngageCSEdu. \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi
+          \ACM@linecountR}%
+      \else
+        \fancyhead[LE]{\ACM@linecountL\@headfootfont
+          \acmConference@shortname,
+          \acmConference@date, \acmConference@venue}%
+        \fancyhead[RO]{\@headfootfont
+          \acmConference@shortname,
+          \acmConference@date, \acmConference@venue\ACM@linecountR}%
+       \fi
     \fi
   \fi
   \if@ACM@sigchiamode
@@ -2674,6 +3042,21 @@
   \fi
   \if@ACM@timestamp
      \fancyfoot[LO,RE]{\ACM@timestamp}
+  \fi
+  \if@ACM@acmcp
+  \renewcommand{\footrulewidth}{0.1\p@}%
+  \fancyheadoffset[L]{46pt}%
+  \fancyhead[L]{\makebox[\z@][l]{%
+      \raisebox{-\dimexpr(0.25\textheight*\ACM@ArticleType@nr)}{%
+      \rotatebox{90}{\colorbox{@ACM@Article@color}{\color{white}%
+          \strut\ACM@ArticleType~Article}}}}%
+    \ACM@linecountL}%
+  \fancyhead[R]{\makebox[\z@][r]{\box\@ACM@acmcpbox}}%
+  \fancyfoot[L,C]{}%
+  \fancyfoot[R]{\footnotesize
+    \@journalName, Volume~\@acmVolume, Issue~\@acmNumber,
+    \ifx\@acmArticle\@empty\else Article~\@acmArticle\fi\space
+    (\@acmPubDate)\ifx\@acmDOI\@empty\else\\\@formatdoi{\@acmDOI}\fi}
   \fi
 }%
 \pagestyle{standardpagestyle}
@@ -2779,6 +3162,21 @@
     \fancyfoot[LO,RE]{\ACM@timestamp}
     \fi
   \fi
+  \if@ACM@acmcp
+  \renewcommand{\footrulewidth}{0.1\p@}%
+  \fancyheadoffset[L]{46pt}%
+  \fancyhead[L]{\makebox[\z@][l]{%
+      \raisebox{-\dimexpr(0.25\textheight*\ACM@ArticleType@nr)}{%
+      \rotatebox{90}{\colorbox{@ACM@Article@color}{\color{white}%
+          \strut\ACM@ArticleType~Article}}}}%
+    \ACM@linecountL}%
+  \fancyhead[R]{\makebox[\z@][r]{\box\@ACM@acmcpbox}}%
+  \fancyfoot[L,C]{}%
+  \fancyfoot[R]{\footnotesize
+    \@journalName, Volume~\@acmVolume, Issue~\@acmNumber,
+    \ifx\@acmArticle\@empty\else Article~\@acmArticle\fi\space
+    (\@acmPubDate)\ifx\@acmDOI\@empty\else\\\@formatdoi{\@acmDOI}\fi}
+  \fi
 }}
 \def\ACM@NRadjust#1{%
  \begingroup
@@ -2873,9 +3271,16 @@
  \setcounter{secnumdepth}{0}
  \def\@secfont{\sffamily\bfseries\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\sffamily\bfseries\section@raggedright}
+\or % acmengage
+ \def\@secfont{\bfseries\Large\section@raggedright\MakeTextUppercase}
+ \def\@subsecfont{\bfseries\Large\section@raggedright}
+\or %acmcp
 \fi
 \def\@adddotafter#1{#1\@addpunct{.}}
 \def\@addspaceafter#1{#1\@addpunct{\enspace}}
+\if@ACM@acmcp
+   \setcounter{secnumdepth}{-1}%
+\fi
 \providecommand*\@dotsep{4.5}
 \def\@acmplainbodyfont{\itshape}
 \def\@acmplainindent{\parindent}
@@ -2895,6 +3300,8 @@
   \def\@acmplainnotefont{\normalfont}
 \or % sigchi
 \or % sigchi-a
+\or % acmengage
+\or % acmcp
 \fi
 \newtheoremstyle{acmplain}%
   {.5\baselineskip\@plus.2\baselineskip
@@ -2925,6 +3332,8 @@
   \def\@acmdefinitionnotefont{\normalfont}
 \or % sigchi
 \or % sigchi-a
+\or % acmengage
+\or % acmcp
 \fi
 \newtheoremstyle{acmdefinition}%
   {.5\baselineskip\@plus.2\baselineskip
@@ -2980,6 +3389,8 @@
   \def\@proofindent{\noindent}
 \or % sigchi
 \or % sigchi-a
+\or % acmengage
+\or % acmcp
 \fi
 \renewenvironment{proof}[1][\proofname]{\par
   \pushQED{\qed}%
@@ -3008,6 +3419,9 @@
        \or % sigchi
           \RequirePackage{pbalance}%
        \or % sigchi-a
+       \or % acmengage
+          \RequirePackage{pbalance}%
+       \or % acmcp
     \fi
   \fi
   \if@ACM@balance
@@ -3030,6 +3444,10 @@
           \RequirePackage{balance}%
        \or % sigchi-a
           \global\@ACM@balancefalse
+       \or % acmengage
+          \RequirePackage{balance}%
+       \or % acmcp
+         \global\@ACM@balancefalse
     \fi
   \fi
 }
@@ -3074,7 +3492,7 @@
      \ifx\@tempa\@tempb\relax
        arXiv:\href{https://arxiv.org/abs/#2}{#2}%
      \else
-       arXiv:#2%
+       #1:#2%
     \fi
   \fi}
 \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
